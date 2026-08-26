@@ -2,6 +2,7 @@
   "use strict";
 
   var APP = window.__APP__ || { systems: {}, colors: ["#2f7d6b"], storageKey: "notaclara_v1" };
+  var I18N = window.__I18N__ || { defaultLang: "es", storageKey: "notaclara_lang", htmlKeys: [], dict: { es: {} } };
 
   /* ---------------------------------------------------------------
      Helpers
@@ -30,6 +31,33 @@
   var WARN_ICON = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12 9v4m0 4h.01M10.3 3.9 1.9 18a2 2 0 0 0 1.7 3h16.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>';
 
   /* ---------------------------------------------------------------
+     i18n — language state + translation lookup
+     (Purely presentational: never touches grade data, calculations,
+     the grading system, or the notes localStorage key.)
+     --------------------------------------------------------------- */
+  function loadLang() {
+    try {
+      var s = localStorage.getItem(I18N.storageKey);
+      if (s && I18N.dict[s]) return s;
+    } catch (e) {}
+    return I18N.dict[I18N.defaultLang] ? I18N.defaultLang : "es";
+  }
+  var lang = loadLang();
+
+  function t(key, vars) {
+    var entry = (I18N.dict[lang] && I18N.dict[lang][key]);
+    if (entry == null) entry = (I18N.dict[I18N.defaultLang] && I18N.dict[I18N.defaultLang][key]);
+    if (entry == null) entry = key;
+    if (vars) {
+      Object.keys(vars).forEach(function (k) {
+        entry = entry.replace(new RegExp("\\{" + k + "\\}", "g"), vars[k]);
+      });
+    }
+    return entry;
+  }
+  function isHtmlKey(key) { return (I18N.htmlKeys || []).indexOf(key) !== -1; }
+
+  /* ---------------------------------------------------------------
      Grade-system conversions (canonical scale is 0-100 "pct")
      --------------------------------------------------------------- */
   function displayToPct(value, sys) { return (value - sys.min) / (sys.max - sys.min) * 100; }
@@ -50,11 +78,8 @@
   function formatScoreValue(pct, sys) {
     if (pct == null) return "—";
     if (sys.id === "letter") return pctToLetterEntry(pct, sys).g;
-    return formatScoreValue.decimalsFor(sys, pct);
-  }
-  formatScoreValue.decimalsFor = function (sys, pct) {
     return roundTo(pctToDisplay(pct, sys), sys.decimals).toFixed(sys.decimals);
-  };
+  }
   function formatScoreSuffix(pct, sys) {
     if (sys.id === "10") return "/10";
     if (sys.id === "100") return "/100";
@@ -70,7 +95,26 @@
   }
 
   /* ---------------------------------------------------------------
-     State — localStorage
+     Text helpers driven by the current language (zones, warnings)
+     --------------------------------------------------------------- */
+  function badgeInfo(pct, sys) {
+    var z = pct == null ? null : zoneOf(pct, sys);
+    var cls = z === "fail" ? "badge-fail" : z === "warn" ? "badge-warn" : z === "pass" ? "badge-pass" : "";
+    var text = z === "fail" ? t("subject.badgeFail")
+      : z === "warn" ? t("subject.badgeWarn")
+      : z === "pass" ? t("subject.badgePass")
+      : t("subject.badgeEmpty");
+    return { cls: cls, text: text, zone: z };
+  }
+  function weightWarnText(weightSum) {
+    var overW = weightSum - 100;
+    return overW > 0
+      ? t("subject.weightOver", { sum: round1(weightSum), diff: round1(overW) })
+      : t("subject.weightUnder", { sum: round1(weightSum), diff: round1(-overW) });
+  }
+
+  /* ---------------------------------------------------------------
+     State — localStorage (grades — untouched by language switching)
      --------------------------------------------------------------- */
   function loadState() {
     try {
@@ -114,7 +158,7 @@
   }
 
   /* ---------------------------------------------------------------
-     Calculations
+     Calculations — language-independent, never touched by i18n
      --------------------------------------------------------------- */
   function computeSubjectStats(sub) {
     var sumSW = 0, evalW = 0, weightSum = 0;
@@ -209,7 +253,7 @@
      --------------------------------------------------------------- */
   function renderNumberScore(g, sys) {
     var v = g.scorePct == null ? "" : roundTo(pctToDisplay(g.scorePct, sys), sys.decimals);
-    return '<input class="num-input" data-role="grade-score" type="number" inputmode="decimal" min="' + sys.min + '" max="' + sys.max + '" step="' + sys.step + '" value="' + v + '" placeholder="—"' + (g.pending ? " disabled" : "") + ' aria-label="Nota obtenida">';
+    return '<input class="num-input" data-role="grade-score" type="number" inputmode="decimal" min="' + sys.min + '" max="' + sys.max + '" step="' + sys.step + '" value="' + v + '" placeholder="—"' + (g.pending ? " disabled" : "") + ' aria-label="' + escHTML(t("grade.scoreAria")) + '">';
   }
   function renderLetterSelect(g, sys) {
     var current = g.scorePct == null ? "" : String(pctToLetterEntry(g.scorePct, sys).val);
@@ -217,18 +261,18 @@
       sys.letters.map(function (l) {
         return '<option value="' + l.val + '"' + (String(l.val) === current ? " selected" : "") + '>' + l.g + "</option>";
       }).join("");
-    return '<select class="letter-select" data-role="grade-score-letter"' + (g.pending ? " disabled" : "") + ' aria-label="Nota obtenida">' + opts + "</select>";
+    return '<select class="letter-select" data-role="grade-score-letter"' + (g.pending ? " disabled" : "") + ' aria-label="' + escHTML(t("grade.scoreAria")) + '">' + opts + "</select>";
   }
   function renderGradeRow(sub, g, sys) {
     var scoreField = sys.id === "letter" ? renderLetterSelect(g, sys) : renderNumberScore(g, sys);
     return '' +
       '<div class="grade-row' + (g.pending ? " is-pending" : "") + '" data-grade="' + g.id + '">' +
-      '<input class="grade-name-input" data-role="grade-name" value="' + escHTML(g.name) + '" maxlength="40" aria-label="Nombre de la evaluación">' +
+      '<input class="grade-name-input" data-role="grade-name" value="' + escHTML(g.name) + '" maxlength="40" aria-label="' + escHTML(t("grade.nameAria")) + '">' +
       '<div class="grade-row-controls">' +
       '<div class="grade-field">' + scoreField + "</div>" +
-      '<div class="grade-field"><input class="num-input weight-input" data-role="grade-weight" type="number" inputmode="decimal" min="0" max="100" step="0.1" value="' + (g.weightPct == null ? "" : g.weightPct) + '" aria-label="Peso en porcentaje" placeholder="%"><label>%</label></div>' +
-      '<label class="pending-toggle' + (g.pending ? " is-on" : "") + '"><input type="checkbox" data-role="grade-pending"' + (g.pending ? " checked" : "") + "> Pendiente</label>" +
-      '<div class="row-actions"><button type="button" class="btn-icon row-delete" data-role="delete-grade" aria-label="Eliminar evaluación" title="Eliminar evaluación">' + ICON_X + "</button></div>" +
+      '<div class="grade-field"><input class="num-input weight-input" data-role="grade-weight" type="number" inputmode="decimal" min="0" max="100" step="0.1" value="' + (g.weightPct == null ? "" : g.weightPct) + '" aria-label="' + escHTML(t("grade.weightAria")) + '" placeholder="%"><label>%</label></div>' +
+      '<label class="pending-toggle' + (g.pending ? " is-on" : "") + '"><input type="checkbox" data-role="grade-pending"' + (g.pending ? " checked" : "") + "> " + escHTML(t("grade.pending")) + "</label>" +
+      '<div class="row-actions"><button type="button" class="btn-icon row-delete" data-role="delete-grade" aria-label="' + escHTML(t("grade.deleteAria")) + '" title="' + escHTML(t("grade.deleteAria")) + '">' + ICON_X + "</button></div>" +
       "</div>" +
       "</div>";
   }
@@ -237,7 +281,8 @@
     return sys.shortcuts.map(function (s) {
       var pct = displayToPct(s.value, sys);
       var active = sub.goalTargetPct != null && Math.abs(pct - sub.goalTargetPct) < 0.05;
-      return '<button type="button" class="goal-chip' + (active ? " is-active" : "") + '" data-role="goal-chip" data-pct="' + pct + '">' + escHTML(s.label) + "</button>";
+      var label = t("shortcut." + s.key) + (s.suffix ? " " + s.suffix : "");
+      return '<button type="button" class="goal-chip' + (active ? " is-active" : "") + '" data-role="goal-chip" data-pct="' + pct + '">' + escHTML(label) + "</button>";
     }).join("");
   }
 
@@ -259,8 +304,9 @@
       }
       var pctVal = simMap[g.id];
       var dispVal = roundTo(pctToDisplay(pctVal, sys), sys.decimals);
-      return '<div class="sim-item"><div class="sim-item-head"><span>' + escHTML(g.name || "Evaluación pendiente") + '</span><span class="sim-value" data-role="sim-value">' + formatScoreFull(pctVal, sys) + '</span></div>' +
-        '<input type="range" class="slider" data-role="sim-slider" data-grade="' + g.id + '" min="' + sys.min + '" max="' + sys.max + '" step="' + sys.step + '" value="' + dispVal + '" style="--pct:' + pctVal + '%" aria-label="Simular nota en ' + escHTML(g.name || "esta evaluación") + '"></div>';
+      var itemName = g.name || t("grade.defaultPendingName");
+      return '<div class="sim-item"><div class="sim-item-head"><span>' + escHTML(itemName) + '</span><span class="sim-value" data-role="sim-value">' + formatScoreFull(pctVal, sys) + '</span></div>' +
+        '<input type="range" class="slider" data-role="sim-slider" data-grade="' + g.id + '" min="' + sys.min + '" max="' + sys.max + '" step="' + sys.step + '" value="' + dispVal + '" style="--pct:' + pctVal + '%" aria-label="' + escHTML(itemName) + '"></div>';
     });
     var simFinalPct = contributedPct + goal.pendingItems.reduce(function (a, g) {
       var w = Number(g.weightPct) || 0;
@@ -268,7 +314,7 @@
       return a + ((sv == null ? 0 : sv) * w / 100);
     }, 0);
     return '<div class="sim-list" data-role="sim-list">' + itemsHTML.join("") + '</div>' +
-      '<div class="sim-final" data-role="sim-final">Con estos valores, tu nota final sería <strong data-role="sim-final-value">' + formatScoreFull(clamp(simFinalPct, 0, 100), sys) + "</strong></div>";
+      '<div class="sim-final" data-role="sim-final">' + escHTML(t("sim.finalPrefix")) + ' <strong data-role="sim-final-value">' + formatScoreFull(clamp(simFinalPct, 0, 100), sys) + "</strong></div>";
   }
 
   function renderGoalResult(sub, sys, stats, targetPct) {
@@ -276,17 +322,18 @@
     var stateClass = goal.status === "ok" ? "" : goal.status === "guaranteed" ? "state-guaranteed" : "state-impossible";
     var headline, detail;
     if (goal.status === "guaranteed") {
-      headline = ICON_CHECK + " ¡Objetivo garantizado!";
-      detail = "Incluso sacando un 0 en lo que te queda, ya llegarías a " + formatScoreFull(clamp(goal.minFinal, 0, 100), sys) + ".";
+      headline = ICON_CHECK + " " + escHTML(t("goal.guaranteedHeadline"));
+      detail = escHTML(t("goal.guaranteedDetail", { value: formatScoreFull(clamp(goal.minFinal, 0, 100), sys) }));
     } else if (goal.status === "impossible") {
-      headline = ICON_WARN + " Objetivo matemáticamente imposible";
-      detail = "Aunque saques la nota máxima en lo pendiente, tu mejor resultado posible es " + formatScoreFull(clamp(goal.maxFinal, 0, 100), sys) + ".";
+      headline = ICON_WARN + " " + escHTML(t("goal.impossibleHeadline"));
+      detail = escHTML(t("goal.impossibleDetail", { value: formatScoreFull(clamp(goal.maxFinal, 0, 100), sys) }));
     } else if (goal.pendingItems.length === 1) {
-      headline = "Necesitas sacar " + formatScoreFull(clamp(goal.neededPct, 0, 100), sys) + ' en "' + escHTML(goal.pendingItems[0].name || "esa evaluación") + '"';
-      detail = "Es la nota mínima exacta en esa evaluación pendiente para llegar a tu objetivo.";
+      var itemName = goal.pendingItems[0].name || t("grade.defaultPendingName");
+      headline = escHTML(t("goal.singleHeadline", { value: formatScoreFull(clamp(goal.neededPct, 0, 100), sys), name: itemName }));
+      detail = escHTML(t("goal.singleDetail"));
     } else {
-      headline = "Necesitas una media de " + formatScoreFull(clamp(goal.neededPct, 0, 100), sys) + " en lo pendiente";
-      detail = "Suponiendo una nota parecida en cada una de las " + goal.pendingItems.length + " evaluaciones que te quedan (" + round1(goal.Wp) + "% del total). Mueve los controles de abajo para repartir de otra forma.";
+      headline = escHTML(t("goal.multiHeadline", { value: formatScoreFull(clamp(goal.neededPct, 0, 100), sys) }));
+      detail = escHTML(t("goal.multiDetail", { count: goal.pendingItems.length, weight: round1(goal.Wp) }));
     }
     var simHTML = (goal.status === "ok" && goal.pendingItems.length) ? renderSimSliders(sub, sys, goal, stats.contributedPct) : "";
     return '<div class="goal-result unlocked ' + stateClass + '" data-role="goal-result">' +
@@ -303,10 +350,10 @@
     var resultHTML = targetPct == null ? "" : renderGoalResult(sub, sys, stats, targetPct);
     return '' +
       '<div class="goal-panel' + (open ? " is-open" : "") + '" data-role="goal-panel">' +
-      "<strong>¿Qué nota final quieres conseguir?</strong>" +
+      "<strong>" + escHTML(t("goal.question")) + "</strong>" +
       '<div class="goal-shortcuts" data-role="goal-shortcuts">' + buildShortcutsHTML(sub, sys) + "</div>" +
       '<div class="goal-custom">' +
-      '<label for="goal-custom-' + sub.id + '">O elige un valor exacto:</label>' +
+      '<label for="goal-custom-' + sub.id + '">' + escHTML(t("goal.customLabel")) + "</label>" +
       (sys.id === "letter"
         ? renderGoalLetterSelect(sub, sys, targetPct)
         : '<input id="goal-custom-' + sub.id + '" class="num-input" data-role="goal-custom" type="number" inputmode="decimal" min="' + sys.min + '" max="' + sys.max + '" step="' + sys.step + '" value="' + customVal + '">'
@@ -319,47 +366,44 @@
   function renderSubjectCard(sub) {
     var sys = APP.systems[state.system];
     var stats = computeSubjectStats(sub);
-    var z = stats.displayPct == null ? null : zoneOf(stats.displayPct, sys);
-    var badgeClass = z === "fail" ? "badge-fail" : z === "warn" ? "badge-warn" : z === "pass" ? "badge-pass" : "";
-    var badgeText = z === "fail" ? "Suspende" : z === "warn" ? "Aprueba justo" : z === "pass" ? "Vas bien" : "Sin datos";
+    var badge = badgeInfo(stats.displayPct, sys);
     var weightPctBar = clamp(stats.weightSum, 0, 100);
     var overW = stats.weightSum - 100;
     var warnVisible = Math.abs(overW) > 0.5;
-    var warnText = overW > 0
-      ? "Los pesos suman " + round1(stats.weightSum) + "% — sobran " + round1(overW) + " puntos porcentuales."
-      : "Los pesos suman " + round1(stats.weightSum) + "% — te faltan " + round1(-overW) + " puntos porcentuales para llegar a 100%.";
 
     var rowsHTML = sub.grades.map(function (g) { return renderGradeRow(sub, g, sys); }).join("");
     var colorsHTML = APP.colors.map(function (c) {
-      return '<button type="button" class="color-dot' + (c === sub.color ? " is-active" : "") + '" style="background:' + c + '" data-role="color-dot" data-color="' + c + '" aria-label="Elegir color"></button>';
+      return '<button type="button" class="color-dot' + (c === sub.color ? " is-active" : "") + '" style="background:' + c + '" data-role="color-dot" data-color="' + c + '" aria-label="' + escHTML(t("subject.colorDotAria")) + '"></button>';
     }).join("");
 
     return '' +
       '<article class="card subject-card" data-subject="' + sub.id + '" style="--subject-color:' + sub.color + '">' +
       '<div class="subject-head">' +
-      '<input class="subject-name-input" data-role="subject-name" value="' + escHTML(sub.name) + '" aria-label="Nombre de la asignatura" maxlength="60">' +
-      '<button type="button" class="btn-icon" data-role="delete-subject" title="Eliminar asignatura" aria-label="Eliminar asignatura">' + ICON_TRASH + "</button>" +
+      '<input class="subject-name-input" data-role="subject-name" value="' + escHTML(sub.name) + '" aria-label="' + escHTML(t("subject.nameAria")) + '" maxlength="60">' +
+      '<button type="button" class="btn-icon" data-role="delete-subject" title="' + escHTML(t("subject.deleteAria")) + '" aria-label="' + escHTML(t("subject.deleteAria")) + '">' + ICON_TRASH + "</button>" +
       "</div>" +
-      '<div class="color-dots" role="group" aria-label="Color de la asignatura">' + colorsHTML + "</div>" +
+      '<div class="color-dots" role="group" aria-label="' + escHTML(t("subject.colorGroupAria")) + '">' + colorsHTML + "</div>" +
       '<div class="subject-body">' +
       '<div class="subject-main">' +
       ringHTML(stats.displayPct, sys, 76, 8, 'data-role="subject-ring"') +
       '<div class="subject-metrics">' +
-      '<span class="badge ' + badgeClass + '" data-role="subject-badge">' + badgeText + "</span>" +
+      '<span class="badge ' + badge.cls + '" data-role="subject-badge">' + escHTML(badge.text) + "</span>" +
       '<div class="weight-meter"><div class="weight-meter-fill" data-role="weight-fill" style="width:' + weightPctBar + '%"></div></div>' +
-      '<div class="weight-meter-label" data-role="evaluated-label"><strong>' + round1(stats.evaluatedWeight) + "%</strong> de la nota ya está decidido</div>" +
+      '<div class="weight-meter-label" data-role="evaluated-label"><strong>' + round1(stats.evaluatedWeight) + "%</strong> " + escHTML(t("subject.evaluatedWeightSuffix")) + "</div>" +
       "</div>" +
       "</div>" +
-      '<div class="weight-warn' + (warnVisible ? " is-visible" : "") + '" data-role="weight-warn">' + WARN_ICON + '<span data-role="weight-warn-text">' + warnText + "</span></div>" +
+      '<div class="weight-warn' + (warnVisible ? " is-visible" : "") + '" data-role="weight-warn">' + WARN_ICON + '<span data-role="weight-warn-text">' + escHTML(weightWarnText(stats.weightSum)) + "</span></div>" +
       '<div class="grades-list" data-role="grades-list">' + rowsHTML + "</div>" +
-      '<div class="add-grade-row"><button type="button" class="btn btn-ghost btn-sm" data-role="add-grade">' + ICON_PLUS + " Añadir evaluación</button></div>" +
-      '<div class="subject-foot"><button type="button" class="btn btn-outline btn-sm" data-role="goal-toggle">' + ICON_TARGET + (sub.goalOpen ? " Ocultar objetivo" : " ¿Qué nota necesito?") + "</button></div>" +
+      '<div class="add-grade-row"><button type="button" class="btn btn-ghost btn-sm" data-role="add-grade">' + ICON_PLUS + " " + escHTML(t("subject.addGrade")) + "</button></div>" +
+      '<div class="subject-foot"><button type="button" class="btn btn-outline btn-sm" data-role="goal-toggle">' + ICON_TARGET + " " + escHTML(sub.goalOpen ? t("subject.goalHide") : t("subject.goalShow")) + "</button></div>" +
       renderGoalPanel(sub, sys, stats) +
       "</div>" +
       "</article>";
   }
 
-  var AD_INLINE_HTML = '<div class="ad-slot ad-inline card" aria-hidden="true"><span>ANUNCIO<small>Publicidad</small></span><!-- PEGA AQUÍ TU CÓDIGO DE ADSENSE --></div>';
+  function adInlineHTML() {
+    return '<div class="ad-slot ad-inline card" aria-hidden="true"><span>' + escHTML(t("ad.label")) + '<small>' + escHTML(t("ad.sublabel")) + '</small></span><!-- PEGA AQUÍ TU CÓDIGO DE ADSENSE --></div>';
+  }
 
   /* ---------------------------------------------------------------
      Rendering — structural
@@ -369,10 +413,10 @@
     if (!grid) return;
     var html = state.subjects.map(function (sub, i) {
       var card = renderSubjectCard(sub);
-      if (i === 1 && state.subjects.length > 2) card += AD_INLINE_HTML;
+      if (i === 1 && state.subjects.length > 2) card += adInlineHTML();
       return card;
     }).join("");
-    html += '<button type="button" class="add-subject-card" data-role="add-subject">' + ICON_PLUS_BIG + "<span>Añadir asignatura</span></button>";
+    html += '<button type="button" class="add-subject-card" data-role="add-subject">' + ICON_PLUS_BIG + "<span>" + escHTML(t("subject.addCard")) + "</span></button>";
     grid.innerHTML = html;
   }
 
@@ -383,19 +427,20 @@
     var withData = state.subjects.map(function (s) { return { s: s, stats: computeSubjectStats(s) }; })
       .filter(function (x) { return x.stats.displayPct != null; });
     if (!withData.length) {
-      wrap.innerHTML = '<div class="summary-empty">Añade tu primera asignatura y una nota para ver aquí tu media general.</div>';
+      wrap.innerHTML = '<div class="summary-empty">' + escHTML(t("summary.empty")) + "</div>";
       return;
     }
     var overall = withData.reduce(function (a, x) { return a + x.stats.displayPct; }, 0) / withData.length;
     var passing = withData.filter(function (x) { return zoneOf(x.stats.displayPct, sys) !== "fail"; }).length;
+    var subjectsWord = state.subjects.length === 1 ? t("summary.subjectsSingular") : t("summary.subjectsPlural");
     wrap.innerHTML =
       '<div class="summary-ring-wrap">' +
       ringHTML(overall, sys, 88, 9, "") +
-      '<div class="summary-text"><div class="summary-label">Media general</div><div class="summary-value">' + escHTML(formatScoreFull(overall, sys)) + "</div></div>" +
+      '<div class="summary-text"><div class="summary-label">' + escHTML(t("summary.label")) + '</div><div class="summary-value">' + escHTML(formatScoreFull(overall, sys)) + "</div></div>" +
       "</div>" +
       '<div class="summary-stats">' +
-      '<div class="summary-stat"><span class="n">' + state.subjects.length + '</span><span class="l">asignatura' + (state.subjects.length === 1 ? "" : "s") + "</span></div>" +
-      '<div class="summary-stat"><span class="n">' + passing + "/" + withData.length + '</span><span class="l">en positivo</span></div>' +
+      '<div class="summary-stat"><span class="n">' + state.subjects.length + '</span><span class="l">' + escHTML(subjectsWord) + "</span></div>" +
+      '<div class="summary-stat"><span class="n">' + passing + "/" + withData.length + '</span><span class="l">' + escHTML(t("summary.positive")) + '</span></div>' +
       "</div>";
   }
 
@@ -416,27 +461,25 @@
 
     setRing(root.querySelector('[data-role="subject-ring"]'), stats.displayPct, sys);
 
-    var badge = root.querySelector('[data-role="subject-badge"]');
-    if (badge) {
-      var z = stats.displayPct == null ? null : zoneOf(stats.displayPct, sys);
-      badge.className = "badge " + (z === "fail" ? "badge-fail" : z === "warn" ? "badge-warn" : z === "pass" ? "badge-pass" : "");
-      badge.textContent = z === "fail" ? "Suspende" : z === "warn" ? "Aprueba justo" : z === "pass" ? "Vas bien" : "Sin datos";
+    var badgeEl = root.querySelector('[data-role="subject-badge"]');
+    if (badgeEl) {
+      var badge = badgeInfo(stats.displayPct, sys);
+      badgeEl.className = "badge " + badge.cls;
+      badgeEl.textContent = badge.text;
     }
 
     var fill = root.querySelector('[data-role="weight-fill"]');
     if (fill) fill.style.width = clamp(stats.weightSum, 0, 100) + "%";
 
     var evalLabel = root.querySelector('[data-role="evaluated-label"]');
-    if (evalLabel) evalLabel.innerHTML = "<strong>" + round1(stats.evaluatedWeight) + "%</strong> de la nota ya está decidido";
+    if (evalLabel) evalLabel.innerHTML = "<strong>" + round1(stats.evaluatedWeight) + "%</strong> " + escHTML(t("subject.evaluatedWeightSuffix"));
 
     var overW = stats.weightSum - 100;
     var warnEl = root.querySelector('[data-role="weight-warn"]');
     if (warnEl) {
       warnEl.classList.toggle("is-visible", Math.abs(overW) > 0.5);
       var txt = root.querySelector('[data-role="weight-warn-text"]');
-      if (txt) txt.textContent = overW > 0
-        ? "Los pesos suman " + round1(stats.weightSum) + "% — sobran " + round1(overW) + " puntos porcentuales."
-        : "Los pesos suman " + round1(stats.weightSum) + "% — te faltan " + round1(-overW) + " puntos porcentuales para llegar a 100%.";
+      if (txt) txt.textContent = weightWarnText(stats.weightSum);
     }
 
     if (sub.goalOpen && sub.goalTargetPct != null) refreshGoalPanelPartial(sub, sys);
@@ -487,9 +530,9 @@
   function addSubject() {
     var color = APP.colors[state.subjects.length % APP.colors.length];
     var sub = {
-      id: uid("s"), name: "Asignatura " + (state.subjects.length + 1), color: color,
+      id: uid("s"), name: t("subject.defaultName", { n: state.subjects.length + 1 }), color: color,
       goalOpen: false, goalTargetPct: null,
-      grades: [{ id: uid("g"), name: "Evaluación 1", scorePct: null, weightPct: 100, pending: true }]
+      grades: [{ id: uid("g"), name: t("grade.defaultName", { n: 1 }), scorePct: null, weightPct: 100, pending: true }]
     };
     state.subjects.push(sub);
     renderAll();
@@ -501,7 +544,7 @@
   }
 
   function onAddGrade(sub) {
-    sub.grades.push({ id: uid("g"), name: "Evaluación " + (sub.grades.length + 1), scorePct: null, weightPct: 0, pending: true });
+    sub.grades.push({ id: uid("g"), name: t("grade.defaultName", { n: sub.grades.length + 1 }), scorePct: null, weightPct: 0, pending: true });
     refreshGradesList(sub);
     scheduleSave();
   }
@@ -527,7 +570,7 @@
     var panel = root.querySelector('[data-role="goal-panel"]');
     if (panel) panel.classList.toggle("is-open", sub.goalOpen);
     var btn = root.querySelector('[data-role="goal-toggle"]');
-    if (btn) btn.innerHTML = ICON_TARGET + (sub.goalOpen ? " Ocultar objetivo" : " ¿Qué nota necesito?");
+    if (btn) btn.innerHTML = ICON_TARGET + " " + escHTML(sub.goalOpen ? t("subject.goalHide") : t("subject.goalShow"));
     if (sub.goalOpen && sub.goalTargetPct == null) {
       sub.goalTargetPct = displayToPct(sys.shortcuts[0].value, sys);
       refreshGoalPanelPartial(sub, sys);
@@ -551,9 +594,9 @@
     if (customLetter) customLetter.value = String(pctToLetterEntry(pct, sys).val);
     scheduleSave();
   }
-  function onGoalCustomInput(t, sub, sys) {
-    var raw = t.tagName === "SELECT" ? parseFloat(t.value) : parseFloat(t.value);
-    if (t.dataset.role === "goal-custom-letter") {
+  function onGoalCustomInput(elm, sub, sys) {
+    var raw = parseFloat(elm.value);
+    if (elm.dataset.role === "goal-custom-letter") {
       sub.goalTargetPct = isFinite(raw) ? raw : null;
     } else {
       sub.goalTargetPct = isFinite(raw) ? clamp(displayToPct(raw, sys), 0, 100) : null;
@@ -562,14 +605,14 @@
     refreshGoalPanelPartial(sub, sys);
     scheduleSave();
   }
-  function onSimSliderInput(t, sub, sys) {
-    var gradeId = t.dataset.grade;
-    var raw = parseFloat(t.value);
+  function onSimSliderInput(elm, sub, sys) {
+    var gradeId = elm.dataset.grade;
+    var raw = parseFloat(elm.value);
     var pct = clamp(displayToPct(raw, sys), 0, 100);
     if (!simState[sub.id]) simState[sub.id] = {};
     simState[sub.id][gradeId] = pct;
-    t.style.setProperty("--pct", pct + "%");
-    var item = t.closest(".sim-item");
+    elm.style.setProperty("--pct", pct + "%");
+    var item = elm.closest(".sim-item");
     if (item) {
       var valEl = item.querySelector('[data-role="sim-value"]');
       if (valEl) valEl.textContent = formatScoreFull(pct, sys);
@@ -581,60 +624,60 @@
      Event delegation
      --------------------------------------------------------------- */
   function onGridInput(e) {
-    var t = e.target;
-    var role = t.dataset.role;
+    var elm = e.target;
+    var role = elm.dataset.role;
     if (!role) return;
-    var subEl = t.closest("[data-subject]");
+    var subEl = elm.closest("[data-subject]");
     var sub = subEl && findSubject(subEl.dataset.subject);
 
-    if (role === "subject-name") { if (sub) { sub.name = t.value; scheduleSave(); updateSummary(); } return; }
+    if (role === "subject-name") { if (sub) { sub.name = elm.value; scheduleSave(); updateSummary(); } return; }
     if (!sub) return;
     var sys = APP.systems[state.system];
 
     if (role === "grade-name") {
-      var gEl = t.closest("[data-grade]");
+      var gEl = elm.closest("[data-grade]");
       var g = gEl && sub.grades.filter(function (x) { return x.id === gEl.dataset.grade; })[0];
-      if (g) { g.name = t.value; scheduleSave(); }
+      if (g) { g.name = elm.value; scheduleSave(); }
       return;
     }
     if (role === "grade-score") {
-      var gEl2 = t.closest("[data-grade]");
+      var gEl2 = elm.closest("[data-grade]");
       var g2 = gEl2 && sub.grades.filter(function (x) { return x.id === gEl2.dataset.grade; })[0];
       if (g2) {
-        var raw = t.value === "" ? null : parseFloat(t.value);
+        var raw = elm.value === "" ? null : parseFloat(elm.value);
         g2.scorePct = (raw == null || !isFinite(raw)) ? null : displayToPct(clamp(raw, sys.min, sys.max), sys);
         recalcSubject(sub);
       }
       return;
     }
     if (role === "grade-weight") {
-      var gEl3 = t.closest("[data-grade]");
+      var gEl3 = elm.closest("[data-grade]");
       var g3 = gEl3 && sub.grades.filter(function (x) { return x.id === gEl3.dataset.grade; })[0];
       if (g3) {
-        var raw3 = t.value === "" ? 0 : parseFloat(t.value);
+        var raw3 = elm.value === "" ? 0 : parseFloat(elm.value);
         g3.weightPct = isFinite(raw3) ? clamp(raw3, 0, 100) : 0;
         recalcSubject(sub);
       }
       return;
     }
-    if (role === "goal-custom") { onGoalCustomInput(t, sub, sys); return; }
-    if (role === "sim-slider") { onSimSliderInput(t, sub, sys); return; }
+    if (role === "goal-custom") { onGoalCustomInput(elm, sub, sys); return; }
+    if (role === "sim-slider") { onSimSliderInput(elm, sub, sys); return; }
   }
 
   function onGridChange(e) {
-    var t = e.target;
-    var role = t.dataset.role;
+    var elm = e.target;
+    var role = elm.dataset.role;
     if (!role) return;
-    var subEl = t.closest("[data-subject]");
+    var subEl = elm.closest("[data-subject]");
     var sub = subEl && findSubject(subEl.dataset.subject);
     if (!sub) return;
     var sys = APP.systems[state.system];
 
     if (role === "grade-pending") {
-      var gEl = t.closest("[data-grade]");
+      var gEl = elm.closest("[data-grade]");
       var g = gEl && sub.grades.filter(function (x) { return x.id === gEl.dataset.grade; })[0];
       if (g) {
-        g.pending = t.checked;
+        g.pending = elm.checked;
         var scoreInput = gEl.querySelector('[data-role="grade-score"], [data-role="grade-score-letter"]');
         if (scoreInput) scoreInput.disabled = g.pending;
         gEl.classList.toggle("is-pending", g.pending);
@@ -645,12 +688,12 @@
       return;
     }
     if (role === "grade-score-letter") {
-      var gEl2 = t.closest("[data-grade]");
+      var gEl2 = elm.closest("[data-grade]");
       var g2 = gEl2 && sub.grades.filter(function (x) { return x.id === gEl2.dataset.grade; })[0];
-      if (g2) { g2.scorePct = t.value === "" ? null : parseFloat(t.value); recalcSubject(sub); }
+      if (g2) { g2.scorePct = elm.value === "" ? null : parseFloat(elm.value); recalcSubject(sub); }
       return;
     }
-    if (role === "goal-custom-letter") { onGoalCustomInput(t, sub, sys); return; }
+    if (role === "goal-custom-letter") { onGoalCustomInput(elm, sub, sys); return; }
   }
 
   function onGridClick(e) {
@@ -664,8 +707,8 @@
     var sys = APP.systems[state.system];
 
     if (e.target.closest('[data-role="delete-subject"]')) {
-      if (state.subjects.length <= 1) { showToast("Necesitas al menos una asignatura."); return; }
-      if (!window.confirm('¿Eliminar "' + sub.name + '" y todas sus notas?')) return;
+      if (state.subjects.length <= 1) { showToast(t("subject.needAtLeastOne")); return; }
+      if (!window.confirm(t("subject.confirmDelete", { name: sub.name }))) return;
       state.subjects = state.subjects.filter(function (s) { return s.id !== sub.id; });
       delete simState[sub.id];
       renderAll();
@@ -692,7 +735,7 @@
   }
 
   /* ---------------------------------------------------------------
-     System switch
+     System switch (0-10 / 0-100 / A-F — independent of language)
      --------------------------------------------------------------- */
   function updateSystemSwitchUI() {
     $$('[data-system-switch] button').forEach(function (b) { b.classList.toggle("is-active", b.dataset.system === state.system); });
@@ -712,6 +755,80 @@
       var btn = e.target.closest("[data-system]");
       if (btn) onSystemChange(btn.dataset.system);
     });
+  }
+
+  /* ---------------------------------------------------------------
+     Language switch (ES / EN / PT)
+     --------------------------------------------------------------- */
+  function updateLangSwitchUI() {
+    $$('[data-lang-switch] button').forEach(function (b) { b.classList.toggle("is-active", b.dataset.lang === lang); });
+  }
+  function setLang(newLang) {
+    if (!I18N.dict[newLang] || newLang === lang) return;
+    lang = newLang;
+    try { localStorage.setItem(I18N.storageKey, lang); } catch (e) {}
+    applyLanguage();
+  }
+  function initLangSwitch() {
+    var el = $("[data-lang-switch]");
+    if (!el) return;
+    updateLangSwitchUI();
+    el.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-lang]");
+      if (btn) setLang(btn.dataset.lang);
+    });
+  }
+
+  function setMetaContent(selector, content) {
+    var el = document.querySelector(selector);
+    if (el) el.setAttribute("content", content);
+  }
+
+  function applyMeta() {
+    document.title = t("meta.title");
+    setMetaContent('meta[name="description"]', t("meta.description"));
+    setMetaContent('meta[property="og:title"]', t("meta.ogTitle"));
+    setMetaContent('meta[property="og:description"]', t("meta.ogDescription"));
+  }
+
+  function applyJsonLd() {
+    var appLd = document.getElementById("ld-webapp");
+    if (appLd) {
+      try {
+        var obj = JSON.parse(appLd.textContent);
+        obj.description = t("meta.description");
+        appLd.textContent = JSON.stringify(obj);
+      } catch (e) {}
+    }
+    var faqLd = document.getElementById("ld-faq");
+    if (faqLd) {
+      var mainEntity = [];
+      for (var i = 1; i <= 11; i++) {
+        var q = t("faq.q" + i), a = t("faq.a" + i);
+        if (q === "faq.q" + i) continue;
+        mainEntity.push({ "@type": "Question", "name": q, "acceptedAnswer": { "@type": "Answer", "text": a } });
+      }
+      faqLd.textContent = JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": mainEntity });
+    }
+  }
+
+  function applyStaticTranslations() {
+    $$("[data-i18n]").forEach(function (el) {
+      var key = el.dataset.i18n;
+      var val = t(key);
+      if (isHtmlKey(key)) el.innerHTML = val; else el.textContent = val;
+    });
+    $$("[data-i18n-aria]").forEach(function (el) { el.setAttribute("aria-label", t(el.dataset.i18nAria)); });
+    $$("[data-i18n-title]").forEach(function (el) { el.setAttribute("title", t(el.dataset.i18nTitle)); });
+  }
+
+  function applyLanguage() {
+    document.documentElement.lang = lang;
+    updateLangSwitchUI();
+    applyStaticTranslations();
+    applyMeta();
+    applyJsonLd();
+    renderAll();
   }
 
   /* ---------------------------------------------------------------
@@ -741,13 +858,13 @@
 
     ctx.fillStyle = "#182524";
     ctx.font = '700 34px "Plus Jakarta Sans", Arial, sans-serif';
-    ctx.fillText("Mis notas", padX, 68);
+    ctx.fillText(t("canvas.title"), padX, 68);
 
     ctx.fillStyle = "#5c6e6b";
     ctx.font = "500 15px Arial, sans-serif";
     var now = new Date();
-    var dateStr = now.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
-    ctx.fillText("NotaClara · " + dateStr, padX, 94);
+    var dateStr = now.toLocaleDateString(t("canvas.dateLocale"), { day: "numeric", month: "long", year: "numeric" });
+    ctx.fillText(t("canvas.brandLine", { date: dateStr }), padX, 94);
 
     var withData = state.subjects.map(function (s) { return { s: s, stats: computeSubjectStats(s) }; }).filter(function (x) { return x.stats.displayPct != null; });
     var overall = withData.length ? withData.reduce(function (a, x) { return a + x.stats.displayPct; }, 0) / withData.length : null;
@@ -758,7 +875,7 @@
     ctx.fillText(overall == null ? "—" : formatScoreFull(overall, sys), W - padX, 76);
     ctx.fillStyle = "#5c6e6b";
     ctx.font = "700 12px Arial, sans-serif";
-    ctx.fillText("MEDIA GENERAL", W - padX, 94);
+    ctx.fillText(t("canvas.overallLabel"), W - padX, 94);
     ctx.textAlign = "left";
 
     ctx.strokeStyle = "#dde8e4";
@@ -775,11 +892,11 @@
 
       ctx.fillStyle = "#182524";
       ctx.font = "700 19px Arial, sans-serif";
-      ctx.fillText(sub.name || "Asignatura", padX + 26, y + 18);
+      ctx.fillText(sub.name || t("canvas.defaultSubjectName"), padX + 26, y + 18);
 
       ctx.fillStyle = "#8a9a97";
       ctx.font = "500 12px Arial, sans-serif";
-      ctx.fillText(round1(stats.evaluatedWeight) + "% evaluado", padX + 26, y + 36);
+      ctx.fillText(t("canvas.evaluatedPct", { pct: round1(stats.evaluatedWeight) }), padX + 26, y + 36);
 
       ctx.textAlign = "right";
       ctx.fillStyle = zColor;
@@ -802,7 +919,7 @@
     ctx.beginPath(); ctx.moveTo(padX, H - footerH + 10); ctx.lineTo(W - padX, H - footerH + 10); ctx.stroke();
     ctx.fillStyle = "#8a9a97";
     ctx.font = "500 13px Arial, sans-serif";
-    ctx.fillText("Calculado con NotaClara — calculadora de nota media y de la nota que necesitas para aprobar.", padX, H - footerH + 42);
+    ctx.fillText(t("canvas.footer"), padX, H - footerH + 42);
 
     return canvas;
   }
@@ -828,29 +945,29 @@
     try {
       var canvas = buildSummaryCanvas();
       canvas.toBlob(function (blob) {
-        if (!blob) { showToast("No se pudo generar la imagen."); return; }
+        if (!blob) { showToast(t("toast.pngError")); return; }
         var url = URL.createObjectURL(blob);
         var a = document.createElement("a");
-        a.href = url; a.download = "mis-notas-notaclara.png";
+        a.href = url; a.download = t("export.filenameBase") + ".png";
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
-        showToast("Imagen descargada ✓");
+        showToast(t("toast.pngDone"));
       }, "image/png");
-    } catch (e) { showToast("No se pudo generar la imagen."); }
+    } catch (e) { showToast(t("toast.pngError")); }
   }
 
   function exportPDF() {
-    showToast("Preparando PDF…");
+    showToast(t("toast.preparingPdf"));
     loadScript("lib/vendor/jspdf.umd.min.js").then(function () {
       var canvas = buildSummaryCanvas();
       var jsPDFCtor = window.jspdf && window.jspdf.jsPDF;
       if (!jsPDFCtor) throw new Error("jsPDF no disponible");
       var doc = new jsPDFCtor({ orientation: canvas.width >= canvas.height ? "l" : "p", unit: "px", format: [canvas.width, canvas.height] });
       doc.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, canvas.width, canvas.height);
-      doc.save("mis-notas-notaclara.pdf");
-      showToast("PDF descargado ✓");
+      doc.save(t("export.filenameBase") + ".pdf");
+      showToast(t("toast.pdfDone"));
     }).catch(function () {
-      showToast("No se pudo generar el PDF. Prueba con la imagen.");
+      showToast(t("toast.pdfError"));
     });
   }
 
@@ -918,8 +1035,9 @@
   }
 
   function boot() {
-    safe(renderAll, "renderAll");
+    safe(applyLanguage, "applyLanguage"); // sets <html lang>, translates static copy, meta, JSON-LD, and renders the app
     safe(initSystemSwitch, "initSystemSwitch");
+    safe(initLangSwitch, "initLangSwitch");
     safe(initDelegation, "initDelegation");
     safe(initExport, "initExport");
     safe(initAdCorner, "initAdCorner");

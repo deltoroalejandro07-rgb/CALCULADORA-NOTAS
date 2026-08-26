@@ -180,7 +180,7 @@ input, select { font: inherit; color: inherit; }
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
 }
-.site-header .container { display: flex; align-items: center; justify-content: space-between; padding-block: .8rem; gap: 1rem; }
+.site-header .container { display: flex; align-items: center; justify-content: space-between; padding-block: .8rem; gap: 1rem; flex-wrap: wrap; }
 .brand { display: flex; align-items: center; gap: .55rem; font-weight: 800; font-size: 1.15rem; }
 .brand-mark {
   width: 34px; height: 34px; border-radius: 10px;
@@ -188,7 +188,8 @@ input, select { font: inherit; color: inherit; }
   display: flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0;
 }
 .brand-mark svg { width: 19px; height: 19px; }
-.header-actions { display: flex; align-items: center; gap: .5rem; }
+.header-actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; justify-content: flex-end; row-gap: .4rem; }
+.lang-switch button { padding: .4rem .6rem; min-height: 32px; }
 
 /* --- system switcher (segmented control) --- */
 .system-switch {

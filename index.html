@@ -21,11 +21,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap">
 
-<link rel="stylesheet" href="styles.css?v=20260825">
+<link rel="stylesheet" href="styles.css?v=20260826">
 
 <!-- TODO: gestor de consentimiento de cookies (CMP) del propietario antes de activar AdSense -->
 
-<script type="application/ld+json">
+<script type="application/ld+json" id="ld-webapp">
 {
   "@context": "https://schema.org",
   "@type": "WebApplication",
@@ -36,7 +36,7 @@
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
 }
 </script>
-<script type="application/ld+json">
+<script type="application/ld+json" id="ld-faq">
 {
   "@context": "https://schema.org",
   "@type": "FAQPage",
@@ -57,7 +57,7 @@
 </script>
 </head>
 <body>
-<a class="skip-link" href="#calculadora">Saltar a la calculadora</a>
+<a class="skip-link" href="#calculadora" data-i18n="nav.skipLink">Saltar a la calculadora</a>
 
 <header class="site-header">
   <div class="container">
@@ -66,8 +66,13 @@
       NotaClara
     </a>
     <div class="header-actions">
-      <a class="btn btn-ghost btn-sm" href="#como-funciona">Cómo funciona</a>
-      <a class="btn btn-ghost btn-sm" href="#faq">FAQ</a>
+      <a class="btn btn-ghost btn-sm" href="#como-funciona" data-i18n="nav.howItWorks">Cómo funciona</a>
+      <a class="btn btn-ghost btn-sm" href="#faq" data-i18n="nav.faq">FAQ</a>
+      <div class="system-switch lang-switch" data-lang-switch role="group" aria-label="ES / EN / PT">
+        <button type="button" data-lang="es">ES</button>
+        <button type="button" data-lang="en">EN</button>
+        <button type="button" data-lang="pt">PT</button>
+      </div>
     </div>
   </div>
 </header>
@@ -75,8 +80,8 @@
 <main id="top">
 
   <section class="hero container">
-    <h1 class="hero-title">La calculadora de nota media y de qué nota necesitas para aprobar</h1>
-    <p class="hero-subtitle">Añade tus evaluaciones con su peso, mira tu nota final en tiempo real y descubre exactamente qué te falta sacar para llegar a tu objetivo. Sin registro, sin nada que instalar.</p>
+    <h1 class="hero-title" data-i18n="hero.title">La calculadora de nota media y de qué nota necesitas para aprobar</h1>
+    <p class="hero-subtitle" data-i18n="hero.subtitle">Añade tus evaluaciones con su peso, mira tu nota final en tiempo real y descubre exactamente qué te falta sacar para llegar a tu objetivo. Sin registro, sin nada que instalar.</p>
   </section>
 
   <section class="tool-section container" id="calculadora">
@@ -92,7 +97,7 @@
     <div class="card summary summary-card" data-summary aria-live="polite"></div>
 
     <noscript>
-      <p style="text-align:center;padding:2rem;color:#5c6e6b;">Esta calculadora necesita JavaScript activado para funcionar. Actívalo en tu navegador para empezar a calcular tu nota media.</p>
+      <p style="text-align:center;padding:2rem;color:#5c6e6b;" data-i18n="noscript.text">Esta calculadora necesita JavaScript activado para funcionar. Actívalo en tu navegador para empezar a calcular tu nota media.</p>
     </noscript>
 
     <div class="subjects-grid" data-subjects></div>
@@ -101,22 +106,22 @@
       <div class="export-menu" data-export-menu>
         <button type="button" class="btn btn-primary" data-export-toggle>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-          Exportar mis notas
+          <span data-i18n="export.button">Exportar mis notas</span>
         </button>
         <div class="export-dropdown" data-export-dropdown>
-          <button type="button" data-export-png>🖼️ Descargar imagen (PNG)<small>Ideal para compartir en redes o chats</small></button>
-          <button type="button" data-export-pdf>📄 Descargar PDF<small>Se carga el generador solo la primera vez</small></button>
+          <button type="button" data-export-png>🖼️ <span data-i18n="export.png">Descargar imagen (PNG)</span><small data-i18n="export.pngHint">Ideal para compartir en redes o chats</small></button>
+          <button type="button" data-export-pdf>📄 <span data-i18n="export.pdf">Descargar PDF</span><small data-i18n="export.pdfHint">Se carga el generador solo la primera vez</small></button>
         </div>
       </div>
     </div>
 
     <p class="privacy-note">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-      100% privado — tus asignaturas y notas se guardan solo en este navegador, nunca se suben a ningún servidor ni requieren cuenta.
+      <span data-i18n="privacy.note">100% privado — tus asignaturas y notas se guardan solo en este navegador, nunca se suben a ningún servidor ni requieren cuenta.</span>
     </p>
 
     <div class="ad-slot ad-banner" aria-hidden="true">
-      <span>ANUNCIO<small>Publicidad</small></span>
+      <span><span data-i18n="ad.label">ANUNCIO</span><small data-i18n="ad.sublabel">Publicidad</small></span>
       <!-- PEGA AQUÍ TU CÓDIGO DE ADSENSE -->
     </div>
 
@@ -125,100 +130,105 @@
   <section class="section" id="como-funciona">
     <div class="container container--narrow">
       <div class="section-head">
-        <span class="eyebrow">Cómo funciona</span>
-        <h2>Qué es la nota media ponderada y cómo se calcula</h2>
-        <p>Es la media de varias notas donde cada una pesa distinto sobre el resultado final, según su importancia en la asignatura.</p>
+        <span class="eyebrow" data-i18n="howItWorks.eyebrow">Cómo funciona</span>
+        <h2 data-i18n="howItWorks.title">Qué es la nota media ponderada y cómo se calcula</h2>
+        <p data-i18n="howItWorks.intro">Es la media de varias notas donde cada una pesa distinto sobre el resultado final, según su importancia en la asignatura.</p>
       </div>
 
       <div class="steps">
         <div class="card step">
           <div class="step-num">1</div>
-          <h3>Añade tus evaluaciones</h3>
-          <p>Examen, trabajo, práctica, participación... cada una con su nombre y su peso en % sobre el total.</p>
+          <h3 data-i18n="howItWorks.step1Title">Añade tus evaluaciones</h3>
+          <p data-i18n="howItWorks.step1Desc">Examen, trabajo, práctica, participación... cada una con su nombre y su peso en % sobre el total.</p>
         </div>
         <div class="card step">
           <div class="step-num">2</div>
-          <h3>Multiplica nota × peso</h3>
-          <p>Cada nota se multiplica por su peso. Un examen del 60% con un 7 aporta 4,2 puntos a tu nota final.</p>
+          <h3 data-i18n="howItWorks.step2Title">Multiplica nota × peso</h3>
+          <p data-i18n="howItWorks.step2Desc">Cada nota se multiplica por su peso. Un examen del 60% con un 7 aporta 4,2 puntos a tu nota final.</p>
         </div>
         <div class="card step">
           <div class="step-num">3</div>
-          <h3>Suma y divide entre 100</h3>
-          <p>Se suman todas las aportaciones y se dividen entre 100 (porque los pesos son porcentajes). Ese es tu resultado.</p>
+          <h3 data-i18n="howItWorks.step3Title">Suma y divide entre 100</h3>
+          <p data-i18n="howItWorks.step3Desc">Se suman todas las aportaciones y se dividen entre 100 (porque los pesos son porcentajes). Ese es tu resultado.</p>
         </div>
       </div>
 
       <div class="card example-box">
-        <h3>Ejemplo numérico sencillo</h3>
+        <h3 data-i18n="howItWorks.exampleTitle">Ejemplo numérico sencillo</h3>
         <table class="example-table">
-          <thead><tr><th>Evaluación</th><th>Peso</th><th>Nota</th><th>Aporta</th></tr></thead>
+          <thead><tr>
+            <th data-i18n="howItWorks.tableEval">Evaluación</th>
+            <th data-i18n="howItWorks.tableWeight">Peso</th>
+            <th data-i18n="howItWorks.tableGrade">Nota</th>
+            <th data-i18n="howItWorks.tableContributes">Aporta</th>
+          </tr></thead>
           <tbody>
-            <tr><td>Examen</td><td>50%</td><td>8</td><td>4,0</td></tr>
-            <tr><td>Trabajo</td><td>30%</td><td>6</td><td>1,8</td></tr>
-            <tr><td>Participación</td><td>20%</td><td>9</td><td>1,8</td></tr>
+            <tr><td data-i18n="howItWorks.rowExam">Examen</td><td>50%</td><td>8</td><td data-i18n="howItWorks.contribExam">4,0</td></tr>
+            <tr><td data-i18n="howItWorks.rowWork">Trabajo</td><td>30%</td><td>6</td><td data-i18n="howItWorks.contribWork">1,8</td></tr>
+            <tr><td data-i18n="howItWorks.rowParticipation">Participación</td><td>20%</td><td>9</td><td data-i18n="howItWorks.contribParticipation">1,8</td></tr>
           </tbody>
-          <tfoot><tr><td colspan="3">Nota final</td><td>7,6</td></tr></tfoot>
+          <tfoot><tr><td colspan="3" data-i18n="howItWorks.finalGrade">Nota final</td><td data-i18n="howItWorks.finalValue">7,6</td></tr></tfoot>
         </table>
-        <p class="example-note">8×0,50 + 6×0,30 + 9×0,20 = 4,0 + 1,8 + 1,8 = <strong>7,6</strong>. Así de simple es la nota media ponderada — y es exactamente lo que la calculadora hace por ti, al instante y con cualquier número de evaluaciones.</p>
+        <p class="example-note" data-i18n="howItWorks.exampleNote">8×0,50 + 6×0,30 + 9×0,20 = 4,0 + 1,8 + 1,8 = <strong>7,6</strong>. Así de simple es la nota media ponderada — y es exactamente lo que la calculadora hace por ti, al instante y con cualquier número de evaluaciones.</p>
       </div>
     </div>
   </section>
 
   <div class="ad-slot ad-incontent" aria-hidden="true">
-    <span>ANUNCIO<small>Publicidad</small></span>
+    <span><span data-i18n="ad.label">ANUNCIO</span><small data-i18n="ad.sublabel">Publicidad</small></span>
     <!-- PEGA AQUÍ TU CÓDIGO DE ADSENSE -->
   </div>
 
   <section class="section" id="faq">
     <div class="container container--narrow">
       <div class="section-head">
-        <span class="eyebrow">Preguntas frecuentes</span>
-        <h2>Todo lo que necesitas saber</h2>
+        <span class="eyebrow" data-i18n="faq.eyebrow">Preguntas frecuentes</span>
+        <h2 data-i18n="faq.title">Todo lo que necesitas saber</h2>
       </div>
       <div class="faq-list">
         <details class="card faq-item">
-          <summary>¿Qué es la nota media ponderada y cómo se calcula? <span class="chev">▾</span></summary>
-          <div class="faq-a">Es la media de varias notas donde cada una cuenta más o menos según su peso (porcentaje) sobre la nota final. Se multiplica cada nota por su peso, se suman esos resultados y se divide entre 100. Por ejemplo, un examen que vale 60% con un 7 aporta 4,2 puntos a la nota final.</div>
+          <summary><span data-i18n="faq.q1">¿Qué es la nota media ponderada y cómo se calcula?</span> <span class="chev">▾</span></summary>
+          <div class="faq-a" data-i18n="faq.a1">Es la media de varias notas donde cada una cuenta más o menos según su peso (porcentaje) sobre la nota final. Se multiplica cada nota por su peso, se suman esos resultados y se divide entre 100. Por ejemplo, un examen que vale 60% con un 7 aporta 4,2 puntos a la nota final.</div>
         </details>
         <details class="card faq-item">
-          <summary>¿Qué nota necesito para aprobar el examen final? <span class="chev">▾</span></summary>
-          <div class="faq-a">Activa el «modo objetivo» en tu asignatura, marca ese examen como pendiente, elige «Aprobar» como objetivo (o escribe la nota exacta que quieres) y la calculadora te mostrará al instante la nota mínima que necesitas sacar en esa prueba para conseguirlo.</div>
+          <summary><span data-i18n="faq.q2">¿Qué nota necesito para aprobar el examen final?</span> <span class="chev">▾</span></summary>
+          <div class="faq-a" data-i18n="faq.a2">Activa el «modo objetivo» en tu asignatura, marca ese examen como pendiente, elige «Aprobar» como objetivo (o escribe la nota exacta que quieres) y la calculadora te mostrará al instante la nota mínima que necesitas sacar en esa prueba para conseguirlo.</div>
         </details>
         <details class="card faq-item">
-          <summary>¿Esta calculadora funciona para cualquier país o sistema educativo? <span class="chev">▾</span></summary>
-          <div class="faq-a">Sí. Puedes elegir entre la escala 0-10 con un decimal (habitual en España y Latinoamérica), la escala 0-100 (habitual en Estados Unidos y otros países) o el sistema de letras A-F, que se convierte automáticamente a un valor numérico equivalente. Cambiar de sistema no borra tus notas.</div>
+          <summary><span data-i18n="faq.q3">¿Esta calculadora funciona para cualquier país o sistema educativo?</span> <span class="chev">▾</span></summary>
+          <div class="faq-a" data-i18n="faq.a3">Sí. Puedes elegir entre la escala 0-10 con un decimal (habitual en España y Latinoamérica), la escala 0-100 (habitual en Estados Unidos y otros países) o el sistema de letras A-F, que se convierte automáticamente a un valor numérico equivalente. Cambiar de sistema no borra tus notas.</div>
         </details>
         <details class="card faq-item">
-          <summary>¿Qué pasa si mis pesos no suman 100%? <span class="chev">▾</span></summary>
-          <div class="faq-a">La calculadora te avisa de forma discreta de cuánto falta o sobra, pero sigue calculando la nota aproximada con los datos que ya tienes mientras terminas de ajustar los porcentajes. No es necesario que sumen exactamente 100% para ver un resultado orientativo.</div>
+          <summary><span data-i18n="faq.q4">¿Qué pasa si mis pesos no suman 100%?</span> <span class="chev">▾</span></summary>
+          <div class="faq-a" data-i18n="faq.a4">La calculadora te avisa de forma discreta de cuánto falta o sobra, pero sigue calculando la nota aproximada con los datos que ya tienes mientras terminas de ajustar los porcentajes. No es necesario que sumen exactamente 100% para ver un resultado orientativo.</div>
         </details>
         <details class="card faq-item">
-          <summary>¿Qué significa que el objetivo sea «matemáticamente imposible»? <span class="chev">▾</span></summary>
-          <div class="faq-a">Significa que, aunque sacaras la nota máxima en todo lo que te queda pendiente, no podrías alcanzar la nota final que has marcado como objetivo, porque el peso restante ya no es suficiente. La calculadora te muestra la nota máxima real a la que puedes aspirar.</div>
+          <summary><span data-i18n="faq.q5">¿Qué significa que el objetivo sea «matemáticamente imposible»?</span> <span class="chev">▾</span></summary>
+          <div class="faq-a" data-i18n="faq.a5">Significa que, aunque sacaras la nota máxima en todo lo que te queda pendiente, no podrías alcanzar la nota final que has marcado como objetivo, porque el peso restante ya no es suficiente. La calculadora te muestra la nota máxima real a la que puedes aspirar.</div>
         </details>
         <details class="card faq-item">
-          <summary>¿Mis notas se guardan en algún servidor? <span class="chev">▾</span></summary>
-          <div class="faq-a">No. Todo se guarda únicamente en tu navegador (localStorage), en tu propio dispositivo. Nadie más puede ver tus asignaturas ni tus notas, no hace falta registrarse y no se envía ningún dato a ningún servidor. Si borras los datos del navegador o cambias de dispositivo, tendrás que volver a introducirlas.</div>
+          <summary><span data-i18n="faq.q6">¿Mis notas se guardan en algún servidor?</span> <span class="chev">▾</span></summary>
+          <div class="faq-a" data-i18n="faq.a6">No. Todo se guarda únicamente en tu navegador (localStorage), en tu propio dispositivo. Nadie más puede ver tus asignaturas ni tus notas, no hace falta registrarse y no se envía ningún dato a ningún servidor. Si borras los datos del navegador o cambias de dispositivo, tendrás que volver a introducirlas.</div>
         </details>
         <details class="card faq-item">
-          <summary>¿Puedo llevar varias asignaturas a la vez? <span class="chev">▾</span></summary>
-          <div class="faq-a">Sí, puedes crear tantas asignaturas como quieras, cada una como una tarjeta independiente con su propio nombre, color y lista de notas. Arriba de todo verás un resumen con la media conjunta de todas tus asignaturas.</div>
+          <summary><span data-i18n="faq.q7">¿Puedo llevar varias asignaturas a la vez?</span> <span class="chev">▾</span></summary>
+          <div class="faq-a" data-i18n="faq.a7">Sí, puedes crear tantas asignaturas como quieras, cada una como una tarjeta independiente con su propio nombre, color y lista de notas. Arriba de todo verás un resumen con la media conjunta de todas tus asignaturas.</div>
         </details>
         <details class="card faq-item">
-          <summary>¿Qué es una nota de corte y cómo la uso aquí? <span class="chev">▾</span></summary>
-          <div class="faq-a">La nota de corte es la puntuación mínima que exige un centro, beca o proceso de admisión. Puedes usar el modo objetivo escribiendo esa nota de corte como meta personalizada para saber qué necesitas sacar en lo que te falta para alcanzarla.</div>
+          <summary><span data-i18n="faq.q8">¿Qué es una nota de corte y cómo la uso aquí?</span> <span class="chev">▾</span></summary>
+          <div class="faq-a" data-i18n="faq.a8">La nota de corte es la puntuación mínima que exige un centro, beca o proceso de admisión. Puedes usar el modo objetivo escribiendo esa nota de corte como meta personalizada para saber qué necesitas sacar en lo que te falta para alcanzarla.</div>
         </details>
         <details class="card faq-item">
-          <summary>Is this a grade calculator or a final grade calculator? <span class="chev">▾</span></summary>
-          <div class="faq-a">Es ambas cosas: funciona como calculadora de nota media (weighted grade calculator) para tu media ponderada actual, y como calculadora de «qué nota necesito para aprobar» (what grade do I need calculator) para calcular la nota final objetivo.</div>
+          <summary><span data-i18n="faq.q9">¿Es lo mismo que un «grade calculator» o una «calculadora de média ponderada»?</span> <span class="chev">▾</span></summary>
+          <div class="faq-a" data-i18n="faq.a9">Sí — NotaClara funciona igual en español, inglés y portugués. Si buscabas grade calculator o calculadora de média ponderada, estás en el sitio correcto. Cambia el idioma desde la cabecera cuando quieras.</div>
         </details>
         <details class="card faq-item">
-          <summary>¿Puedo exportar o compartir mis notas? <span class="chev">▾</span></summary>
-          <div class="faq-a">Sí, el botón «Exportar mis notas» genera una imagen o un PDF con el resumen de tus asignaturas y tu media, lista para guardar o compartir con quien quieras.</div>
+          <summary><span data-i18n="faq.q10">¿Puedo exportar o compartir mis notas?</span> <span class="chev">▾</span></summary>
+          <div class="faq-a" data-i18n="faq.a10">Sí, el botón «Exportar mis notas» genera una imagen o un PDF con el resumen de tus asignaturas y tu media, lista para guardar o compartir con quien quieras.</div>
         </details>
         <details class="card faq-item">
-          <summary>¿Los cálculos son exactos o solo orientativos? <span class="chev">▾</span></summary>
-          <div class="faq-a">Los cálculos matemáticos (media ponderada, nota mínima necesaria) son exactos según los datos que introduces. Aun así, cada centro educativo puede tener sus propias normas de redondeo o evaluación, así que usa el resultado como una guía fiable, no como el acta oficial de notas.</div>
+          <summary><span data-i18n="faq.q11">¿Los cálculos son exactos o solo orientativos?</span> <span class="chev">▾</span></summary>
+          <div class="faq-a" data-i18n="faq.a11">Los cálculos matemáticos (media ponderada, nota mínima necesaria) son exactos según los datos que introduces. Aun así, cada centro educativo puede tener sus propias normas de redondeo o evaluación, así que usa el resultado como una guía fiable, no como el acta oficial de notas.</div>
         </details>
       </div>
     </div>
@@ -228,25 +238,26 @@
 
 <footer class="site-footer">
   <div class="container footer-grid">
-    <span>© <span id="year">2026</span> NotaClara — hecho para estudiantes.</span>
+    <span>© <span id="year">2026</span> <span data-i18n="footer.copyright">NotaClara — hecho para estudiantes.</span></span>
     <nav class="footer-links">
-      <a href="privacidad.html">Privacidad</a>
-      <a href="aviso-legal.html">Aviso legal</a>
-      <a href="#faq">FAQ</a>
+      <a href="privacidad.html" data-i18n="footer.privacy">Privacidad</a>
+      <a href="aviso-legal.html" data-i18n="footer.legal">Aviso legal</a>
+      <a href="#faq" data-i18n="footer.faq">FAQ</a>
     </nav>
   </div>
 </footer>
 
 <aside class="ad-slot ad-corner" data-ad-corner aria-hidden="true">
-  <button type="button" class="ad-corner-close" data-role="ad-corner-close" aria-label="Cerrar anuncio">✕</button>
-  <span>ANUNCIO<small>Publicidad</small></span>
+  <button type="button" class="ad-corner-close" data-role="ad-corner-close" data-i18n-aria="ad.closeAria" aria-label="Cerrar anuncio">✕</button>
+  <span><span data-i18n="ad.label">ANUNCIO</span><small data-i18n="ad.sublabel">Publicidad</small></span>
   <!-- PEGA AQUÍ TU CÓDIGO DE ADSENSE -->
 </aside>
 
 <div class="toast" data-toast role="status" aria-live="polite"></div>
 
+<script defer src="lib/i18n.js"></script>
 <script defer src="lib/manifest.js"></script>
-<script defer src="main.js?v=20260825"></script>
+<script defer src="main.js?v=20260826"></script>
 <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>
