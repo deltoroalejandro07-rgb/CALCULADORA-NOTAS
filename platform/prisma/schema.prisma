@@ -1,0 +1,289 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// AUTH (Auth.js / NextAuth v5 - Prisma adapter)
+// ---------------------------------------------------------------------------
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ---------------------------------------------------------------------------
+// USUARIOS
+// ---------------------------------------------------------------------------
+
+enum Sex {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  emailVerified   DateTime?
+  name            String?
+  phone           String?
+  sex             Sex?
+  age             Int?
+  weightKg        Decimal?  @db.Decimal(5, 2)
+  heightCm        Decimal?  @db.Decimal(5, 2)
+  notifyReminders Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  accounts       Account[]
+  sessions       Session[]
+  stripeCustomer StripeCustomer?
+  intakeForms    IntakeForm[]
+  goals          Goal[]
+  trainingPlans  TrainingPlan[]
+  checkins       Checkin[]
+  payments       Payment[]
+}
+
+// ---------------------------------------------------------------------------
+// PAGOS (Stripe)
+// ---------------------------------------------------------------------------
+
+enum CardStatus {
+  PENDING
+  AUTHORIZED
+  FAILED
+}
+
+model StripeCustomer {
+  id                    String     @id @default(cuid())
+  userId                String     @unique
+  stripeCustomerId      String     @unique
+  stripePaymentMethodId String?
+  cardStatus            CardStatus @default(PENDING)
+  authorizedAt          DateTime?
+  createdAt             DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+model Payment {
+  id                    String        @id @default(cuid())
+  userId                String
+  trainingPlanId        String?       @unique
+  stripePaymentIntentId String?       @unique
+  amountCents           Int
+  currency              String        @default("eur")
+  status                PaymentStatus @default(PENDING)
+  createdAt             DateTime      @default(now())
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trainingPlan TrainingPlan? @relation(fields: [trainingPlanId], references: [id])
+}
+
+// ---------------------------------------------------------------------------
+// INTAKE
+// ---------------------------------------------------------------------------
+
+enum TrainingCategory {
+  STRENGTH
+  HYROX
+  RUNNING
+}
+
+enum TrainingHistory {
+  NEVER
+  IRREGULAR
+  REGULAR
+}
+
+enum EquipmentAccess {
+  FULL_GYM
+  BASIC_HOME
+  BODYWEIGHT
+}
+
+model IntakeForm {
+  id                    String           @id @default(cuid())
+  userId                String
+  category              TrainingCategory
+  trainingHistory       TrainingHistory
+  injuries              Json? // { has: boolean, notes?: string }
+  healthConditions      Json? // { heartOrBp, pregnancy, recentSurgery }
+  requiresMedicalNotice Boolean          @default(false)
+  daysPerWeek           Int
+  sessionDuration       String
+  equipment             EquipmentAccess
+  motivation            String?
+  commonAnswers         Json?
+  categoryAnswers       Json?
+  createdAt             DateTime         @default(now())
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trainingPlans TrainingPlan[]
+
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// OBJETIVO (versionado)
+// ---------------------------------------------------------------------------
+
+model Goal {
+  id                 String           @id @default(cuid())
+  userId             String
+  category           TrainingCategory
+  subGoal            String?
+  competitionDate    DateTime?
+  isFirstCompetition Boolean?
+  distance           String?
+  active             Boolean          @default(true)
+  supersededById     String?          @unique
+  createdAt          DateTime         @default(now())
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  supersededBy  Goal?          @relation("GoalSupersession", fields: [supersededById], references: [id])
+  supersedes    Goal?          @relation("GoalSupersession")
+  trainingPlans TrainingPlan[]
+
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// PLANES GENERADOS
+// ---------------------------------------------------------------------------
+
+enum PlanStatus {
+  ACTIVE
+  COMPLETED
+  SUPERSEDED
+}
+
+model TrainingPlan {
+  id                 String     @id @default(cuid())
+  userId             String
+  goalId             String
+  intakeFormId       String
+  checkinId          String?    @unique
+  monthNumber        Int
+  isFree             Boolean    @default(false)
+  status             PlanStatus @default(ACTIVE)
+  planJson           Json
+  aiNotes            Json?
+  weeksToCompetition Int?
+  generatedAt        DateTime   @default(now())
+  aiModel            String?
+  aiPromptVersion    String?
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goal       Goal       @relation(fields: [goalId], references: [id])
+  intakeForm IntakeForm @relation(fields: [intakeFormId], references: [id])
+  checkin    Checkin?   @relation("PlanEvaluatedBy", fields: [checkinId], references: [id])
+  checkins   Checkin[]  @relation("CheckinTargetsPlan")
+  payment    Payment?
+
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// CHECK-INS MENSUALES
+// ---------------------------------------------------------------------------
+
+enum AdherenceFeeling {
+  GREAT
+  OK_SKIPPED_SOME
+  STRUGGLED
+}
+
+enum SessionsCompleted {
+  ALMOST_ALL
+  ABOUT_HALF
+  FEW_OR_NONE
+}
+
+enum PerceivedEffort {
+  EASY
+  JUST_RIGHT
+  HARD
+  TOO_MUCH
+}
+
+enum PainLevel {
+  NONE
+  MILD
+  SEVERE
+}
+
+enum CompetitionStatus {
+  UNCHANGED
+  CANCELLED
+  CHANGED
+}
+
+model Checkin {
+  id                 String             @id @default(cuid())
+  userId             String
+  trainingPlanId     String
+  adherenceFeeling   AdherenceFeeling
+  sessionsCompleted  SessionsCompleted
+  perceivedEffort    PerceivedEffort
+  painReported       PainLevel
+  painLocation       String?
+  goalUnchanged      Boolean
+  newCategory        TrainingCategory?
+  newSubGoal         String?
+  weeklyChangesNote  String?
+  competitionStatus  CompetitionStatus?
+  newCompetitionDate DateTime?
+  competitionResult  String?
+  completedAt        DateTime           @default(now())
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trainingPlan  TrainingPlan  @relation("CheckinTargetsPlan", fields: [trainingPlanId], references: [id])
+  resultingPlan TrainingPlan? @relation("PlanEvaluatedBy")
+
+  @@index([userId])
+  @@index([trainingPlanId])
+}

@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+:root {
+  --color-base: #0a0c0b;
+  --color-surface: #12151a;
+  --color-surface-warm: #12140f;
+  --color-line: #202420;
+  --color-line-cool: #212630;
+  --color-primary: #edefea;
+  --color-secondary: #7a8079;
+  --color-accent-green: #34d399;
+  --color-accent-blue: #4f8fe8;
+}
+
+@theme inline {
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
+
+  --color-base: var(--color-base);
+  --color-surface: var(--color-surface);
+  --color-surface-warm: var(--color-surface-warm);
+  --color-line: var(--color-line);
+  --color-line-cool: var(--color-line-cool);
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-accent-green: var(--color-accent-green);
+  --color-accent-blue: var(--color-accent-blue);
+
+  --radius-card: 18px;
+  --radius-pill: 100px;
+}
+
+body {
+  background: var(--color-base);
+  color: var(--color-primary);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+}
+
+.gradient-cta {
+  background: linear-gradient(
+    90deg,
+    var(--color-accent-green) 0%,
+    var(--color-accent-blue) 100%
+  );
+}
+
+.gradient-progress {
+  background: linear-gradient(
+    90deg,
+    var(--color-accent-green) 0%,
+    var(--color-accent-blue) 100%
+  );
+}
