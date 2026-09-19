@@ -5,6 +5,7 @@ export { Input } from "./Input";
 export { Field } from "./Field";
 export { OptionCard } from "./OptionCard";
 export { ProgressBar } from "./ProgressBar";
+export { StepShell } from "./StepShell";
 export {
   ChevronLeftIcon,
   ChevronRightIcon,

@@ -1,7 +1,8 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getLatestPlan, getCurrentPlanPosition } from "@/lib/plans";
-import { Card, ProgressBar } from "@/components/ui";
+import { Button, Card, ProgressBar } from "@/components/ui";
 import { WeekPills } from "@/components/plan/WeekPills";
 import { DayCard } from "@/components/plan/DayCard";
 
@@ -66,6 +67,20 @@ export default async function PlanWeekPage({
           />
         ))}
       </div>
+
+      {weekNumber === plan.data.weeks.length && (
+        <Card className="flex flex-col gap-3 text-center">
+          <p className="text-sm text-secondary">
+            ¿Terminaste este bloque de 4 semanas? Cuéntanos cómo te fue para
+            ajustar tu plan del próximo mes.
+          </p>
+          <Link href="/checkin">
+            <Button variant="secondary" className="w-full">
+              Hacer mi check-in mensual
+            </Button>
+          </Link>
+        </Card>
+      )}
     </main>
   );
 }

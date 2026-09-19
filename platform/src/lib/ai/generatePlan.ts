@@ -36,7 +36,7 @@ export async function generateTrainingPlan(params: {
 
   const systemBlocks = [
     { type: "text" as const, text: COMMON_PROMPT },
-    { type: "text" as const, text: CATEGORY_PROMPTS[intakeForm.category] },
+    { type: "text" as const, text: CATEGORY_PROMPTS[goal.category] },
   ];
   if (checkin && previousPlan) {
     systemBlocks.push({ type: "text" as const, text: ADJUSTMENTS_PROMPT });

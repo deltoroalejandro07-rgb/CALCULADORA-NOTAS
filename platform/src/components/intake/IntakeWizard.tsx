@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { StepShell } from "./StepShell";
+import { StepShell } from "@/components/ui/StepShell";
 import { emptyDraft, IntakeDraft } from "./types";
 import { PersonalStep, isPersonalStepValid } from "./steps/PersonalStep";
 import { HealthStep, isHealthStepValid } from "./steps/HealthStep";

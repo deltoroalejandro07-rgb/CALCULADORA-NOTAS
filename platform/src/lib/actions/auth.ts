@@ -8,6 +8,6 @@ export async function requestMagicLink(formData: FormData) {
 
   await signIn("nodemailer", {
     email,
-    redirectTo: "/onboarding/intake",
+    redirectTo: "/onboarding/tarjeta",
   });
 }
