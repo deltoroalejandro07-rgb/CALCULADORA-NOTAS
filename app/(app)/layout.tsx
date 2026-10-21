@@ -1,4 +1,5 @@
-import { BarraInferior } from "@/components/app/barra-inferior";
+import { Suspense } from "react";
+import { Barra, BarraInferior } from "@/components/app/barra-inferior";
 import { Sincronizador } from "@/components/app/sincronizador";
 
 // Carcasa estática (se precarga y abre al instante); cada página trae
@@ -8,7 +9,9 @@ export default function LayoutApp({ children }: LayoutProps<"/">) {
     <>
       <Sincronizador />
       <div className="pb-barra mx-auto min-h-dvh max-w-lg">{children}</div>
-      <BarraInferior />
+      <Suspense fallback={<Barra ruta={null} />}>
+        <BarraInferior />
+      </Suspense>
     </>
   );
 }

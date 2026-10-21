@@ -53,3 +53,17 @@ body {
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* Números de la ruta del día sobre los círculos del mapa */
+.leaflet-tooltip.numero-ruta {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 0;
+}
+.leaflet-tooltip.numero-ruta::before {
+  display: none;
+}

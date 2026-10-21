@@ -14,13 +14,16 @@ const ENLACES = [
 ];
 
 export function BarraInferior() {
-  const ruta = usePathname();
+  return <Barra ruta={usePathname()} />;
+}
 
+/** Sin ruta (mientras carga una página con parámetros) no marca ninguna pestaña. */
+export function Barra({ ruta }: { ruta: string | null }) {
   return (
     <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-borde bg-superficie/95 backdrop-blur">
       <ul className="mx-auto grid max-w-lg grid-cols-5">
         {ENLACES.map(({ href, texto, icono: Icono, central }) => {
-          const activo = ruta === href || ruta.startsWith(href + "/");
+          const activo = !!ruta && (ruta === href || ruta.startsWith(href + "/"));
           return (
             <li key={href} className="flex justify-center">
               {central ? (
