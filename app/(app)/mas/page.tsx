@@ -1,5 +1,6 @@
 import { BarChart3, ChevronRight, FileSpreadsheet, Package, Tag, UserCog } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { Cabecera, Cargando, Tarjeta } from "@/components/app/piezas";
 import { usuarioActual } from "@/lib/auth";
@@ -20,13 +21,13 @@ async function Contenido() {
   const esAdmin = usuario.rol === "admin";
 
   const secciones = [
-    { texto: "Catálogo de productos", icono: Package, paso: 4 },
-    { texto: "Ofertas", icono: Tag, paso: 4 },
+    { texto: "Catálogo de productos", icono: Package, href: "/catalogo" },
+    { texto: "Ofertas", icono: Tag, href: "/ofertas" },
     ...(esAdmin
       ? [
-          { texto: "Panel de dirección", icono: BarChart3, paso: 6 },
-          { texto: "Usuarios", icono: UserCog, paso: 0 },
-          { texto: "Importar / exportar clientes", icono: FileSpreadsheet, paso: 7 },
+          { texto: "Panel de dirección", icono: BarChart3, href: "/direccion" },
+          { texto: "Usuarios", icono: UserCog, href: "/ajustes/usuarios" },
+          { texto: "Importar / exportar clientes", icono: FileSpreadsheet, href: "/ajustes/importar" },
         ]
       : []),
   ];
@@ -43,12 +44,13 @@ async function Contenido() {
         </Tarjeta>
 
         <ul className="divide-y divide-borde overflow-hidden rounded-2xl border border-borde bg-superficie">
-          {secciones.map(({ texto, icono: Icono, paso }) => (
-            <li key={texto} className="flex min-h-14 items-center gap-3 px-4 text-suave">
-              <Icono className="h-5 w-5" aria-hidden />
-              <span className="flex-1">{texto}</span>
-              <span className="text-xs">{paso ? `Paso ${paso}` : "Pronto"}</span>
-              <ChevronRight className="h-5 w-5" aria-hidden />
+          {secciones.map(({ texto, icono: Icono, href }) => (
+            <li key={texto}>
+              <Link href={href} className="flex min-h-14 items-center gap-3 px-4 active:bg-fondo">
+                <Icono className="h-5 w-5 text-marca" aria-hidden />
+                <span className="flex-1">{texto}</span>
+                <ChevronRight className="h-5 w-5 text-suave" aria-hidden />
+              </Link>
             </li>
           ))}
         </ul>

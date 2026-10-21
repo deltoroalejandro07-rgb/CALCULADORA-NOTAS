@@ -12,6 +12,17 @@
   --marca: #0f766e;
   --marca-texto: #ffffff;
   --marca-suave: #ccfbf1;
+  /* Gráficos: paleta categórica validada (orden fijo) y rampa ordinal azul */
+  --serie-1: #2a78d6;
+  --serie-2: #eb6834;
+  --serie-3: #1baf7a;
+  --serie-4: #eda100;
+  --serie-5: #e87ba4;
+  --serie-6: #008300;
+  --ordinal-1: #86b6ef;
+  --ordinal-2: #3987e5;
+  --ordinal-3: #1c5cab;
+  --neutro-grafico: #c9c7c1;
 }
 
 [data-theme="dark"] {
@@ -23,6 +34,16 @@
   --marca: #2dd4bf;
   --marca-texto: #042f2e;
   --marca-suave: #123c39;
+  --serie-1: #3987e5;
+  --serie-2: #d95926;
+  --serie-3: #199e70;
+  --serie-4: #c98500;
+  --serie-5: #d55181;
+  --serie-6: #008300;
+  --ordinal-1: #184f95;
+  --ordinal-2: #2a78d6;
+  --ordinal-3: #6da7ec;
+  --neutro-grafico: #4a4a46;
 }
 
 @theme inline {

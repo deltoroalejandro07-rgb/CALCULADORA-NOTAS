@@ -54,7 +54,7 @@ await page.getByRole("button", { name: "Entrar" }).click();
 await page.waitForURL("**/hoy");
 
 paso("Visita con cobertura: cliente cercano, pide oferta, productos, nota, foto, consentimiento");
-await page.getByRole("link", { name: "Registrar visita" }).click();
+await page.getByRole("link", { name: "Registrar visita", exact: true }).click();
 await page.getByText("Más cercanos a ti").waitFor();
 await page.screenshot({ path: `${SALIDA}/10-visita-vacia.png` });
 const primero = page.locator("ul li button").first();

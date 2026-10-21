@@ -573,3 +573,18 @@ create policy "fotos visitas: borrar" on storage.objects for delete to authentic
 
 create policy "productos: admin escribe" on storage.objects for all to authenticated
   using (bucket_id = 'productos' and es_admin()) with check (bucket_id = 'productos' and es_admin());
+
+-- ---- migrations/20261023000003_campanas_comerciales.sql ----
+-- =====================================================================
+-- Cada comercial envía las campañas a sus propios clientes desde su móvil
+-- (enlaces wa.me / mailto), así que también puede crear campañas.
+-- =====================================================================
+
+drop policy if exists campanas_ver on campanas;
+
+create policy campanas_ver on campanas for select to authenticated
+  using (es_admin() or creado_por = auth.uid()
+         or exists (select 1 from mensajes m where m.campana_id = campanas.id and m.comercial_id = auth.uid()));
+
+create policy campanas_crear on campanas for insert to authenticated
+  with check (creado_por = auth.uid());

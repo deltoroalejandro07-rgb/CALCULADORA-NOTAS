@@ -1,10 +1,8 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import { latLngBounds } from "leaflet";
-import Link from "next/link";
-import { useEffect } from "react";
-import { CircleMarker, MapContainer, Polyline, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
+import L from "leaflet";
+import { useEffect, useRef } from "react";
 import type { EstadoCliente } from "@/lib/dominio/tipos";
 import { TEXTO_ESTADO } from "@/lib/dominio/tipos";
 
@@ -24,16 +22,7 @@ const COLOR: Record<EstadoCliente, string> = {
   perdido: "#ef4444",
 };
 
-function Encuadre({ puntos, yo }: { puntos: PuntoMapa[]; yo?: { lat: number; lng: number } | null }) {
-  const mapa = useMap();
-  useEffect(() => {
-    const coords: [number, number][] = puntos.map((p) => [p.lat, p.lng]);
-    if (yo) coords.push([yo.lat, yo.lng]);
-    if (coords.length === 1) mapa.setView(coords[0], 15);
-    else if (coords.length > 1) mapa.fitBounds(latLngBounds(coords), { padding: [30, 30] });
-  }, [mapa, puntos, yo]);
-  return null;
-}
+const escapar = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 interface Props {
   puntos: PuntoMapa[];
@@ -43,47 +32,54 @@ interface Props {
   alto?: string;
 }
 
+/**
+ * Leaflet manejado a mano: cada vez que el efecto se ejecuta crea su propio contenedor
+ * y lo destruye al limpiar. Next 16 oculta y vuelve a mostrar pantallas (<Activity>)
+ * repitiendo los efectos, y así el mapa nunca reutiliza un contenedor ya usado.
+ */
 export default function Mapa({ puntos, ruta, yo, alto = "60vh" }: Props) {
-  const centro: [number, number] = puntos[0] ? [puntos[0].lat, puntos[0].lng] : yo ? [yo.lat, yo.lng] : [40.4168, -3.7038];
-  return (
-    <div className="isolate overflow-hidden rounded-2xl border border-borde" style={{ height: alto }}>
-      <MapContainer center={centro} zoom={13} scrollWheelZoom className="h-full w-full">
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <Encuadre puntos={puntos} yo={yo} />
-        {ruta && puntos.length > 1 && (
-          <Polyline positions={[...(yo ? [[yo.lat, yo.lng] as [number, number]] : []), ...puntos.map((p) => [p.lat, p.lng] as [number, number])]} pathOptions={{ color: "#0f766e", dashArray: "6 8", weight: 3 }} />
-        )}
-        {yo && (
-          <CircleMarker center={[yo.lat, yo.lng]} radius={8} pathOptions={{ color: "#fff", weight: 3, fillColor: "#2563eb", fillOpacity: 1 }}>
-            <Tooltip>Estás aquí</Tooltip>
-          </CircleMarker>
-        )}
-        {puntos.map((p, i) => (
-          <CircleMarker
-            key={p.id}
-            center={[p.lat, p.lng]}
-            radius={ruta ? 13 : 9}
-            pathOptions={{ color: "#fff", weight: 2, fillColor: COLOR[p.estado], fillOpacity: 0.95 }}
-          >
-            {ruta && (
-              <Tooltip permanent direction="center" className="numero-ruta">
-                {i + 1}
-              </Tooltip>
-            )}
-            <Popup>
-              <strong>{p.nombre}</strong>
-              <br />
-              {TEXTO_ESTADO[p.estado]}
-              {p.detalle ? ` · ${p.detalle}` : ""}
-              <br />
-              <Link href={`/clientes/${p.id}`}>Ver ficha →</Link>
-            </Popup>
-          </CircleMarker>
-        ))}
-      </MapContainer>
-    </div>
-  );
+  const caja = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!caja.current) return;
+    const div = document.createElement("div");
+    div.style.height = "100%";
+    div.style.width = "100%";
+    caja.current.appendChild(div);
+
+    const mapa = L.map(div, { zoomControl: true, attributionControl: true });
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19,
+    }).addTo(mapa);
+
+    const coords: L.LatLngTuple[] = puntos.map((p) => [p.lat, p.lng]);
+    const miPos: L.LatLngTuple[] = yo ? [[yo.lat, yo.lng]] : [];
+    if (yo) {
+      L.circleMarker([yo.lat, yo.lng], { radius: 8, color: "#fff", weight: 3, fillColor: "#2563eb", fillOpacity: 1 }).bindTooltip("Estás aquí").addTo(mapa);
+    }
+    if (ruta && puntos.length > 1) {
+      L.polyline([...miPos, ...coords], { color: "#0f766e", dashArray: "6 8", weight: 3 }).addTo(mapa);
+    }
+    puntos.forEach((p, i) => {
+      const m = L.circleMarker([p.lat, p.lng], { radius: ruta ? 13 : 9, color: "#fff", weight: 2, fillColor: COLOR[p.estado], fillOpacity: 0.95 })
+        .bindPopup(
+          `<strong>${escapar(p.nombre)}</strong><br>${TEXTO_ESTADO[p.estado]}${p.detalle ? ` · ${escapar(p.detalle)}` : ""}<br><a href="/clientes/${p.id}">Ver ficha →</a>`,
+        )
+        .addTo(mapa);
+      if (ruta) m.bindTooltip(String(i + 1), { permanent: true, direction: "center", className: "numero-ruta" });
+    });
+
+    const todos = [...coords, ...miPos];
+    if (todos.length === 1) mapa.setView(todos[0], 15);
+    else if (todos.length > 1) mapa.fitBounds(L.latLngBounds(todos), { padding: [30, 30] });
+    else mapa.setView([40.4168, -3.7038], 12);
+
+    return () => {
+      mapa.remove();
+      div.remove();
+    };
+  }, [puntos, ruta, yo]);
+
+  return <div ref={caja} className="isolate overflow-hidden rounded-2xl border border-borde" style={{ height: alto }} />;
 }

@@ -35,7 +35,7 @@ const esquemaCliente = z.object({
   notas: texto,
   proxima_accion: texto,
   proxima_accion_fecha: z.preprocess(vacioANull, z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable()),
-  comercial_id: z.preprocess(vacioANull, z.string().uuid().nullable()),
+  comercial_id: z.preprocess(vacioANull, z.guid().nullable()),
 });
 
 export interface EstadoFormulario {
@@ -82,7 +82,7 @@ export async function guardarCliente(_: EstadoFormulario, form: FormData): Promi
 }
 
 const esquemaConsentimiento = z.object({
-  cliente_id: z.string().uuid(),
+  cliente_id: z.guid(),
   canal: z.enum(["whatsapp", "email"]),
   otorgado: z.enum(["si", "no"]).transform((v) => v === "si"),
   origen: z.enum(["verbal_visita", "formulario_papel", "whatsapp", "email", "web"]),
@@ -99,13 +99,13 @@ export async function registrarConsentimiento(form: FormData) {
 }
 
 const esquemaPedido = z.object({
-  cliente_id: z.string().uuid(),
+  cliente_id: z.guid(),
   fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   notas: z.string().max(2000).optional(),
   lineas: z
     .array(
       z.object({
-        producto_id: z.string().uuid().nullable(),
+        producto_id: z.guid().nullable(),
         descripcion: z.string().min(1),
         cantidad: z.number().positive(),
         precio_unitario: z.number().min(0),
@@ -138,7 +138,7 @@ export async function crearPedido(datos: z.input<typeof esquemaPedido>): Promise
 export async function borrarCliente(form: FormData) {
   const usuario = await usuarioActual();
   if (usuario.rol !== "admin") throw new Error("Solo el administrador puede borrar clientes");
-  const id = z.string().uuid().parse(form.get("id"));
+  const id = z.guid().parse(form.get("id"));
   const sb = await supabaseServidor();
   const { data: fotos } = await sb.from("visita_fotos").select("storage_path, visitas!inner(cliente_id)").eq("visitas.cliente_id", id);
   if (fotos?.length) await sb.storage.from("visitas").remove(fotos.map((f) => f.storage_path));
