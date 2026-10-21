@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+/* Modo oscuro por atributo: lo fija un script en <head> según la preferencia guardada o la del sistema. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  --fondo: #f6f7f9;
+  --superficie: #ffffff;
+  --texto: #111827;
+  --texto-suave: #5b6472;
+  --borde: #e3e6eb;
+  --marca: #0f766e;
+  --marca-texto: #ffffff;
+  --marca-suave: #ccfbf1;
+}
+
+[data-theme="dark"] {
+  --fondo: #0d1117;
+  --superficie: #161b22;
+  --texto: #e6edf3;
+  --texto-suave: #9aa4b2;
+  --borde: #2a313c;
+  --marca: #2dd4bf;
+  --marca-texto: #042f2e;
+  --marca-suave: #123c39;
+}
+
+@theme inline {
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-texto: var(--texto);
+  --color-suave: var(--texto-suave);
+  --color-borde: var(--borde);
+  --color-marca: var(--marca);
+  --color-marca-texto: var(--marca-texto);
+  --color-marca-suave: var(--marca-suave);
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--fondo);
+  color: var(--texto);
+}
+
+/* Espacio para la barra inferior y la zona segura del iPhone */
+.pb-barra {
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
