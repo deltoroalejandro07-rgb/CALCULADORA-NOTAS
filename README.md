@@ -9,8 +9,8 @@ App web (PWA, móvil primero) para el equipo comercial de una distribuidora al c
 | Paso | Contenido | Estado |
 |---|---|---|
 | 0 | Proyecto base, base de datos y RLS, login por código, navegación, datos demo | ✅ |
-| 1 | Registro de visita (sin cobertura) | ⏳ |
-| 2 | Lista y ficha de cliente | |
+| 1 | Registro de visita (funciona sin cobertura) | ✅ |
+| 2 | Lista y ficha de cliente | ⏳ |
 | 3 | Panel Hoy con mapa | |
 | 4 | Catálogo y ofertas | |
 | 5 | Plantillas, mensajes y campañas | |
@@ -53,7 +53,20 @@ npm run dev             # http://localhost:3000
 
 `demo:borrar` y `demo:cargar` usan la base local; para otra base: `DATABASE_URL="postgresql://…" npm run demo:borrar`.
 
-Recorrido con capturas (con la app en marcha): `CHROMIUM=/ruta/a/chromium node tests/e2e-capturas.mjs carpeta-salida`.
+Recorridos con navegador (con `npm run build && npm start` en marcha; `CHROMIUM` es opcional):
+
+- `node tests/e2e-capturas.mjs carpeta` — login, navegación y permisos.
+- `node tests/e2e-visita.mjs carpeta` — visita con y sin cobertura, arranque sin red y subida automática.
+
+## Cómo funciona sin cobertura
+
+- Al abrir la app con red se guarda en el móvil (IndexedDB) una copia de **tus** clientes y del catálogo.
+- Al guardar una visita se escribe primero en el móvil y después se sube. Si no hay red, queda en una cola y se sube sola al volver la conexión, al abrir la app o cada 2 minutos. Un aviso arriba indica cuántas quedan.
+- Los IDs se generan en el móvil y la subida es idempotente: reintentar nunca duplica visitas, fotos ni consentimientos.
+- Las fotos se comprimen en el móvil (~1600 px, JPEG) antes de guardarse.
+- Un service worker (`public/sw.js`, solo en producción) guarda la pantalla "Nueva visita" para poder abrirla sin red. No guarda páginas con datos.
+- Al cerrar sesión se borran los datos del móvil (avisando si queda algo sin subir).
+- iPhone: Safari no sincroniza en segundo plano; la cola se sube al abrir la app con cobertura.
 
 ## Variables de entorno
 
@@ -69,6 +82,7 @@ Recorrido con capturas (con la app en marcha): `CHROMIUM=/ruta/a/chromium node t
 app/                  rutas (login, (app)/hoy, clientes, visita, mensajes, mas)
 components/           UI
 lib/dominio/          reglas de negocio puras (estado, temperatura, tipos)
+lib/offline/          copia local (IndexedDB) y cola de sincronización
 lib/supabase/         clientes de Supabase y tipos generados
 proxy.ts              renueva la sesión y redirige al login
 supabase/migrations/  esquema, triggers y políticas RLS

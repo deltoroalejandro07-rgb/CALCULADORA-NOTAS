@@ -59,7 +59,7 @@ await page.getByRole("link", { name: "Hoy" }).click();
 await page.getByText("Seguimientos vencidos").waitFor();
 await page.screenshot({ path: `${SALIDA}/06-hoy-oscuro.png` });
 await page.getByRole("link", { name: "Registrar visita" }).click();
-await page.getByText("Paso 1 del plan").waitFor();
+await page.getByRole("button", { name: /Guardar visita/ }).waitFor();
 await page.getByRole("link", { name: "Más" }).click();
 await page.getByRole("radio", { name: "Claro" }).click();
 await page.getByRole("button", { name: "Cerrar sesión" }).click();

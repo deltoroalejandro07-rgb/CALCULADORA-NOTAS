@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
-import { Cabecera, Proximamente } from "@/components/app/piezas";
+import { Suspense } from "react";
+import { Cabecera } from "@/components/app/piezas";
+import { FormularioVisita } from "@/components/visita/formulario-visita";
 
 export const metadata: Metadata = { title: "Nueva visita" };
 
+// Página estática sin datos del usuario: los lee del propio móvil (IndexedDB),
+// así el service worker puede servirla sin cobertura.
 export default function PaginaNuevaVisita() {
   return (
     <>
-      <Cabecera titulo="Nueva visita" subtitulo="Menos de 30 segundos" />
-      <Proximamente paso={1}>
-        Buscar o crear cliente, resultado con botones grandes, productos, nota o dictado, foto y próxima acción. Funcionará sin cobertura.
-      </Proximamente>
+      <Cabecera titulo="Nueva visita" />
+      <Suspense>
+        <FormularioVisita />
+      </Suspense>
     </>
   );
 }

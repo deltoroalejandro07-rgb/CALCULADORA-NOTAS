@@ -75,7 +75,10 @@ create policy consent_crear on consentimientos for insert to authenticated
   with check (puede_ver_cliente(cliente_id) and registrado_por = auth.uid());
 
 -- ---------- visitas ----------
-create policy visitas_ver    on visitas for select to authenticated using (puede_ver_visita(id));
+-- Con columnas de la propia fila (no buscando por id): así funciona también en
+-- INSERT ... ON CONFLICT DO NOTHING, que comprueba la fila antes de que exista.
+create policy visitas_ver    on visitas for select to authenticated
+  using (es_admin() or comercial_id = auth.uid() or puede_ver_cliente(cliente_id));
 create policy visitas_crear  on visitas for insert to authenticated
   with check (es_admin() or (comercial_id = auth.uid() and puede_ver_cliente(cliente_id)));
 create policy visitas_editar on visitas for update to authenticated

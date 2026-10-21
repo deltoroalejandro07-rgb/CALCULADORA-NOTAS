@@ -4,6 +4,7 @@ import { LogOut, Monitor, Moon, Sun } from "lucide-react";
 import { useState, useSyncExternalStore } from "react";
 import { Boton } from "@/components/ui/boton";
 import { cn } from "@/lib/cn";
+import { baseLocal } from "@/lib/offline/db";
 import { supabaseNavegador } from "@/lib/supabase/navegador";
 
 type Tema = "claro" | "oscuro" | "sistema";
@@ -74,8 +75,18 @@ export function CerrarSesion() {
       className="w-full"
       cargando={cargando}
       onClick={async () => {
+        const db = baseLocal();
+        const pendientes = await db.cola.count();
+        if (
+          pendientes &&
+          !confirm(`Tienes ${pendientes} ${pendientes === 1 ? "registro" : "registros"} sin subir. Si cierras sesión ahora se perderán. ¿Salir igualmente?`)
+        )
+          return;
         setCargando(true);
         await supabaseNavegador().auth.signOut();
+        // Los datos de clientes guardados en el móvil no deben quedar para el siguiente usuario
+        await db.delete();
+        navigator.serviceWorker?.controller?.postMessage("borrar-cache");
         // Recarga completa: borra de memoria las pantallas y datos del usuario anterior
         window.location.replace("/login");
       }}
