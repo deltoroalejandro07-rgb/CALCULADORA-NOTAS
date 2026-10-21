@@ -99,4 +99,8 @@ tests/                Vitest + recorrido Playwright
 
 ## Desplegar
 
-Lo detallaré paso a paso al terminar la fase 1 (cuentas de Supabase, Vercel, Meta y Brevo). En resumen: crear proyecto Supabase en región UE → `supabase link` + `supabase db push` → importar el repo en Vercel con las variables de entorno → en Supabase, Auth → URL Configuration, poner la URL de Vercel.
+- **Supabase** (región UE): pegar `supabase/instalar.sql` en el SQL Editor (se regenera con `npm run db:instalar-sql`). Después, Authentication → Sign In / Providers → desactivar *Allow new users to sign up*.
+- **Vercel:** importar el repositorio (rama `main`) con las tres variables de entorno de arriba. Las funciones corren en `dub1` (Irlanda, junto a la base de datos; ver `vercel.json`).
+- **Supabase → Authentication → URL Configuration:** *Site URL* = la URL de Vercel, y añadir `https://TU-APP.vercel.app/**` en *Redirect URLs*.
+- **Primer administrador:** Authentication → Users → Add user, y en el SQL Editor: `update perfiles set rol = 'admin' where email = '…';`
+- **Correo:** el SMTP de serie de Supabase solo envía a miembros del equipo y pocos emails por hora. Para los comerciales hay que configurar SMTP propio (Brevo) en Authentication → Emails → SMTP Settings, y entonces poner en la plantilla *Magic Link* el código `{{ .Token }}`.
