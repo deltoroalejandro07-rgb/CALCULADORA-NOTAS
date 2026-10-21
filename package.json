@@ -13,7 +13,8 @@
     "db:reset": "supabase db reset",
     "db:tipos": "supabase gen types typescript --local > lib/supabase/tipos-bd.ts",
     "demo:borrar": "psql \"${DATABASE_URL:-postgresql://postgres:postgres@127.0.0.1:54322/postgres}\" -f supabase/seed/borrar_demo.sql",
-    "demo:cargar": "psql \"${DATABASE_URL:-postgresql://postgres:postgres@127.0.0.1:54322/postgres}\" -f supabase/seed/datos_demo.sql"
+    "demo:cargar": "psql \"${DATABASE_URL:-postgresql://postgres:postgres@127.0.0.1:54322/postgres}\" -f supabase/seed/datos_demo.sql",
+    "db:instalar-sql": "bash supabase/generar-instalar.sh"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
