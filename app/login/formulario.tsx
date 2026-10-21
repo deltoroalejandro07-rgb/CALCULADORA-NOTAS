@@ -13,7 +13,11 @@ export function FormularioLogin() {
   const [codigo, setCodigo] = useState("");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(
-    motivo === "sin-acceso" ? "Tu usuario está desactivado. Habla con el administrador." : null,
+    motivo === "sin-acceso"
+      ? "Tu usuario está desactivado. Habla con el administrador."
+      : motivo === "enlace"
+        ? "El enlace ha caducado o ya se usó. Pide uno nuevo."
+        : null,
   );
 
   async function pedirCodigo(e: React.FormEvent) {
@@ -22,8 +26,9 @@ export function FormularioLogin() {
     setError(null);
     const { error } = await supabaseNavegador().auth.signInWithOtp({
       email: email.trim().toLowerCase(),
-      // Solo entran usuarios invitados por el administrador
-      options: { shouldCreateUser: false },
+      // Solo entran usuarios invitados por el administrador. Según la plantilla de
+      // email llega un código, un enlace (a /auth/confirmar) o ambos.
+      options: { shouldCreateUser: false, emailRedirectTo: `${window.location.origin}/auth/confirmar` },
     });
     setCargando(false);
     if (error) {
@@ -77,12 +82,13 @@ export function FormularioLogin() {
       <Boton type="submit" cargando={cargando} className="w-full">
         Enviarme un código
       </Boton>
-      <p className="text-center text-sm text-suave">Te llegará un código de 6 cifras por email.</p>
+      <p className="text-center text-sm text-suave">Te llegará un email para entrar.</p>
     </form>
   ) : (
     <form onSubmit={verificar} className="space-y-4">
       <p className="text-sm text-suave">
-        Hemos enviado un código a <strong className="text-texto">{email}</strong>.
+        Hemos enviado un email a <strong className="text-texto">{email}</strong>. Escribe aquí el código o, si trae un
+        enlace, ábrelo <strong className="text-texto">en este mismo móvil y navegador</strong>.
       </p>
       <label className="block">
         <span className="mb-1.5 block text-sm font-medium">Código</span>

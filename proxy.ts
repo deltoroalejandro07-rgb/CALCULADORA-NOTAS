@@ -22,7 +22,9 @@ export async function proxy(request: NextRequest) {
   );
 
   const { data } = await supabase.auth.getClaims();
-  const publica = request.nextUrl.pathname.startsWith("/login");
+  const ruta = request.nextUrl.pathname;
+  if (ruta.startsWith("/auth/")) return respuesta; // enlace del email: lo resuelve la propia ruta
+  const publica = ruta.startsWith("/login");
 
   if (!data?.claims && !publica) {
     const url = request.nextUrl.clone();
