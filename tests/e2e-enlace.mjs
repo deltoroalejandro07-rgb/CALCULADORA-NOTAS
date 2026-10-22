@@ -1,19 +1,17 @@
 // Acceso pulsando el enlace del email (lo que manda la plantilla por defecto de Supabase).
+// Caso real del móvil: se pide en un navegador y el enlace se abre en OTRO (Mail → Safari,
+// Gmail → su navegador interno). Debe funcionar igual.
 // Uso: node tests/e2e-enlace.mjs   (con Supabase local y la app en :3000)
-import { chromium, devices } from "@playwright/test";
 import assert from "node:assert/strict";
+import { abrirNavegador, APP, MAILPIT } from "./e2e-util.mjs";
 
-const APP = "http://localhost:3000";
-const MAILPIT = "http://127.0.0.1:54324";
-
-const navegador = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {});
-const page = await (await navegador.newContext({ ...devices["iPhone 13"], locale: "es-ES" })).newPage();
-
+const pidiendo = await abrirNavegador();
 await fetch(`${MAILPIT}/api/v1/messages`, { method: "DELETE" });
-await page.goto(`${APP}/login`);
-await page.getByLabel("Tu email").fill("luis@demo.local");
-await page.getByRole("button", { name: "Enviarme un código" }).click();
-await page.getByLabel("Código").waitFor();
+await pidiendo.page.goto(`${APP}/login`);
+await pidiendo.page.getByLabel("Tu email").fill("luis@demo.local");
+await pidiendo.page.getByRole("button", { name: "Enviarme un código" }).click();
+await pidiendo.page.getByLabel("Código").waitFor();
+await pidiendo.navegador.close();
 
 let enlace;
 for (let i = 0; i < 20 && !enlace; i++) {
@@ -26,15 +24,19 @@ for (let i = 0; i < 20 && !enlace; i++) {
   if (!enlace) await new Promise((r) => setTimeout(r, 500));
 }
 assert.ok(enlace, "el email debe traer enlace");
-await page.goto(enlace);
-await page.waitForURL("**/hoy");
-await page.getByText("Hola, Luis").waitFor();
-console.log("✓ Entrada por enlace → /hoy como Luis");
+
+// Otro navegador, sin ninguna cookie del que pidió el acceso
+const otro = await abrirNavegador();
+await otro.page.goto(enlace);
+await otro.page.waitForURL("**/hoy");
+await otro.page.getByText("Hola, Luis").waitFor();
+console.log("✓ Enlace abierto en otro navegador → /hoy como Luis");
+await otro.navegador.close();
 
 // Un enlace ya usado no debe dar acceso
-await page.context().clearCookies();
-await page.goto(enlace);
-await page.waitForURL("**/login**");
-await page.getByText(/caducado o ya se usó|no tiene acceso/).waitFor();
+const tercero = await abrirNavegador();
+await tercero.page.goto(enlace);
+await tercero.page.waitForURL("**/login**");
+await tercero.page.getByText(/caducado o ya se usó/).waitFor();
 console.log("✓ Enlace reutilizado → vuelve al login con aviso");
-await navegador.close();
+await tercero.navegador.close();

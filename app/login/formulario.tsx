@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Boton } from "@/components/ui/boton";
-import { supabaseNavegador } from "@/lib/supabase/navegador";
+import { supabaseEnvioAcceso, supabaseNavegador } from "@/lib/supabase/navegador";
 
 export function FormularioLogin() {
   const router = useRouter();
@@ -24,7 +24,7 @@ export function FormularioLogin() {
     e.preventDefault();
     setCargando(true);
     setError(null);
-    const { error } = await supabaseNavegador().auth.signInWithOtp({
+    const { error } = await supabaseEnvioAcceso().auth.signInWithOtp({
       email: email.trim().toLowerCase(),
       // Solo entran usuarios invitados por el administrador. Según la plantilla de
       // email llega un código, un enlace (a /auth/confirmar) o ambos.
@@ -88,7 +88,7 @@ export function FormularioLogin() {
     <form onSubmit={verificar} className="space-y-4">
       <p className="text-sm text-suave">
         Hemos enviado un email a <strong className="text-texto">{email}</strong>. Escribe aquí el código o, si trae un
-        enlace, ábrelo <strong className="text-texto">en este mismo móvil y navegador</strong>.
+        enlace, púlsalo.
       </p>
       <label className="block">
         <span className="mb-1.5 block text-sm font-medium">Código</span>
