@@ -16,6 +16,29 @@ interface Usuario {
   clientes: number;
 }
 
+/** Contraseña fácil de dictar por teléfono: palabra + 4 cifras (p. ej. «barril4821»). */
+function generarContrasena() {
+  const palabras = ["barril", "terraza", "vermut", "cafe", "tapas", "botella", "pedido", "ruta", "cana", "menu"];
+  const n = new Uint32Array(2);
+  crypto.getRandomValues(n);
+  return `${palabras[n[0] % palabras.length]}${String(1000 + (n[1] % 9000))}`;
+}
+
+function CampoContrasena() {
+  const [valor, setValor] = useState("");
+  return (
+    <label className="block text-sm font-medium">
+      Contraseña
+      <div className="mt-1 flex gap-2">
+        <input name="contrasena" required minLength={8} value={valor} onChange={(e) => setValor(e.target.value)} autoComplete="off" placeholder="mínimo 8 caracteres" className={`${campo} mt-0 flex-1`} />
+        <button type="button" onClick={() => setValor(generarContrasena())} className="rounded-xl border border-borde px-3 text-sm font-medium">
+          Generar
+        </button>
+      </div>
+    </label>
+  );
+}
+
 const campo = "mt-1 min-h-12 w-full rounded-xl border border-borde bg-superficie px-3 outline-none focus:border-marca";
 
 export function GestionUsuarios({ yo, usuarios, claveConfigurada, urlApp }: { yo: string; usuarios: Usuario[]; claveConfigurada: boolean; urlApp: string | null }) {
@@ -74,6 +97,7 @@ export function GestionUsuarios({ yo, usuarios, claveConfigurada, urlApp }: { yo
             Email
             <input name="email" type="email" required inputMode="email" placeholder="ana@tuempresa.es" className={campo} />
           </label>
+          <CampoContrasena />
           <label className="block text-sm font-medium">
             Rol
             <select name="rol" defaultValue="comercial" className={campo}>
@@ -84,7 +108,7 @@ export function GestionUsuarios({ yo, usuarios, claveConfigurada, urlApp }: { yo
           {alta.error && <p className="text-sm text-red-600">{alta.error}</p>}
           {alta.ok && (
             <p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-100">
-              ✓ {alta.ok} Dile que abra {urlApp ?? window.location.origin}, escriba su email y use el código o enlace que le llegue.
+              ✓ {alta.ok} Pásale estos datos y la dirección {urlApp ?? window.location.origin}. Podrá cambiar la contraseña en Más.
             </p>
           )}
           <Boton type="submit" cargando={creando} className="w-full">
@@ -96,6 +120,7 @@ export function GestionUsuarios({ yo, usuarios, claveConfigurada, urlApp }: { yo
       <section>
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-suave">Equipo ({activos.length} activos)</h2>
         {aviso.error && <p className="mb-2 text-sm text-red-600">{aviso.error}</p>}
+        {aviso.ok && aviso.ok !== "Hecho." && <p className="mb-2 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-100">✓ {aviso.ok}</p>}
         <ul className="space-y-2">
           {usuarios.map((u) => (
             <li key={u.id} className={cn("rounded-2xl border border-borde bg-superficie p-4", !u.activo && "opacity-60")}>
@@ -120,8 +145,21 @@ export function GestionUsuarios({ yo, usuarios, claveConfigurada, urlApp }: { yo
                   <option value="admin">Admin</option>
                 </select>
               </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  disabled={pendiente}
+                  onClick={() => {
+                    const nueva = prompt(`Nueva contraseña para ${u.nombre} (mínimo 8 caracteres):`, generarContrasena());
+                    if (nueva) cambiar({ id: u.id, accion: "contrasena", contrasena: nueva.trim() });
+                  }}
+                  className="min-h-10 rounded-lg border border-borde px-3 text-sm font-medium"
+                >
+                  Cambiar contraseña
+                </button>
+              </div>
               {u.id !== yo && (
-                <div className="mt-3 flex flex-wrap items-center gap-2">
+                <div className="mt-2 flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     disabled={pendiente}

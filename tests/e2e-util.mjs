@@ -42,6 +42,7 @@ async function codigoDe(email) {
 export async function entrar(page, email) {
   await fetch(`${MAILPIT}/api/v1/messages`, { method: "DELETE" });
   await page.goto(`${APP}/login`);
+  await page.getByRole("button", { name: "Prefiero recibir un email para entrar" }).click();
   await page.getByLabel("Tu email").fill(email);
   await page.getByRole("button", { name: "Enviarme un código" }).click();
   await page.getByLabel("Código").fill(await codigoDe(email));

@@ -33,3 +33,14 @@ export function fechaHora(valor: string | Date | null | undefined): string {
 export function euros(valor: number | string | null | undefined): string {
   return valor == null || valor === "" ? "—" : fmtEuros.format(Number(valor));
 }
+
+const fmtDiaMadrid = new Intl.DateTimeFormat("en-CA", { timeZone: ZONA });
+
+/**
+ * Días naturales entre dos instantes contados en hora de Madrid. Da lo mismo en el
+ * servidor (UTC) que en el móvil, así no cambia el texto al hidratar.
+ */
+export function diasNaturales(desde: string | Date, hasta: string | Date = new Date()): number {
+  const dia = (v: string | Date) => Date.parse(fmtDiaMadrid.format(aFecha(v)) + "T00:00:00Z");
+  return Math.round((dia(hasta) - dia(desde)) / 86_400_000);
+}

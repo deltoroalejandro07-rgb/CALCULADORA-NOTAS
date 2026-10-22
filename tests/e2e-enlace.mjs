@@ -8,6 +8,7 @@ import { abrirNavegador, APP, MAILPIT } from "./e2e-util.mjs";
 const pidiendo = await abrirNavegador();
 await fetch(`${MAILPIT}/api/v1/messages`, { method: "DELETE" });
 await pidiendo.page.goto(`${APP}/login`);
+await pidiendo.page.getByRole("button", { name: "Prefiero recibir un email para entrar" }).click();
 await pidiendo.page.getByLabel("Tu email").fill("luis@demo.local");
 await pidiendo.page.getByRole("button", { name: "Enviarme un código" }).click();
 await pidiendo.page.getByLabel("Código").waitFor();

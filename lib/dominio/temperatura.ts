@@ -1,4 +1,4 @@
-import { differenceInCalendarDays } from "date-fns";
+import { diasNaturales } from "../formato";
 import type { EstadoCliente, ResultadoVisita } from "./tipos";
 
 export type Temperatura = "caliente" | "templado" | "frio";
@@ -32,7 +32,7 @@ interface DatosTemperatura {
 export function calcularTemperatura(c: DatosTemperatura, hoy: Date = new Date()): Temperatura {
   if (c.estado === "perdido" || !c.ultimo_resultado_at || !c.ultimo_resultado) return "frio";
 
-  const dias = differenceInCalendarDays(hoy, new Date(c.ultimo_resultado_at));
+  const dias = diasNaturales(c.ultimo_resultado_at, hoy);
   if (dias > DIAS_TEMPLADO) return "frio";
 
   if (POSITIVOS.includes(c.ultimo_resultado)) return dias <= DIAS_CALIENTE ? "caliente" : "templado";

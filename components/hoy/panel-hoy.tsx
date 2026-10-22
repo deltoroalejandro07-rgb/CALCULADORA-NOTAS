@@ -9,7 +9,7 @@ import { cn } from "@/lib/cn";
 import { enlaceRutaGoogle, longitudRuta, MAX_PARADAS_ENLACE, ordenarRuta } from "@/lib/dominio/ruta";
 import { TEXTO_RESULTADO, TEXTO_TIPO_NEGOCIO, type EstadoCliente, type ResultadoVisita, type TipoNegocio } from "@/lib/dominio/tipos";
 import { fechaDentroDe, textoDistancia } from "@/lib/dominio/visita";
-import { fecha } from "@/lib/formato";
+import { diasNaturales, fecha } from "@/lib/formato";
 import { useUbicacion } from "@/lib/navegador";
 
 interface ClienteHoy {
@@ -31,7 +31,7 @@ interface ClienteHoy {
   is_seed: boolean;
 }
 
-const dias = (ahora: number, desde: string) => Math.floor((ahora - new Date(desde).getTime()) / 86_400_000);
+const dias = (ahora: number, desde: string) => diasNaturales(desde, new Date(ahora));
 
 function Fila({ c, detalle, rojo }: { c: ClienteHoy; detalle: string; rojo?: boolean }) {
   return (
@@ -144,7 +144,7 @@ export function PanelHoy({ clientes }: { clientes: ClienteHoy[] }) {
 
       <Seccion titulo="Vencidos" icono={AlarmClock} clase="text-red-600" filtro="vencidos" total={g.vencidos.length}>
         {g.vencidos.slice(0, 5).map((c) => (
-          <Fila key={c.id} c={c} rojo detalle={`${c.proxima_accion ?? "Seguimiento"} · ${fecha(c.proxima_accion_fecha)} (hace ${dias(ahora, c.proxima_accion_fecha + "T12:00:00")} d)`} />
+          <Fila key={c.id} c={c} rojo detalle={`${c.proxima_accion ?? "Seguimiento"} · ${fecha(c.proxima_accion_fecha)} (hace ${dias(ahora, c.proxima_accion_fecha!)} d)`} />
         ))}
       </Seccion>
 

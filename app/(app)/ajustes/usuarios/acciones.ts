@@ -15,6 +15,7 @@ const esquemaAlta = z.object({
   nombre: z.string().trim().min(2, "Pon el nombre"),
   email: z.string().trim().toLowerCase().email("Email no válido"),
   rol: z.enum(["comercial", "admin"]),
+  contrasena: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
 });
 
 export async function crearUsuario(_: Resultado, form: FormData): Promise<Resultado> {
@@ -24,9 +25,10 @@ export async function crearUsuario(_: Resultado, form: FormData): Promise<Result
   const admin = supabaseAdmin();
   if (!admin) return { error: "Falta configurar SUPABASE_SECRET_KEY en Vercel (ver instrucciones abajo)." };
 
-  // Sin email de invitación: el comercial entra con su email y recibe el código de acceso
+  // Sin email de invitación: el comercial entra con su email y esta contraseña
   const { data, error } = await admin.auth.admin.createUser({
     email: r.data.email,
+    password: r.data.contrasena,
     email_confirm: true,
     user_metadata: { nombre: r.data.nombre },
   });
@@ -37,23 +39,31 @@ export async function crearUsuario(_: Resultado, form: FormData): Promise<Result
   const { error: e2 } = await sb.from("perfiles").update({ nombre: r.data.nombre, rol: r.data.rol }).eq("id", data.user.id);
   if (e2) return { error: e2.message };
   refresh();
-  return { ok: `${r.data.nombre} ya puede entrar con ${r.data.email}.` };
+  return { ok: `${r.data.nombre} ya puede entrar con ${r.data.email} y la contraseña «${r.data.contrasena}».` };
 }
 
 const esquemaCambio = z.object({
   id: z.guid(),
-  accion: z.enum(["rol", "activar", "desactivar", "traspasar"]),
+  accion: z.enum(["rol", "activar", "desactivar", "traspasar", "contrasena"]),
   rol: z.enum(["comercial", "admin"]).optional(),
   destino: z.guid().optional(),
+  contrasena: z.string().optional(),
 });
 
 export async function cambiarUsuario(form: FormData): Promise<Resultado> {
   const yo = await exigirAdmin();
   const d = esquemaCambio.parse(Object.fromEntries(form));
-  if (d.id === yo.id && d.accion !== "traspasar") return { error: "No puedes cambiar tu propio rol ni desactivarte." };
+  if (d.id === yo.id && d.accion !== "traspasar" && d.accion !== "contrasena") return { error: "No puedes cambiar tu propio rol ni desactivarte." };
   const sb = await supabaseServidor();
   const admin = supabaseAdmin();
 
+  if (d.accion === "contrasena") {
+    if (!d.contrasena || d.contrasena.length < 8) return { error: "La contraseña debe tener al menos 8 caracteres." };
+    if (!admin) return { error: "Falta configurar SUPABASE_SECRET_KEY en Vercel." };
+    const { error } = await admin.auth.admin.updateUserById(d.id, { password: d.contrasena });
+    if (error) return { error: error.message };
+    return { ok: `Contraseña cambiada a «${d.contrasena}».` };
+  }
   if (d.accion === "rol" && d.rol) {
     const { error } = await sb.from("perfiles").update({ rol: d.rol }).eq("id", d.id);
     if (error) return { error: error.message };

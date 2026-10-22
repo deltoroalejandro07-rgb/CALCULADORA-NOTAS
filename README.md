@@ -16,6 +16,8 @@ App web instalable (PWA, móvil primero) para el equipo comercial de una distrib
 | **Mensajes** | Historial de envíos, plantillas con variables, envío individual y **campañas por segmento** (abre WhatsApp/email con el texto personalizado y lo registra). Solo a clientes con consentimiento; aviso de baja automático. |
 | **Más** | Catálogo (destacados, nº de interesados), ofertas con segmento y vista previa, tema claro/oscuro, cerrar sesión. Para el administrador: panel de dirección, usuarios e importar/exportar. |
 
+**Acceso:** email y contraseña (el administrador la pone al dar de alta y cada uno puede cambiarla); como alternativa, código/enlace por email.
+
 **Roles:** el *administrador* lo ve todo y gestiona catálogo, ofertas, plantillas, usuarios e importación. El *comercial* ve y edita solo sus clientes (lo garantiza RLS en la base de datos, no solo la interfaz), registra visitas y pedidos y lanza campañas a sus clientes.
 
 ## Arrancar en local
@@ -31,7 +33,7 @@ npm run db:reset        # migraciones + usuarios y datos de ejemplo
 npm run dev             # http://localhost:3000
 ```
 
-**Entrar en local:** usa uno de estos emails; el código llega al buzón de pruebas http://127.0.0.1:54324.
+**Entrar en local:** «Prefiero recibir un email para entrar» con uno de estos emails; el código llega al buzón de pruebas http://127.0.0.1:54324 (los usuarios demo no tienen contraseña).
 
 | Email | Rol |
 |---|---|
@@ -103,7 +105,7 @@ tests/                Vitest y recorridos Playwright
 2. **Vercel:** importar el repositorio (rama `main`) con las tres variables de entorno. Las funciones corren en `dub1` (Irlanda, junto a la base de datos; `vercel.json`).
 3. **Supabase → Authentication → URL Configuration:** *Site URL* = URL de Vercel; *Redirect URLs* += `https://TU-APP.vercel.app/**`.
 4. **Primer administrador:** *Authentication → Users → Add user* y en el SQL Editor `update perfiles set rol = 'admin' where email = '…';`
-5. **Correo propio (Brevo)** para que los comerciales reciban el código: ver `docs/GUIA-CUENTAS.md`.
+5. **Comerciales:** *Más → Usuarios* con email y contraseña (requiere `SUPABASE_SECRET_KEY`). El correo propio (Brevo) es opcional: ver `docs/GUIA-CUENTAS.md`.
 
 Cada push a `main` se publica solo en Vercel. Si un cambio añade una migración nueva, hay que ejecutarla en el SQL Editor de producción.
 

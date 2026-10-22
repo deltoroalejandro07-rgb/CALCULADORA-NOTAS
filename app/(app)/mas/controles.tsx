@@ -95,3 +95,56 @@ export function CerrarSesion() {
     </Boton>
   );
 }
+
+export function CambiarContrasena() {
+  const [abierto, setAbierto] = useState(false);
+  const [nueva, setNueva] = useState("");
+  const [repetida, setRepetida] = useState("");
+  const [estado, setEstado] = useState<{ ok?: string; error?: string }>({});
+  const [guardando, setGuardando] = useState(false);
+
+  if (!abierto) {
+    return (
+      <button type="button" onClick={() => setAbierto(true)} className="text-sm font-medium text-marca underline">
+        Cambiar mi contraseña
+      </button>
+    );
+  }
+  const campo = "mt-1 min-h-12 w-full rounded-xl border border-borde bg-superficie px-3 outline-none focus:border-marca";
+  return (
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (nueva.length < 8) return setEstado({ error: "Mínimo 8 caracteres." });
+        if (nueva !== repetida) return setEstado({ error: "Las dos contraseñas no coinciden." });
+        setGuardando(true);
+        const { error } = await supabaseNavegador().auth.updateUser({ password: nueva });
+        setGuardando(false);
+        if (error) return setEstado({ error: /different|same/i.test(error.message) ? "Tiene que ser distinta de la actual." : "No se ha podido cambiar. ¿Hay conexión?" });
+        setEstado({ ok: "Contraseña cambiada. Úsala la próxima vez que entres." });
+        setNueva("");
+        setRepetida("");
+      }}
+      className="space-y-3"
+    >
+      <label className="block text-sm font-medium">
+        Nueva contraseña
+        <input type="password" autoComplete="new-password" value={nueva} onChange={(e) => setNueva(e.target.value)} className={campo} />
+      </label>
+      <label className="block text-sm font-medium">
+        Repítela
+        <input type="password" autoComplete="new-password" value={repetida} onChange={(e) => setRepetida(e.target.value)} className={campo} />
+      </label>
+      {estado.error && <p className="text-sm text-red-600">{estado.error}</p>}
+      {estado.ok && <p className="text-sm text-emerald-700 dark:text-emerald-300">✓ {estado.ok}</p>}
+      <div className="flex gap-2">
+        <Boton type="submit" cargando={guardando} className="flex-1">
+          Guardar
+        </Boton>
+        <Boton type="button" variante="secundario" onClick={() => setAbierto(false)}>
+          Cerrar
+        </Boton>
+      </div>
+    </form>
+  );
+}

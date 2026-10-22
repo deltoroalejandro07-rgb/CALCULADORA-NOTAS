@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Cabecera, Cargando, Tarjeta } from "@/components/app/piezas";
 import { usuarioActual } from "@/lib/auth";
-import { CerrarSesion, SelectorTema } from "./controles";
+import { CambiarContrasena, CerrarSesion, SelectorTema } from "./controles";
 
 export const metadata: Metadata = { title: "Más" };
 
@@ -41,6 +41,9 @@ async function Contenido() {
           <p className="text-sm text-suave">
             {usuario.email} · {esAdmin ? "Administrador" : "Comercial"}
           </p>
+          <div className="mt-3">
+            <CambiarContrasena />
+          </div>
         </Tarjeta>
 
         <ul className="divide-y divide-borde overflow-hidden rounded-2xl border border-borde bg-superficie">

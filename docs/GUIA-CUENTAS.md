@@ -8,7 +8,7 @@ Qué cuentas necesita el CRM, qué está ya hecho y cómo terminar lo que falta.
 | **Vercel** | Publicar la app | Gratis (plan Hobby) | ✅ Publicada en `crm-comercial-mu.vercel.app` |
 | **Clave secreta de Supabase en Vercel** | Dar de alta usuarios desde el CRM | — | ⏳ Paso 1 |
 | **Actualizar la base de datos** | Cambios de esquema nuevos | — | ⏳ Paso 2 |
-| **Brevo** (correo) | Que a los comerciales les llegue el código de acceso | Gratis hasta 300 emails/día | ⏳ Paso 3 |
+| **Brevo** (correo) | Solo si quieres entrar con código por email o, en fase 2, campañas por email | Gratis hasta 300 emails/día | Opcional |
 | **Meta – WhatsApp Business** | Fase 2: envío automático y respuestas en la app | Pago por conversación | Fase 2 |
 
 ---
@@ -40,9 +40,9 @@ Migraciones pendientes de aplicar en producción:
 
 > Si algún día montas un proyecto de Supabase nuevo, basta con pegar `supabase/instalar.sql`, que ya incluye todas las migraciones.
 
-## Paso 3 · Correo propio con Brevo (antes de dar acceso a los comerciales)
+## Paso 3 (opcional) · Correo propio con Brevo
 
-El correo de serie de Supabase **solo envía a los miembros de tu cuenta de Supabase** y unos pocos emails por hora. Para que cada comercial reciba su acceso hace falta un servidor de correo (SMTP). Brevo es gratis hasta 300 emails al día y tiene servidores en la UE.
+**Con email y contraseña no hace falta.** Solo si prefieres que entren con un código por email (o para las campañas por email de la fase 2). El correo de serie de Supabase **solo envía a los miembros de tu cuenta de Supabase** y unos pocos emails por hora; Brevo es gratis hasta 300 emails al día y tiene servidores en la UE.
 
 ### 3.1 Crear la cuenta y el remitente
 1. Regístrate en **https://www.brevo.com** (plan *Free*).
@@ -82,13 +82,15 @@ Así sirve tanto el código (imprescindible con la app instalada en iPhone) como
 ## Paso 4 · Instalar la app en el móvil
 
 - **Android (Chrome):** abre `https://crm-comercial-mu.vercel.app`, entra, y en el menú **⋮ → Instalar aplicación** (o *Añadir a pantalla de inicio*).
-- **iPhone (Safari):** abre la dirección, pulsa **Compartir ⬆︎ → Añadir a pantalla de inicio**. Dentro de la app instalada entra con el **código** (requiere el paso 3).
+- **iPhone (Safari):** abre la dirección, pulsa **Compartir ⬆︎ → Añadir a pantalla de inicio**. Dentro de la app instalada entra con tu **email y contraseña**.
 
 La primera vez abre la app con cobertura: a partir de ahí, «Nueva visita» funciona sin red.
 
 ## Paso 5 · Dar de alta a los comerciales
 
-**Más → Usuarios → Dar de alta**: nombre y email. Dile que abra la app, escriba su email y use el código que le llegue.
+**Más → Usuarios → Dar de alta**: nombre, email y contraseña (botón *Generar* para una fácil de dictar). Pásale la dirección de la app, su email y la contraseña; podrá cambiarla en **Más → Cambiar mi contraseña**. Si la olvida, en Usuarios → **Cambiar contraseña**.
+
+**Tu propia contraseña (administrador):** es la que pusiste al crear tu usuario en Supabase. Si no la recuerdas, entra una vez con el enlace del email («Prefiero recibir un email para entrar») y cámbiala en **Más → Cambiar mi contraseña**.
 
 ## Datos de ejemplo (opcional)
 

@@ -68,8 +68,41 @@ await entrar(page, "admin@demo.local");
 await page.goto(`${APP}/ajustes/usuarios`);
 await page.getByLabel("Nombre").fill("Marta E2E");
 await page.getByLabel("Email").fill("marta.e2e@demo.local");
+await page.getByLabel("Contraseña").fill("corta");
+await page.getByRole("button", { name: "Dar de alta" }).click();
+assert.equal(await page.getByLabel("Contraseña").evaluate((el) => el.validity.tooShort), true);
+await page.getByRole("button", { name: "Generar" }).click();
+const contrasenaMarta = await page.getByLabel("Contraseña").inputValue();
+assert.match(contrasenaMarta, /^[a-z]+\d{4}$/);
 await page.getByRole("button", { name: "Dar de alta" }).click();
 await page.getByText(/Marta E2E ya puede entrar/).waitFor();
+
+paso("Marta entra con email y contraseña (otro navegador)");
+{
+  const otro = await abrirNavegador();
+  await otro.page.goto(`${APP}/login`);
+  await otro.page.getByLabel("Tu email").fill("marta.e2e@demo.local");
+  await otro.page.getByLabel("Contraseña").fill("mal-contrasena");
+  await otro.page.getByRole("button", { name: "Entrar", exact: true }).click();
+  await otro.page.getByText(/Email o contraseña incorrectos/).waitFor();
+  await otro.page.getByLabel("Contraseña").fill(contrasenaMarta);
+  await otro.page.getByRole("button", { name: "Entrar", exact: true }).click();
+  await otro.page.waitForURL("**/hoy");
+  await otro.page.getByText("Hola, Marta").waitFor();
+  // Cambia su propia contraseña desde Más
+  await otro.page.goto(`${APP}/mas`);
+  await otro.page.getByRole("button", { name: "Cambiar mi contraseña" }).click();
+  await otro.page.getByLabel("Nueva contraseña").fill("nueva-clave-123");
+  await otro.page.getByLabel("Repítela").fill("nueva-clave-123");
+  await otro.page.getByRole("button", { name: "Guardar" }).click();
+  await otro.page.getByText(/Contraseña cambiada/).waitFor();
+  await otro.navegador.close();
+}
+
+paso("El admin le pone otra contraseña");
+page.once("dialog", (d) => d.accept("otra-clave-456"));
+await page.locator("li", { hasText: "marta.e2e@demo.local" }).getByRole("button", { name: "Cambiar contraseña" }).click();
+await page.getByText(/Contraseña cambiada a «otra-clave-456»/).waitFor();
 assert.equal(sql("select rol || '|' || activo from perfiles where email = 'marta.e2e@demo.local'"), "comercial|true");
 page.once("dialog", (d) => d.accept());
 await page.locator("li", { hasText: "marta.e2e@demo.local" }).getByRole("button", { name: "Desactivar" }).click();

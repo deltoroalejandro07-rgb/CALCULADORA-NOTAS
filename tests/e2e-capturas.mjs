@@ -24,6 +24,7 @@ async function entrar(page, email) {
   await fetch(`${MAILPIT}/api/v1/messages`, { method: "DELETE" });
   await page.goto(`${APP}/hoy`);
   await page.waitForURL("**/login");
+  await page.getByRole("button", { name: "Prefiero recibir un email para entrar" }).click();
   await page.getByLabel("Tu email").fill(email);
   await page.getByRole("button", { name: "Enviarme un código" }).click();
   await page.getByLabel("Código").waitFor();
@@ -66,6 +67,7 @@ await page.getByRole("button", { name: "Cerrar sesión" }).click();
 await page.waitForURL("**/login");
 
 // Email sin acceso
+await page.getByRole("button", { name: "Prefiero recibir un email para entrar" }).click();
 await page.getByLabel("Tu email").fill("desconocido@ejemplo.com");
 await page.getByRole("button", { name: "Enviarme un código" }).click();
 await page.getByText("no tiene acceso").waitFor();

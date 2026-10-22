@@ -47,6 +47,7 @@ page.on("pageerror", (e) => errores.push(e.message));
 paso("Entrar como Ana");
 await fetch(`${MAILPIT}/api/v1/messages`, { method: "DELETE" });
 await page.goto(`${APP}/login`);
+await page.getByRole("button", { name: "Prefiero recibir un email para entrar" }).click();
 await page.getByLabel("Tu email").fill("ana@demo.local");
 await page.getByRole("button", { name: "Enviarme un código" }).click();
 await page.getByLabel("Código").fill(await codigoDe("ana@demo.local"));
