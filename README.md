@@ -1,4 +1,4 @@
-# CRM HORECA
+# CRM dliverygo
 
 App web instalable (PWA, móvil primero) para el equipo comercial de una distribuidora al canal hostelería: registro de visitas en menos de 30 segundos (también sin cobertura), ficha y estado de cada cliente, panel diario con ruta, catálogo y ofertas, mensajes y campañas por WhatsApp y email con consentimiento (RGPD/LSSI), panel de dirección e importación/exportación.
 

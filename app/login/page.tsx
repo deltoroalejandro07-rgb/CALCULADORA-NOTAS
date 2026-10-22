@@ -7,13 +7,11 @@ export const metadata: Metadata = { title: "Entrar" };
 export default function PaginaLogin() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6 py-10">
-      <div className="mb-8 flex items-center gap-3">
+      <div className="mb-8">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/icon.svg" alt="" className="h-12 w-12" />
-        <div>
-          <h1 className="text-2xl font-bold">CRM HORECA</h1>
-          <p className="text-sm text-suave">Visitas, clientes y ofertas</p>
-        </div>
+        <img src="/logo.svg" alt="dliverygo" width={318} height={103} className="h-16 w-auto" />
+        <h1 className="mt-4 text-2xl font-bold">CRM comercial</h1>
+        <p className="text-sm text-suave">Visitas, clientes y ofertas</p>
       </div>
       <Suspense>
         <FormularioLogin />

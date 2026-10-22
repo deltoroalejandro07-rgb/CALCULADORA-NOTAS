@@ -3,10 +3,12 @@ import { cn } from "@/lib/cn";
 import { TEXTO_TEMPERATURA, type Temperatura } from "@/lib/dominio/temperatura";
 import { TEXTO_ESTADO, type EstadoCliente } from "@/lib/dominio/tipos";
 
-export function Cabecera({ titulo, subtitulo, children }: { titulo: string; subtitulo?: string; children?: React.ReactNode }) {
+export function Cabecera({ titulo, subtitulo, logo, children }: { titulo: string; subtitulo?: string; logo?: boolean; children?: React.ReactNode }) {
   return (
     <header className="flex items-end justify-between gap-3 px-4 pb-3 pt-6">
       <div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {logo && <img src="/logo.svg" alt="dliverygo" width={318} height={103} className="mb-3 h-8 w-auto" />}
         <h1 className="text-2xl font-bold">{titulo}</h1>
         {subtitulo && <p className="text-sm text-suave">{subtitulo}</p>}
       </div>

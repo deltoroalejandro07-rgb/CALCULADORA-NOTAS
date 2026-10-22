@@ -31,6 +31,7 @@ async function Contenido() {
   return (
     <>
       <Cabecera
+        logo
         titulo={`Hola, ${usuario.nombre.split(" ")[0]}`}
         subtitulo={`${fechaLarga.charAt(0).toUpperCase()}${fechaLarga.slice(1)}${usuario.rol === "admin" ? " · todo el equipo" : ""}`}
       />

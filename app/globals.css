@@ -9,9 +9,10 @@
   --texto: #111827;
   --texto-suave: #5b6472;
   --borde: #e3e6eb;
-  --marca: #0f766e;
+  /* Verde dliverygo (#4aa49d) algo más oscuro: el texto blanco encima se lee bien */
+  --marca: #2f7d77;
   --marca-texto: #ffffff;
-  --marca-suave: #ccfbf1;
+  --marca-suave: #dff1ef;
   /* Gráficos: paleta categórica validada (orden fijo) y rampa ordinal azul */
   --serie-1: #2a78d6;
   --serie-2: #eb6834;
@@ -31,9 +32,9 @@
   --texto: #e6edf3;
   --texto-suave: #9aa4b2;
   --borde: #2a313c;
-  --marca: #2dd4bf;
-  --marca-texto: #042f2e;
-  --marca-suave: #123c39;
+  --marca: #4aa49d;
+  --marca-texto: #06201e;
+  --marca-suave: #173a37;
   --serie-1: #3987e5;
   --serie-2: #d95926;
   --serie-3: #199e70;

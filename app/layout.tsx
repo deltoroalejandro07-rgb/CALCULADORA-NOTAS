@@ -5,10 +5,10 @@ import "./globals.css";
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "CRM HORECA", template: "%s · CRM HORECA" },
+  title: { default: "CRM dliverygo", template: "%s · dliverygo" },
   description: "Visitas, clientes y ofertas para el equipo comercial.",
-  applicationName: "CRM HORECA",
-  appleWebApp: { capable: true, title: "CRM", statusBarStyle: "default" },
+  applicationName: "CRM dliverygo",
+  appleWebApp: { capable: true, title: "dliverygo", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

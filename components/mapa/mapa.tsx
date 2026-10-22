@@ -59,7 +59,7 @@ export default function Mapa({ puntos, ruta, yo, alto = "60vh" }: Props) {
       L.circleMarker([yo.lat, yo.lng], { radius: 8, color: "#fff", weight: 3, fillColor: "#2563eb", fillOpacity: 1 }).bindTooltip("Estás aquí").addTo(mapa);
     }
     if (ruta && puntos.length > 1) {
-      L.polyline([...miPos, ...coords], { color: "#0f766e", dashArray: "6 8", weight: 3 }).addTo(mapa);
+      L.polyline([...miPos, ...coords], { color: "#2f7d77", dashArray: "6 8", weight: 3 }).addTo(mapa);
     }
     puntos.forEach((p, i) => {
       const m = L.circleMarker([p.lat, p.lng], { radius: ruta ? 13 : 9, color: "#fff", weight: 2, fillColor: COLOR[p.estado], fillOpacity: 0.95 })
