@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Boton } from "@/components/ui/boton";
+import { mensajeErrorAcceso, sugerirEmail } from "@/lib/dominio/acceso";
 import { supabaseEnvioAcceso, supabaseNavegador } from "@/lib/supabase/navegador";
 
 export function FormularioLogin() {
@@ -32,11 +33,7 @@ export function FormularioLogin() {
     });
     setCargando(false);
     if (error) {
-      setError(
-        error.status === 422 || /signups not allowed|not found/i.test(error.message)
-          ? "Ese email no tiene acceso. Pide al administrador que te invite."
-          : "No se ha podido enviar el código. Inténtalo de nuevo en un momento.",
-      );
+      setError(mensajeErrorAcceso(error));
       return;
     }
     setPaso("codigo");
@@ -78,6 +75,11 @@ export function FormularioLogin() {
           className={campo}
         />
       </label>
+      {sugerirEmail(email) && (
+        <button type="button" onClick={() => setEmail(sugerirEmail(email)!)} className="text-left text-sm text-amber-700 dark:text-amber-300">
+          ¿Querías decir <strong className="underline">{sugerirEmail(email)}</strong>?
+        </button>
+      )}
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
       <Boton type="submit" cargando={cargando} className="w-full">
         Enviarme un código
