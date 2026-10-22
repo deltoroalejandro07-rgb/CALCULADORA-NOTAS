@@ -6,8 +6,8 @@ Qué cuentas necesita el CRM, qué está ya hecho y cómo terminar lo que falta.
 |---|---|---|---|
 | **Supabase** | Base de datos, acceso, fotos | Gratis (plan Free) | ✅ Creado |
 | **Vercel** | Publicar la app | Gratis (plan Hobby) | ✅ Publicada en `crm-comercial-mu.vercel.app` |
-| **Clave secreta de Supabase en Vercel** | Dar de alta usuarios desde el CRM | — | ⏳ Paso 1 |
-| **Actualizar la base de datos** | Cambios de esquema nuevos | — | ⏳ Paso 2 |
+| **Clave secreta de Supabase en Vercel** | Dar de alta usuarios desde el CRM | — | ✅ Hecho |
+| **Actualizar la base de datos** | Cambios de esquema nuevos | — | ✅ Al día |
 | **Brevo** (correo) | Solo si quieres entrar con código por email o, en fase 2, campañas por email | Gratis hasta 300 emails/día | Opcional |
 | **Meta – WhatsApp Business** | Fase 2: envío automático y respuestas en la app | Pago por conversación | Fase 2 |
 
@@ -34,9 +34,7 @@ Cada vez que el esquema cambia hay un fichero nuevo en `supabase/migrations/`. H
 1. Abre en GitHub el fichero de la migración (rama `main`), pulsa *Raw* y copia todo.
 2. **Supabase → SQL Editor → New query** → pega → **Run**. Debe decir *Success*.
 
-Migraciones pendientes de aplicar en producción:
-
-- `supabase/migrations/20261023000003_campanas_comerciales.sql` (los comerciales pueden lanzar sus propias campañas).
+Migraciones pendientes de aplicar en producción: **ninguna** (la última aplicada es `20261023000003_campanas_comerciales.sql`).
 
 > Si algún día montas un proyecto de Supabase nuevo, basta con pegar `supabase/instalar.sql`, que ya incluye todas las migraciones.
 
@@ -90,7 +88,13 @@ La primera vez abre la app con cobertura: a partir de ahí, «Nueva visita» fun
 
 **Más → Usuarios → Dar de alta**: nombre, email y contraseña (botón *Generar* para una fácil de dictar). Pásale la dirección de la app, su email y la contraseña; podrá cambiarla en **Más → Cambiar mi contraseña**. Si la olvida, en Usuarios → **Cambiar contraseña**.
 
-**Tu propia contraseña (administrador):** es la que pusiste al crear tu usuario en Supabase. Si no la recuerdas, entra una vez con el enlace del email («Prefiero recibir un email para entrar») y cámbiala en **Más → Cambiar mi contraseña**.
+**Tu propia contraseña (administrador):** cámbiala en **Más → Cambiar mi contraseña**. Si la olvidas, en **Supabase → SQL Editor** ejecuta (con la contraseña nueva entre comillas) y entra con ella:
+
+```sql
+update auth.users
+set encrypted_password = extensions.crypt('NuevaContraseña', extensions.gen_salt('bf'))
+where email = 'tu-email@ejemplo.com';
+```
 
 ## Datos de ejemplo (opcional)
 
