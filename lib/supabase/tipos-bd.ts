@@ -23,7 +23,21 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "campanas": {
+            "ajustes_logistica": {
+                  Row: {
+                    "actualizado_at": string,"almacen_direccion": string | null,"almacen_lat": number | null,"almacen_lng": number | null,"id": boolean
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "actualizado_at"?: string,"almacen_direccion"?: string | null,"almacen_lat"?: number | null,"almacen_lng"?: number | null,"id"?: boolean
+                  }
+                  Update: {
+                    "actualizado_at"?: string,"almacen_direccion"?: string | null,"almacen_lat"?: number | null,"almacen_lng"?: number | null,"id"?: boolean
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"campanas": {
                   Row: {
                     "canal": Database["public"]['Enums']["canal_mensaje"],"creado_at": string,"creado_por": string | null,"filtro": NonNullable<Json>,"id": string,"is_seed": boolean,"nombre": string,"oferta_id": string | null,"plantilla_id": string | null
                   }
@@ -107,6 +121,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"clientes_entrega": {
+                  Row: {
+                    "actualizado_at": string,"actualizado_por": string | null,"cliente_id": string,"horario_entrega": string | null,"notas_acceso": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "actualizado_at"?: string,"actualizado_por"?: string | null,"cliente_id": string,"horario_entrega"?: string | null,"notas_acceso"?: string | null
+                  }
+                  Update: {
+                    "actualizado_at"?: string,"actualizado_por"?: string | null,"cliente_id"?: string,"horario_entrega"?: string | null,"notas_acceso"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "clientes_entrega_actualizado_por_fkey"
+      columns: ["actualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "clientes_entrega_cliente_id_fkey"
+      columns: ["cliente_id"]
+isOneToOne: true
+      referencedRelation: "clientes"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"consentimientos": {
                   Row: {
                     "canal": Database["public"]['Enums']["canal_mensaje"],"cliente_id": string,"evidencia": string | null,"id": string,"origen": Database["public"]['Enums']["origen_consentimiento"],"otorgado": boolean,"registrado_at": string,"registrado_por": string | null
@@ -130,6 +170,32 @@ isOneToOne: false
       columns: ["registrado_por"]
 isOneToOne: false
       referencedRelation: "perfiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"eventos_reparto": {
+                  Row: {
+                    "creado_at": string,"detalle": Json | null,"id": number,"parada_id": string | null,"ruta_id": string | null,"tipo": string,"usuario_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "creado_at"?: string,"detalle"?: Json | null,"id"?: never,"parada_id"?: string | null,"ruta_id"?: string | null,"tipo": string,"usuario_id"?: string | null
+                  }
+                  Update: {
+                    "creado_at"?: string,"detalle"?: Json | null,"id"?: never,"parada_id"?: string | null,"ruta_id"?: string | null,"tipo"?: string,"usuario_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "eventos_reparto_parada_id_fkey"
+      columns: ["parada_id"]
+isOneToOne: false
+      referencedRelation: "paradas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "eventos_reparto_ruta_id_fkey"
+      columns: ["ruta_id"]
+isOneToOne: false
+      referencedRelation: "rutas"
       referencedColumns: ["id"]
     }
                   ]
@@ -217,6 +283,50 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"paradas": {
+                  Row: {
+                    "cliente_id": string,"cobrado": number | null,"creado_at": string,"entrega_id": string | null,"envases_entregados": number,"envases_recogidos": number,"estado": Database["public"]['Enums']["estado_parada"],"firma_path": string | null,"firmante": string | null,"forma_cobro": string | null,"fotos": (string)[],"id": string,"lat": number | null,"lineas": NonNullable<Json>,"lng": number | null,"motivo_fallo": string | null,"notas_oficina": string | null,"observaciones": string | null,"orden": number,"pedido_id": string | null,"precision_m": number | null,"realizada_at": string | null,"registrada_at": string | null,"registrada_por": string | null,"ruta_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cliente_id": string,"cobrado"?: number | null,"creado_at"?: string,"entrega_id"?: string | null,"envases_entregados"?: number,"envases_recogidos"?: number,"estado"?: Database["public"]['Enums']["estado_parada"],"firma_path"?: string | null,"firmante"?: string | null,"forma_cobro"?: string | null,"fotos"?: (string)[],"id"?: string,"lat"?: number | null,"lineas"?: NonNullable<Json>,"lng"?: number | null,"motivo_fallo"?: string | null,"notas_oficina"?: string | null,"observaciones"?: string | null,"orden": number,"pedido_id"?: string | null,"precision_m"?: number | null,"realizada_at"?: string | null,"registrada_at"?: string | null,"registrada_por"?: string | null,"ruta_id": string
+                  }
+                  Update: {
+                    "cliente_id"?: string,"cobrado"?: number | null,"creado_at"?: string,"entrega_id"?: string | null,"envases_entregados"?: number,"envases_recogidos"?: number,"estado"?: Database["public"]['Enums']["estado_parada"],"firma_path"?: string | null,"firmante"?: string | null,"forma_cobro"?: string | null,"fotos"?: (string)[],"id"?: string,"lat"?: number | null,"lineas"?: NonNullable<Json>,"lng"?: number | null,"motivo_fallo"?: string | null,"notas_oficina"?: string | null,"observaciones"?: string | null,"orden"?: number,"pedido_id"?: string | null,"precision_m"?: number | null,"realizada_at"?: string | null,"registrada_at"?: string | null,"registrada_por"?: string | null,"ruta_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "paradas_cliente_id_fkey"
+      columns: ["cliente_id"]
+isOneToOne: false
+      referencedRelation: "clientes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "paradas_pedido_id_fkey"
+      columns: ["pedido_id"]
+isOneToOne: false
+      referencedRelation: "pedidos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "paradas_pedido_id_fkey"
+      columns: ["pedido_id"]
+isOneToOne: false
+      referencedRelation: "pedidos_por_repartir"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "paradas_registrada_por_fkey"
+      columns: ["registrada_por"]
+isOneToOne: false
+      referencedRelation: "perfiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "paradas_ruta_id_fkey"
+      columns: ["ruta_id"]
+isOneToOne: false
+      referencedRelation: "rutas"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"pedido_lineas": {
                   Row: {
                     "cantidad": number,"descripcion": string,"id": string,"importe": number | null,"pedido_id": string,"precio_unitario": number,"producto_id": string | null
@@ -234,6 +344,12 @@ isOneToOne: false
       columns: ["pedido_id"]
 isOneToOne: false
       referencedRelation: "pedidos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pedido_lineas_pedido_id_fkey"
+      columns: ["pedido_id"]
+isOneToOne: false
+      referencedRelation: "pedidos_por_repartir"
       referencedColumns: ["id"]
     },{
       foreignKeyName: "pedido_lineas_producto_id_fkey"
@@ -317,6 +433,58 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"rutas": {
+                  Row: {
+                    "conductor_id": string | null,"creado_at": string,"creado_por": string | null,"estado": Database["public"]['Enums']["estado_ruta"],"fecha": string,"id": string,"iniciada_at": string | null,"notas": string | null,"terminada_at": string | null,"vehiculo_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "conductor_id"?: string | null,"creado_at"?: string,"creado_por"?: string | null,"estado"?: Database["public"]['Enums']["estado_ruta"],"fecha": string,"id"?: string,"iniciada_at"?: string | null,"notas"?: string | null,"terminada_at"?: string | null,"vehiculo_id"?: string | null
+                  }
+                  Update: {
+                    "conductor_id"?: string | null,"creado_at"?: string,"creado_por"?: string | null,"estado"?: Database["public"]['Enums']["estado_ruta"],"fecha"?: string,"id"?: string,"iniciada_at"?: string | null,"notas"?: string | null,"terminada_at"?: string | null,"vehiculo_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rutas_conductor_id_fkey"
+      columns: ["conductor_id"]
+isOneToOne: false
+      referencedRelation: "perfiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rutas_creado_por_fkey"
+      columns: ["creado_por"]
+isOneToOne: false
+      referencedRelation: "perfiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rutas_vehiculo_id_fkey"
+      columns: ["vehiculo_id"]
+isOneToOne: false
+      referencedRelation: "vehiculos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vehiculos": {
+                  Row: {
+                    "activo": boolean,"capacidad_bultos": number | null,"capacidad_kg": number | null,"conductor_habitual": string | null,"creado_at": string,"etiqueta_ambiental": string | null,"id": string,"matricula": string | null,"nombre": string,"notas": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "activo"?: boolean,"capacidad_bultos"?: number | null,"capacidad_kg"?: number | null,"conductor_habitual"?: string | null,"creado_at"?: string,"etiqueta_ambiental"?: string | null,"id"?: string,"matricula"?: string | null,"nombre": string,"notas"?: string | null
+                  }
+                  Update: {
+                    "activo"?: boolean,"capacidad_bultos"?: number | null,"capacidad_kg"?: number | null,"conductor_habitual"?: string | null,"creado_at"?: string,"etiqueta_ambiental"?: string | null,"id"?: string,"matricula"?: string | null,"nombre"?: string,"notas"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vehiculos_conductor_habitual_fkey"
+      columns: ["conductor_habitual"]
+isOneToOne: false
+      referencedRelation: "perfiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"visita_fotos": {
                   Row: {
                     "creado_at": string,"id": string,"storage_path": string,"tipo": Database["public"]['Enums']["tipo_foto"],"visita_id": string
@@ -392,7 +560,39 @@ isOneToOne: false
                 }
           }
           Views: {
-            [_ in never]: never
+            "pedidos_por_repartir": {
+                  Row: {
+                    "cliente_id": string | null,"comercial_id": string | null,"creado_at": string | null,"fecha": string | null,"id": string | null,"importe_total": number | null,"is_seed": boolean | null,"notas": string | null,"visita_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                           "cliente_id"?: string | null,"comercial_id"?: string | null,"creado_at"?: string | null,"fecha"?: string | null,"id"?: string | null,"importe_total"?: number | null,"is_seed"?: boolean | null,"notas"?: string | null,"visita_id"?: string | null
+                         }
+                        Update: {
+                           "cliente_id"?: string | null,"comercial_id"?: string | null,"creado_at"?: string | null,"fecha"?: string | null,"id"?: string | null,"importe_total"?: number | null,"is_seed"?: boolean | null,"notas"?: string | null,"visita_id"?: string | null
+                         }
+                        Relationships: [
+                    {
+      foreignKeyName: "pedidos_cliente_id_fkey"
+      columns: ["cliente_id"]
+isOneToOne: false
+      referencedRelation: "clientes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pedidos_comercial_id_fkey"
+      columns: ["comercial_id"]
+isOneToOne: false
+      referencedRelation: "perfiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pedidos_visita_id_fkey"
+      columns: ["visita_id"]
+isOneToOne: false
+      referencedRelation: "visitas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                }
           }
           Functions: {
             "buscar_posibles_duplicados":
@@ -400,17 +600,35 @@ isOneToOne: false
               "comercial": string,"es_mio": boolean,"id": string,"nombre_negocio": string,"zona": string
             }[]
                            },
+"conduce_ruta":
+{ Args: { "rid": string }; Returns: boolean
+                           },
 "es_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
+"hoy_madrid":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"mi_reparto":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"puede_registrar_parada":
+{ Args: { "pid": string }; Returns: boolean
+                           },
 "puede_ver_cliente":
 { Args: { "cid": string }; Returns: boolean
+                           },
+"puede_ver_parada":
+{ Args: { "pid": string }; Returns: boolean
                            },
 "puede_ver_pedido":
 { Args: { "pid": string }; Returns: boolean
                            },
 "puede_ver_visita":
 { Args: { "vid": string }; Returns: boolean
+                           },
+"registrar_entrega":
+{ Args: { "p_datos": Json,"p_entrega": string,"p_estado": Database["public"]['Enums']["estado_parada"],"p_parada": string }; Returns: string
                            },
 "show_limit":
 { Args: Record<PropertyKey, never>; Returns: number
@@ -423,7 +641,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "canal_mensaje": "whatsapp"|"email","categoria_producto": "cerveza"|"refrescos"|"agua"|"vino"|"licores"|"cafe"|"alimentacion"|"limpieza_menaje","estado_cliente": "prospecto"|"interesado"|"cliente"|"perdido","estado_mensaje": "preparado"|"enviado"|"entregado"|"leido"|"respondido"|"fallido","origen_consentimiento": "verbal_visita"|"formulario_papel"|"whatsapp"|"email"|"web","resultado_visita": "no_estaba"|"sin_interes"|"pide_info"|"interesado"|"pide_oferta"|"hace_pedido","rol_usuario": "admin"|"comercial","tipo_foto": "escaparate"|"barra"|"competencia"|"otra","tipo_negocio": "bar"|"restaurante"|"cafeteria"|"hotel"|"pub"|"catering"|"otro","tipo_visita": "puerta_fria"|"propaganda"|"seguimiento"|"degustacion"|"toma_pedido"|"incidencia"
+            "canal_mensaje": "whatsapp"|"email","categoria_producto": "cerveza"|"refrescos"|"agua"|"vino"|"licores"|"cafe"|"alimentacion"|"limpieza_menaje","estado_cliente": "prospecto"|"interesado"|"cliente"|"perdido","estado_mensaje": "preparado"|"enviado"|"entregado"|"leido"|"respondido"|"fallido","estado_parada": "pendiente"|"entregada"|"fallida","estado_ruta": "planificada"|"en_curso"|"terminada","origen_consentimiento": "verbal_visita"|"formulario_papel"|"whatsapp"|"email"|"web","resultado_visita": "no_estaba"|"sin_interes"|"pide_info"|"interesado"|"pide_oferta"|"hace_pedido","rol_usuario": "admin"|"comercial","tipo_foto": "escaparate"|"barra"|"competencia"|"otra","tipo_negocio": "bar"|"restaurante"|"cafeteria"|"hotel"|"pub"|"catering"|"otro","tipo_visita": "puerta_fria"|"propaganda"|"seguimiento"|"degustacion"|"toma_pedido"|"incidencia"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -543,7 +761,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "canal_mensaje": ["whatsapp", "email"],"categoria_producto": ["cerveza", "refrescos", "agua", "vino", "licores", "cafe", "alimentacion", "limpieza_menaje"],"estado_cliente": ["prospecto", "interesado", "cliente", "perdido"],"estado_mensaje": ["preparado", "enviado", "entregado", "leido", "respondido", "fallido"],"origen_consentimiento": ["verbal_visita", "formulario_papel", "whatsapp", "email", "web"],"resultado_visita": ["no_estaba", "sin_interes", "pide_info", "interesado", "pide_oferta", "hace_pedido"],"rol_usuario": ["admin", "comercial"],"tipo_foto": ["escaparate", "barra", "competencia", "otra"],"tipo_negocio": ["bar", "restaurante", "cafeteria", "hotel", "pub", "catering", "otro"],"tipo_visita": ["puerta_fria", "propaganda", "seguimiento", "degustacion", "toma_pedido", "incidencia"]
+            "canal_mensaje": ["whatsapp", "email"],"categoria_producto": ["cerveza", "refrescos", "agua", "vino", "licores", "cafe", "alimentacion", "limpieza_menaje"],"estado_cliente": ["prospecto", "interesado", "cliente", "perdido"],"estado_mensaje": ["preparado", "enviado", "entregado", "leido", "respondido", "fallido"],"estado_parada": ["pendiente", "entregada", "fallida"],"estado_ruta": ["planificada", "en_curso", "terminada"],"origen_consentimiento": ["verbal_visita", "formulario_papel", "whatsapp", "email", "web"],"resultado_visita": ["no_estaba", "sin_interes", "pide_info", "interesado", "pide_oferta", "hace_pedido"],"rol_usuario": ["admin", "comercial"],"tipo_foto": ["escaparate", "barra", "competencia", "otra"],"tipo_negocio": ["bar", "restaurante", "cafeteria", "hotel", "pub", "catering", "otro"],"tipo_visita": ["puerta_fria", "propaganda", "seguimiento", "degustacion", "toma_pedido", "incidencia"]
           }
         }
 } as const

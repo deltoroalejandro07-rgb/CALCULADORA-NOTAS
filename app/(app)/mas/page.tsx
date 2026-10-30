@@ -1,4 +1,4 @@
-import { BarChart3, ChevronRight, FileSpreadsheet, Package, Tag, UserCog } from "lucide-react";
+import { BarChart3, ChevronRight, FileSpreadsheet, Package, Route, Tag, Truck, UserCog } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -28,8 +28,10 @@ async function Contenido() {
           { texto: "Panel de dirección", icono: BarChart3, href: "/direccion" },
           { texto: "Usuarios", icono: UserCog, href: "/ajustes/usuarios" },
           { texto: "Importar / exportar clientes", icono: FileSpreadsheet, href: "/ajustes/importar" },
+          { texto: "Logística: rutas y vehículos", icono: Route, href: "/logistica" },
         ]
       : []),
+    { texto: "Mi reparto", icono: Truck, href: "/reparto" },
   ];
 
   return (

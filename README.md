@@ -15,6 +15,8 @@ App web instalable (PWA, móvil primero) para el equipo comercial de una distrib
 | **Clientes** | Búsqueda, filtros (estado, temperatura, tipo, zona, vencidos…), mapa, alta. **Ficha**: llamar, WhatsApp, email, cómo llegar, próxima acción, intereses, ofertas que le encajan, consentimiento por canal, historial (visitas con fotos, mensajes, pedidos), pedido sencillo, exportar datos (RGPD). |
 | **Mensajes** | Historial de envíos, plantillas con variables, envío individual y **campañas por segmento** (abre WhatsApp/email con el texto personalizado y lo registra). Solo a clientes con consentimiento; aviso de baja automático. |
 | **Más** | Catálogo (destacados, nº de interesados), ofertas con segmento y vista previa, tema claro/oscuro, cerrar sesión. Para el administrador: panel de dirección, usuarios e importar/exportar. |
+| **Logística** (admin) | Vehículos y almacén; rutas por día con los pedidos por repartir, orden por cercanía, hoja de carga; entregas con firma y **albarán** imprimible. |
+| **Mi reparto** | La app del conductor (cualquier usuario con una ruta asignada): ruta del día descargada en el móvil, navegar/llamar, **entrega con firma** (cantidades, envases retornables, cobro, fotos) o incidencia. **Funciona sin cobertura**; cada entrega se registra una sola vez y no se puede modificar. |
 
 **Acceso:** email y contraseña (el administrador la pone al dar de alta y cada uno puede cambiarla); como alternativa, código/enlace por email.
 
@@ -64,6 +66,7 @@ El service worker (uso sin cobertura) solo se activa en producción: `npm run bu
 | `node tests/e2e-clientes.mjs <dir>` | Lista, filtros, mapa, ficha, edición, consentimiento, pedido, RGPD |
 | `node tests/e2e-enlace.mjs` | Acceso con el enlace del email |
 | `node tests/e2e-fase1.mjs <dir>` | Hoy, usuarios, catálogo, ofertas, plantillas, campañas, dirección, importar/exportar |
+| `node tests/e2e-reparto.mjs <dir>` | Logística: planificar ruta, entregar con firma sin cobertura, arranque sin red, subida y albarán |
 
 ## Variables de entorno
 
@@ -98,6 +101,7 @@ tests/                Vitest y recorridos Playwright
 - **Temperatura** (`lib/dominio/temperatura.ts`): caliente = pedido/oferta/interés ≤ 14 días; templado = eso mismo a 15–30 días o *pide información* ≤ 30 días; frío = el resto. Los días cuentan desde el último resultado útil («no estaba» no cuenta).
 - **Consentimiento** por canal con historial inmutable; la base de datos rechaza mensajes sin él; todo mensaje comercial lleva aviso de baja.
 - **Sin cobertura:** IDs generados en el móvil y subida idempotente (reintentar nunca duplica). Al cerrar sesión se borran los datos del móvil (con aviso si queda algo sin subir). En iPhone la subida ocurre al abrir la app.
+- **Reparto:** la ruta se descarga en el móvil (base local propia, separada de la de visitas). La firma y las fotos se guardan primero en el móvil y solo se liberan cuando el servidor confirma la entrega; `registrar_entrega` es idempotente y, si otra entrega distinta ya estaba registrada, la del móvil queda como «conflicto» sin perderse. Una entrega registrada no se puede modificar ni borrar (trigger). El conductor no ve el CRM: recibe solo sus paradas con `mi_reparto()`.
 
 ## Desplegar
 

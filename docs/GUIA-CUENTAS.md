@@ -7,7 +7,7 @@ Qué cuentas necesita el CRM, qué está ya hecho y cómo terminar lo que falta.
 | **Supabase** | Base de datos, acceso, fotos | Gratis (plan Free) | ✅ Creado |
 | **Vercel** | Publicar la app | Gratis (plan Hobby) | ✅ Publicada en `crm-comercial-mu.vercel.app` |
 | **Clave secreta de Supabase en Vercel** | Dar de alta usuarios desde el CRM | — | ✅ Hecho |
-| **Actualizar la base de datos** | Cambios de esquema nuevos | — | ✅ Al día |
+| **Actualizar la base de datos** | Cambios de esquema nuevos | — | ⏳ Logística (Paso 2) |
 | **Brevo** (correo) | Solo si quieres entrar con código por email o, en fase 2, campañas por email | Gratis hasta 300 emails/día | Opcional |
 | **Meta – WhatsApp Business** | Fase 2: envío automático y respuestas en la app | Pago por conversación | Fase 2 |
 
@@ -36,7 +36,9 @@ Cada vez que el esquema cambia hay un fichero nuevo en `supabase/migrations/`. H
 1. Abre en GitHub el fichero de la migración (rama `main`), pulsa *Raw* y copia todo.
 2. **Supabase → SQL Editor → New query** → pega → **Run**. Debe decir *Success*.
 
-Migraciones pendientes de aplicar en producción: **ninguna** (la última aplicada es `20261023000003_campanas_comerciales.sql`).
+Migraciones pendientes de aplicar en producción:
+
+- `supabase/migrations/20261030000004_logistica.sql` (logística: vehículos, rutas de reparto y entregas con firma). Solo añade tablas nuevas; no cambia nada de lo existente.
 
 > Si algún día montas un proyecto de Supabase nuevo, basta con pegar `supabase/instalar.sql`, que ya incluye todas las migraciones.
 

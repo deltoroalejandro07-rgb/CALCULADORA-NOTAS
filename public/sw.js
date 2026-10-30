@@ -2,12 +2,16 @@
 // - Ficheros estáticos de Next (/_next/static, con hash): caché primero.
 // - Páginas: red primero; sin red se sirve "Nueva visita", que no contiene
 //   datos del usuario (los lee de IndexedDB en el propio móvil).
+// - Reparto: "/reparto" también se guarda; si el conductor tiene una ruta
+//   en marcha, sin red se le lleva ahí en vez de a "Nueva visita".
 // Nunca se cachean páginas con datos ni llamadas a Supabase.
 
 const VERSION = "v1";
 const CACHE_PAGINA = `pagina-${VERSION}`;
 const CACHE_ESTATICOS = "estaticos";
 const PAGINA_OFFLINE = "/visita/nueva";
+const PAGINA_REPARTO = "/reparto";
+const PREFERENCIA = "/__preferencia-sin-red";
 
 self.addEventListener("install", () => self.skipWaiting());
 
@@ -21,20 +25,34 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-/** Guarda la página offline y todos los JS/CSS que necesita. Solo con sesión iniciada. */
-async function cachearPaginaOffline() {
-  const respuesta = await fetch(PAGINA_OFFLINE, { credentials: "same-origin", cache: "no-store" });
+/** Guarda una página sin datos del usuario y todos los JS/CSS que necesita. Solo con sesión iniciada. */
+async function cachearPagina(ruta) {
+  const respuesta = await fetch(ruta, { credentials: "same-origin", cache: "no-store" });
   if (!respuesta.ok || respuesta.redirected) return; // sin sesión → redirige al login
   const html = await respuesta.clone().text();
   const recursos = [...new Set(html.match(/\/_next\/static\/[^"'\s)\\]+/g) ?? [])];
   const estaticos = await caches.open(CACHE_ESTATICOS);
   await Promise.all(recursos.map((url) => estaticos.match(url).then((hit) => hit ?? estaticos.add(url)).catch(() => {})));
-  await (await caches.open(CACHE_PAGINA)).put(PAGINA_OFFLINE, respuesta);
+  await (await caches.open(CACHE_PAGINA)).put(ruta, respuesta);
+}
+
+async function cachearPaginaOffline() {
+  await cachearPagina(PAGINA_OFFLINE);
+  await cachearPagina(PAGINA_REPARTO).catch(() => {});
+}
+
+async function prefiereReparto() {
+  const r = await caches.match(PREFERENCIA, { cacheName: CACHE_PAGINA });
+  return r ? (await r.text()) === "reparto" : false;
 }
 
 self.addEventListener("message", (event) => {
   if (event.data === "cachear-offline") event.waitUntil(cachearPaginaOffline().catch(() => {}));
   if (event.data === "borrar-cache") event.waitUntil(caches.delete(CACHE_PAGINA));
+  if (event.data === "preferir-reparto" || event.data === "preferir-visita") {
+    const valor = event.data === "preferir-reparto" ? "reparto" : "visita";
+    event.waitUntil(caches.open(CACHE_PAGINA).then((c) => c.put(PREFERENCIA, new Response(valor))));
+  }
 });
 
 self.addEventListener("fetch", (event) => {
@@ -58,6 +76,10 @@ self.addEventListener("fetch", (event) => {
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request).catch(async () => {
+        // Reparto: su propia página, o ahí directamente si hay una ruta en marcha
+        const reparto = await caches.match(PAGINA_REPARTO, { cacheName: CACHE_PAGINA });
+        if (reparto && url.pathname === PAGINA_REPARTO) return reparto;
+        if (reparto && url.pathname !== PAGINA_OFFLINE && (await prefiereReparto())) return Response.redirect(PAGINA_REPARTO, 302);
         const pagina = await caches.match(PAGINA_OFFLINE, { cacheName: CACHE_PAGINA });
         // Otra página sin red: llevar a "Nueva visita" (con su URL real, para que Next hidrate bien)
         if (pagina && url.pathname !== PAGINA_OFFLINE) return Response.redirect(PAGINA_OFFLINE, 302);
