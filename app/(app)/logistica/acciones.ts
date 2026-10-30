@@ -19,6 +19,30 @@ const numero = z.preprocess((v) => (v === "" || v == null ? null : Number(String
 const fecha = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha no válida");
 const id = z.guid();
 
+/** Errores de Supabase en lenguaje claro. Sin la migración de logística, las tablas no existen. */
+function mensajeError(e: { message: string }): string {
+  if (/schema cache|does not exist|Could not find the (table|function)/i.test(e.message)) {
+    return "Falta actualizar la base de datos: ejecuta en Supabase la migración de logística (docs/GUIA-CUENTAS.md, paso 2).";
+  }
+  return e.message;
+}
+
+/** Busca la dirección en OpenStreetMap (gratis). Sin resultado o sin red: null. */
+async function buscarCoordenadas(direccion: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const q = new URLSearchParams({ q: direccion, format: "json", limit: "1", countrycodes: "es" });
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?${q}`, {
+      headers: { "User-Agent": "crm-dliverygo/1.0 (+https://crm-comercial-mu.vercel.app)", "Accept-Language": "es" },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!r.ok) return null;
+    const [primero] = (await r.json()) as { lat: string; lon: string }[];
+    return primero ? { lat: Number(primero.lat), lng: Number(primero.lon) } : null;
+  } catch {
+    return null;
+  }
+}
+
 // ---------- Vehículos y almacén ----------
 
 const esquemaVehiculo = z.object({
@@ -39,7 +63,7 @@ export async function guardarVehiculo(_: EstadoForm, form: FormData): Promise<Es
   const vid = form.get("id") as string | null;
   const sb = await supabaseServidor();
   const { error } = vid ? await sb.from("vehiculos").update(r.data).eq("id", vid) : await sb.from("vehiculos").insert(r.data);
-  if (error) return { error: error.message };
+  if (error) return { error: mensajeError(error) };
   refresh();
   return { ok: vid ? "Vehículo guardado." : "Vehículo añadido." };
 }
@@ -54,11 +78,24 @@ export async function guardarAlmacen(_: EstadoForm, form: FormData): Promise<Est
   await exigirAdmin();
   const r = esquemaAlmacen.safeParse(Object.fromEntries(form));
   if (!r.success) return { error: "Ubicación no válida" };
+  const datos = { ...r.data };
+  let nota = "";
+  // Sin GPS (p. ej. desde el ordenador): se busca la dirección escrita en el mapa
+  if (datos.almacen_lat == null && datos.almacen_direccion) {
+    const c = await buscarCoordenadas(datos.almacen_direccion);
+    if (c) {
+      datos.almacen_lat = c.lat;
+      datos.almacen_lng = c.lng;
+      nota = " Ubicación encontrada en el mapa por la dirección.";
+    } else {
+      nota = " No hemos encontrado la dirección en el mapa: revísala o usa tu ubicación estando en el almacén.";
+    }
+  }
   const sb = await supabaseServidor();
-  const { error } = await sb.from("ajustes_logistica").update({ ...r.data, actualizado_at: new Date().toISOString() }).eq("id", true);
-  if (error) return { error: error.message };
+  const { error } = await sb.from("ajustes_logistica").update({ ...datos, actualizado_at: new Date().toISOString() }).eq("id", true);
+  if (error) return { error: mensajeError(error) };
   refresh();
-  return { ok: "Almacén guardado." };
+  return { ok: "Almacén guardado." + nota };
 }
 
 // ---------- Rutas ----------
@@ -76,7 +113,7 @@ export async function crearRuta(_: EstadoForm, form: FormData): Promise<EstadoFo
   if (!r.success) return { error: r.error.issues[0].message };
   const sb = await supabaseServidor();
   const { data, error } = await sb.from("rutas").insert(r.data).select("id").single();
-  if (error) return { error: error.message };
+  if (error) return { error: mensajeError(error) };
   redirect(`/logistica/rutas/${data.id}`);
 }
 
@@ -120,7 +157,7 @@ export async function anadirParadas(_: EstadoForm, form: FormData): Promise<Esta
     ...clientes.map((c) => ({ ruta_id: rutaId, cliente_id: c, orden: ++orden })),
   ];
   const { error } = await sb.from("paradas").insert(filas);
-  if (error) return { error: /paradas_pedido_vivo/.test(error.message) ? "Algún pedido ya está en otra ruta." : error.message };
+  if (error) return { error: /paradas_pedido_vivo/.test(error.message) ? "Algún pedido ya está en otra ruta." : mensajeError(error) };
   refresh();
   return { ok: `${filas.length} parada${filas.length === 1 ? "" : "s"} añadida${filas.length === 1 ? "" : "s"}.` };
 }
@@ -187,7 +224,7 @@ export async function guardarEntregaCliente(_: EstadoForm, form: FormData): Prom
   if (!r.success) return { error: "Datos no válidos" };
   const sb = await supabaseServidor();
   const { error } = await sb.from("clientes_entrega").upsert({ ...r.data, actualizado_at: new Date().toISOString() });
-  if (error) return { error: error.message };
+  if (error) return { error: mensajeError(error) };
   refresh();
   return { ok: "Guardado." };
 }
