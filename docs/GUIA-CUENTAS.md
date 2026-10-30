@@ -13,6 +13,8 @@ Qué cuentas necesita el CRM, qué está ya hecho y cómo terminar lo que falta.
 
 ---
 
+> **Pausa del plan gratuito de Supabase:** si el proyecto pasa una semana sin uso, Supabase lo pausa y nadie puede entrar («No se ha podido entrar. ¿Hay conexión?»). Se reactiva en **Supabase → el proyecto → Restore project** (tarda unos minutos). Para evitarlo, Vercel llama cada día a `/api/despertar` (ver `vercel.json`). Con Supabase Pro no hay pausas.
+
 ## Paso 1 · Clave secreta de Supabase en Vercel
 
 Sin ella, la pantalla **Más → Usuarios** no puede dar de alta comerciales.

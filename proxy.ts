@@ -24,6 +24,7 @@ export async function proxy(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const ruta = request.nextUrl.pathname;
   if (ruta.startsWith("/auth/")) return respuesta; // enlace del email: lo resuelve la propia ruta
+  if (ruta === "/api/despertar") return respuesta; // aviso diario de Vercel, sin sesión
   const publica = ruta.startsWith("/login");
 
   if (!data?.claims && !publica) {
