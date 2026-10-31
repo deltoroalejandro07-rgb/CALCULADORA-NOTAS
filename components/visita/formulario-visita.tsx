@@ -375,7 +375,7 @@ export function FormularioVisita() {
         </Seccion>
       )}
 
-      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t border-borde bg-fondo/95 px-4 py-3 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 lg:bottom-0 lg:left-64 border-t border-borde bg-fondo/95 px-4 py-3 backdrop-blur">
         <div className="mx-auto max-w-lg">
           {aviso && <p className="mb-2 text-center text-sm font-medium text-red-600 dark:text-red-400" role="alert">{aviso}</p>}
           <Boton className="w-full text-lg" onClick={guardar} cargando={guardando}>

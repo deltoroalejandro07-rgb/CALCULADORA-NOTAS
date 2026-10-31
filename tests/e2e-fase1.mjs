@@ -28,7 +28,7 @@ assert.match(nav, /^https:\/\/www\.google\.com\/maps\/dir\/\?api=1&destination=/
 assert.equal(await page.locator(".leaflet-container").count(), 0);
 assert.match(await page.getByRole("link", { name: /^Abrir .* en Google Maps$/ }).first().getAttribute("href"), /^https:\/\/www\.google\.com\/maps\/dir\/\?api=1&destination=-?\d/);
 await page.screenshot({ path: `${SALIDA}/30-hoy.png`, fullPage: true });
-await page.getByRole("link", { name: /^\d+\s*Seguimientos vencidos$/ }).click();
+await page.getByRole("link", { name: /^Seguimientos vencidos\s*\d+$/ }).click();
 await page.waitForURL("**/clientes?filtro=vencidos");
 
 paso("Un comercial no entra en dirección ni en usuarios");

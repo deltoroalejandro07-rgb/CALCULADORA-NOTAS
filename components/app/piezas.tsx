@@ -5,12 +5,12 @@ import { TEXTO_ESTADO, type EstadoCliente } from "@/lib/dominio/tipos";
 
 export function Cabecera({ titulo, subtitulo, logo, children }: { titulo: string; subtitulo?: string; logo?: boolean; children?: React.ReactNode }) {
   return (
-    <header className="flex items-end justify-between gap-3 px-4 pb-3 pt-6">
-      <div>
+    <header className="flex flex-wrap items-end justify-between gap-3 px-4 pb-4 pt-6 lg:pb-6 lg:pt-10">
+      <div className="min-w-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        {logo && <img src="/logo.svg" alt="dliverygo" width={318} height={103} className="mb-3 h-8 w-auto" />}
-        <h1 className="text-2xl font-bold">{titulo}</h1>
-        {subtitulo && <p className="text-sm text-suave">{subtitulo}</p>}
+        {logo && <img src="/logo.svg" alt="dliverygo" width={318} height={103} className="mb-3 h-8 w-auto lg:hidden" />}
+        <h1 className="text-2xl font-semibold tracking-tight lg:text-3xl">{titulo}</h1>
+        {subtitulo && <p className="mt-0.5 text-sm text-suave lg:text-[15px]">{subtitulo}</p>}
       </div>
       {children}
     </header>
@@ -29,7 +29,7 @@ export function Cargando() {
 }
 
 export function Tarjeta({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <div className={cn("rounded-2xl border border-borde bg-superficie p-4", className)}>{children}</div>;
+  return <div className={cn("rounded-2xl border border-borde bg-superficie p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]", className)}>{children}</div>;
 }
 
 const COLOR_ESTADO: Record<EstadoCliente, string> = {

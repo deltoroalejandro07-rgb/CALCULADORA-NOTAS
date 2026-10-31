@@ -20,7 +20,7 @@ export function BarraInferior() {
 /** Sin ruta (mientras carga una página con parámetros) no marca ninguna pestaña. */
 export function Barra({ ruta }: { ruta: string | null }) {
   return (
-    <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-borde bg-superficie/95 backdrop-blur">
+    <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-borde bg-superficie/95 backdrop-blur lg:hidden">
       <ul className="mx-auto grid max-w-lg grid-cols-5">
         {ENLACES.map(({ href, texto, icono: Icono, central }) => {
           const activo = !!ruta && (ruta === href || ruta.startsWith(href + "/"));
@@ -30,9 +30,9 @@ export function Barra({ ruta }: { ruta: string | null }) {
                 <Link
                   href={href}
                   aria-label="Registrar visita"
-                  className="-mt-6 flex h-16 w-16 flex-col items-center justify-center rounded-full bg-marca text-marca-texto shadow-lg ring-4 ring-fondo active:scale-95"
+                  className="-mt-5 flex h-14 w-14 flex-col items-center justify-center rounded-full bg-marca text-marca-texto shadow-lg shadow-marca/30 ring-4 ring-fondo active:scale-95"
                 >
-                  <Icono className="h-8 w-8" strokeWidth={2.5} />
+                  <Icono className="h-7 w-7" strokeWidth={2.5} />
                 </Link>
               ) : (
                 <Link

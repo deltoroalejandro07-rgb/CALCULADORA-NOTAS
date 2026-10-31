@@ -64,7 +64,7 @@ function Seccion({ titulo, icono: Icono, clase, filtro, total, children }: { tit
           </Link>
         )}
       </h2>
-      <ul className="divide-y divide-borde border-y border-borde bg-superficie">{children}</ul>
+      <ul className="divide-y divide-borde border-y border-borde bg-superficie lg:mx-4 lg:overflow-hidden lg:rounded-2xl lg:border-x">{children}</ul>
     </section>
   );
 }
@@ -102,12 +102,18 @@ export function PanelHoy({ clientes }: { clientes: ClienteHoy[] }) {
 
   return (
     <div className="space-y-5">
-      <section className="grid grid-cols-2 gap-3 px-4">
+      <section className="grid grid-cols-2 gap-3 px-4 lg:grid-cols-4">
         {tarjetas.map(({ texto, n, icono: Icono, clase, filtro }) => (
-          <Link key={texto} href={`/clientes?filtro=${filtro}`} className="rounded-2xl border border-borde bg-superficie p-4 active:scale-[0.98]">
-            <Icono className={`h-6 w-6 ${clase}`} aria-hidden />
-            <p className="mt-2 text-3xl font-bold tabular-nums">{n}</p>
-            <p className="text-sm leading-tight text-suave">{texto}</p>
+          <Link
+            key={texto}
+            href={`/clientes?filtro=${filtro}`}
+            className="group rounded-2xl border border-borde bg-superficie p-3.5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition hover:border-marca/40 hover:shadow-md active:scale-[0.98] lg:p-5"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-[13px] font-medium leading-tight text-suave">{texto}</p>
+              <Icono className={`h-5 w-5 shrink-0 ${clase}`} aria-hidden />
+            </div>
+            <p className="mt-2 text-2xl font-semibold tracking-tight tabular-nums lg:text-3xl">{n}</p>
           </Link>
         ))}
       </section>

@@ -19,7 +19,7 @@ const pct = (x: number) => `${Math.round(x * 100)} %`;
 export default function PaginaDireccion() {
   return (
     <>
-      <Link href="/mas" className="inline-flex min-h-11 items-center gap-1 px-3 pt-3 text-sm text-suave">
+      <Link href="/mas" className="inline-flex min-h-11 items-center gap-1 px-3 pt-3 text-sm text-suave lg:hidden">
         <ChevronLeft className="h-5 w-5" aria-hidden /> Más
       </Link>
       <Cabecera titulo="Panel de dirección" subtitulo="Últimas 8 semanas · todo el equipo" />
@@ -40,7 +40,7 @@ async function Contenido() {
 
   return (
     <div className="space-y-4 px-4 pb-8">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Cifra valor={String(d.totalVisitas)} etiqueta="Visitas" detalle={`${(d.totalVisitas / d.semanas).toFixed(1).replace(".", ",")} por semana`} />
         <Cifra valor={pct(d.tasaConversion)} etiqueta="Visitas que acaban en pedido" detalle={`${d.totalPedidosVisita} pedidos en visita`} />
         <Cifra valor={String(nuevosEsteMes)} etiqueta="Clientes nuevos este mes" detalle={`${clientesTotal} en total`} />

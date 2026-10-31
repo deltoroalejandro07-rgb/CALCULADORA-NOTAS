@@ -90,7 +90,7 @@ export function Sincronizador() {
   }
 
   return (
-    <div role="status" className="pointer-events-none fixed inset-x-0 top-0 z-50 mx-auto flex max-w-lg justify-end px-3 pt-[max(0.5rem,env(safe-area-inset-top))]">
+    <div role="status" className="pointer-events-none fixed inset-x-0 top-0 z-50 mx-auto flex max-w-lg justify-end lg:max-w-none lg:px-6 px-3 pt-[max(0.5rem,env(safe-area-inset-top))]">
       <p className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold shadow ${clase}`}>
         {icono}
         {texto}

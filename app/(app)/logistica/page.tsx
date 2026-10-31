@@ -21,7 +21,7 @@ const COLOR_RUTA: Record<EstadoRuta, string> = {
 export default function PaginaLogistica({ searchParams }: PageProps<"/logistica">) {
   return (
     <>
-      <Link href="/mas" className="inline-flex min-h-11 items-center gap-1 px-3 pt-3 text-sm text-suave">
+      <Link href="/mas" className="inline-flex min-h-11 items-center gap-1 px-3 pt-3 text-sm text-suave lg:hidden">
         <ChevronLeft className="h-5 w-5" aria-hidden /> Más
       </Link>
       <Cabecera titulo="Logística" subtitulo="Rutas de reparto y vehículos" />

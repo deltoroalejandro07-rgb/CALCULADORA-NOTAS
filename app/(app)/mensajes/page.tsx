@@ -45,7 +45,7 @@ async function Contenido() {
   ]);
 
   const historial = (
-    <ul className="divide-y divide-borde border-y border-borde bg-superficie">
+    <ul className="divide-y divide-borde border-y border-borde bg-superficie lg:mx-4 lg:overflow-hidden lg:rounded-2xl lg:border-x">
       {(mensajes ?? []).map((m) => (
         <li key={m.id} className="px-4 py-3">
           <div className="flex items-start gap-2">

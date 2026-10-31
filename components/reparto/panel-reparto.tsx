@@ -403,7 +403,7 @@ export function PanelReparto() {
 
       <section>
         <p className="mb-1 px-4 text-sm font-semibold uppercase tracking-wide text-suave">Todas las paradas</p>
-        <ol className="divide-y divide-borde border-y border-borde bg-superficie">
+        <ol className="divide-y divide-borde border-y border-borde bg-superficie lg:mx-4 lg:overflow-hidden lg:rounded-2xl lg:border-x">
           {ordenadas.map((p, i) => {
             const { estado, local } = estadoDe(p);
             return (

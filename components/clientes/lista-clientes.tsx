@@ -194,7 +194,7 @@ export function ListaClientes({ clientes, esAdmin }: { clientes: ClienteLista[];
         </div>
       </div>
 
-      <ul className="mt-2 divide-y divide-borde border-y border-borde bg-superficie">
+      <ul className="mt-2 divide-y divide-borde border-y border-borde bg-superficie lg:mx-4 lg:overflow-hidden lg:rounded-2xl lg:border-x">
           {filtrados.map(({ c, t }) => {
             const vencido = c.proxima_accion_fecha && c.proxima_accion_fecha < fechaDentroDe(0);
             return (

@@ -4,7 +4,7 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 :root {
-  --fondo: #f6f7f9;
+  --fondo: #f4f5f7;
   --superficie: #ffffff;
   --texto: #111827;
   --texto-suave: #5b6472;
@@ -66,6 +66,9 @@ html {
 body {
   background: var(--fondo);
   color: var(--texto);
+  /* Inter con cifras tabulares y formas más sobrias: aspecto más profesional */
+  font-feature-settings: "cv11", "ss01", "tnum";
+  text-rendering: optimizeLegibility;
 }
 
 /* Espacio para la barra inferior y la zona segura del iPhone */
