@@ -71,7 +71,7 @@ export function FormularioPlantilla({ inicial, comercial }: { inicial?: Plantill
       {canal === "email" && (
         <label className="block text-sm font-medium">
           Asunto
-          <input name="asunto" defaultValue={inicial?.asunto ?? ""} placeholder="{oferta} para {negocio}" className={campo} />
+          <input name="asunto" defaultValue={inicial?.asunto ?? ""} placeholder="Novedades para {negocio}" className={campo} />
         </label>
       )}
       <div>
@@ -79,7 +79,7 @@ export function FormularioPlantilla({ inicial, comercial }: { inicial?: Plantill
           Mensaje *
         </label>
         <div className="my-2 flex flex-wrap gap-1.5">
-          {VARIABLES.map((v) => (
+          {VARIABLES.filter((v) => v === "contacto" || v === "negocio" || v === "comercial").map((v) => (
             <button key={v} type="button" onClick={() => insertar(v)} title={AYUDA_VARIABLES[v]} className="rounded-lg border border-borde bg-superficie px-2 py-1.5 font-mono text-xs">
               {`{${v}}`}
             </button>

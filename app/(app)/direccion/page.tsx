@@ -7,7 +7,7 @@ import { BarrasHorizontales, Cifra, Columnas, ColumnasApiladas, Tarjeta } from "
 import { exigirAdmin } from "@/lib/auth";
 import { cargarDireccion } from "@/lib/datos/direccion";
 import { TEXTO_ESTADO } from "@/lib/dominio/tipos";
-import { euros } from "@/lib/formato";
+
 
 export const metadata: Metadata = { title: "Panel de dirección" };
 
@@ -36,7 +36,7 @@ async function Contenido() {
   const embudoActivo = d.embudo.filter((e) => e.estado !== "perdido");
   const clientesTotal = d.embudo.reduce((s, e) => s + e.n, 0);
   const nuevosEsteMes = d.nuevosMes[d.nuevosMes.length - 1]?.n ?? 0;
-  const ventas = d.ventasMes.reduce((s, m) => s + m.importe, 0);
+  const interesados = d.embudo.find((e) => e.estado === "interesado")?.n ?? 0;
 
   return (
     <div className="space-y-4 px-4 pb-8">
@@ -44,7 +44,7 @@ async function Contenido() {
         <Cifra valor={String(d.totalVisitas)} etiqueta="Visitas" detalle={`${(d.totalVisitas / d.semanas).toFixed(1).replace(".", ",")} por semana`} />
         <Cifra valor={pct(d.tasaConversion)} etiqueta="Visitas que acaban en pedido" detalle={`${d.totalPedidosVisita} pedidos en visita`} />
         <Cifra valor={String(nuevosEsteMes)} etiqueta="Clientes nuevos este mes" detalle={`${clientesTotal} en total`} />
-        <Cifra valor={euros(ventas)} etiqueta="Pedidos (6 meses)" detalle="sin IVA" />
+        <Cifra valor={String(interesados)} etiqueta="Clientes interesados" detalle="ahora mismo" />
       </div>
 
       <Tarjeta titulo="Visitas por comercial y semana" subtitulo="Semana que empieza el lunes indicado">
@@ -97,14 +97,6 @@ async function Contenido() {
 
       <Tarjeta titulo="Clientes nuevos por mes">
         <Columnas datos={d.nuevosMes.map((m) => ({ etiqueta: nombreMes(m.mes), n: m.n }))} />
-      </Tarjeta>
-
-      <Tarjeta titulo="Importe de pedidos por mes" subtitulo="Sin IVA">
-        <Columnas datos={d.ventasMes.map((m) => ({ etiqueta: nombreMes(m.mes), n: Math.round(m.importe) }))} enEuros color="var(--serie-3)" />
-      </Tarjeta>
-
-      <Tarjeta titulo="Productos con más interés" subtitulo="Nº de clientes que los marcaron «le interesa»">
-        <BarrasHorizontales datos={d.productos} color="var(--serie-2)" />
       </Tarjeta>
 
       <Tarjeta titulo="Zonas con más actividad" subtitulo="Visitas en las últimas 8 semanas">

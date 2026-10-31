@@ -9,8 +9,17 @@ const SALIDA = process.argv[2] ?? "capturas";
 
 // Limpieza de ejecuciones anteriores (las entregas registradas no se borran por diseño: sin triggers)
 sql(
-  "set session_replication_role = replica; delete from eventos_reparto; delete from paradas; delete from rutas; delete from vehiculos where matricula = '1234E2E'; set session_replication_role = origin; update ajustes_logistica set almacen_lat = null, almacen_lng = null, almacen_direccion = null",
+  "set session_replication_role = replica; delete from eventos_reparto; delete from paradas; delete from rutas; delete from albaranes; delete from destinos; delete from vehiculos where matricula = '1234E2E'; set session_replication_role = origin; update ajustes_logistica set almacen_lat = null, almacen_lng = null, almacen_direccion = null",
 );
+// Tres albaranes por repartir (como si se hubieran subido los PDF de Holded), cerca del almacén de prueba
+sql(`with d as (
+    insert into destinos (nombre, direccion, localidad, telefono, lat, lng, clave) values
+      ('Bodega Antigua E2E', 'C/ Lavapiés 40', 'Madrid', '+34600000001', 40.4085, -3.7010, 'e2e-1'),
+      ('Mesón El Hidalgo E2E', 'C/ Embajadores 50', 'Madrid', '+34600000002', 40.4060, -3.7030, 'e2e-2'),
+      ('Taberna Los Arcos E2E', 'C/ Fuencarral 140', 'Madrid', '+34600000003', 40.4300, -3.7020, 'e2e-3')
+    returning id, clave)
+  insert into albaranes (numero, destino_id, lineas, origen)
+  select 'SOE2E' || right(clave, 1), id, '[{"descripcion": "CERVEZA BARRIL 30L", "cantidad": 2}, {"descripcion": "AGUA 1,5L PACK 6", "cantidad": 3}]', 'manual' from d`);
 process.loadEnvFile(".env.local");
 const almacen = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SECRET_KEY).storage.from("entregas");
 for (const carpeta of (await almacen.list()).data ?? []) {
@@ -45,14 +54,14 @@ await page.getByRole("button", { name: "Guardar", exact: true }).click();
 await page.getByText("1234E2E").waitFor();
 await page.screenshot({ path: `${SALIDA}/41-vehiculos.png`, fullPage: true });
 
-paso("Nueva ruta para hoy con 3 pedidos por repartir, ordenada por cercanía");
+paso("Nueva ruta para hoy con 3 albaranes por repartir, ordenada por cercanía");
 await page.goto(`${APP}/logistica`);
 await page.getByRole("button", { name: "Nueva ruta" }).click();
 assert.equal(await page.locator("select[name=conductor_id]").inputValue(), sql("select id from perfiles where email = 'luis@demo.local'"), "pone el conductor habitual");
 await page.getByRole("button", { name: "Crear y añadir paradas" }).click();
 await page.waitForURL("**/logistica/rutas/**");
 const rutaId = page.url().split("/").pop();
-const casillas = page.locator('input[name="pedido"]');
+const casillas = page.locator('input[name="albaran"]');
 for (let i = 0; i < 3; i++) await casillas.nth(i).check();
 await page.getByRole("button", { name: "Añadir a la ruta (3)" }).click();
 await page.getByText("✓ 3 paradas añadidas.").waitFor();
@@ -153,9 +162,9 @@ await firma.waitFor();
 assert.ok(await firma.evaluate((img) => img.complete && img.naturalWidth > 0), "la firma se ve");
 await page.screenshot({ path: `${SALIDA}/50-albaran.png`, fullPage: true });
 
-paso("El pedido que falló vuelve a «por repartir»");
-const fallido = sql(`select pedido_id from paradas where ruta_id = '${rutaId}' and estado = 'fallida'`);
-assert.equal(sql(`select count(*) from pedidos_por_repartir where id = '${fallido}'`), "1");
+paso("El albarán entregado queda entregado; el que falló vuelve a «por repartir»");
+assert.equal(sql(`select a.estado from albaranes a join paradas p on p.albaran_id = a.id where p.ruta_id = '${rutaId}' and p.estado = 'fallida'`), "pendiente");
+assert.equal(sql(`select a.estado from albaranes a join paradas p on p.albaran_id = a.id where p.ruta_id = '${rutaId}' and p.estado = 'entregada'`), "entregado");
 
 const errores = [...oficina.errores, ...movil.errores];
 assert.deepEqual(errores, [], "sin errores en la consola");

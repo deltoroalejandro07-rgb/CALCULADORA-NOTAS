@@ -146,18 +146,19 @@ async function paradasDe(rutaId: string) {
 export async function anadirParadas(_: EstadoForm, form: FormData): Promise<EstadoForm> {
   await exigirAdmin();
   const rutaId = id.parse(form.get("ruta_id"));
-  const pedidos = form.getAll("pedido").map(String).filter((v) => id.safeParse(v).success);
+  const albaranes = form.getAll("albaran").map(String).filter((v) => id.safeParse(v).success);
   const clientes = form.getAll("cliente").map(String).filter((v) => id.safeParse(v).success);
-  if (!pedidos.length && !clientes.length) return { error: "Marca al menos un pedido o un cliente." };
+  if (!albaranes.length && !clientes.length) return { error: "Marca al menos un albarán o un cliente." };
   const sb = await supabaseServidor();
-  const { data: peds } = pedidos.length ? await sb.from("pedidos_por_repartir").select("id, cliente_id").in("id", pedidos) : { data: [] };
+  const { data: albs } = albaranes.length ? await sb.from("albaranes").select("id, destino_id").in("id", albaranes).eq("estado", "pendiente") : { data: [] };
   let orden = (await paradasDe(rutaId)).reduce((m, p) => Math.max(m, p.orden), 0);
   const filas = [
-    ...(peds ?? []).map((p) => ({ ruta_id: rutaId, cliente_id: p.cliente_id!, pedido_id: p.id!, orden: ++orden })),
+    ...(albs ?? []).map((a) => ({ ruta_id: rutaId, destino_id: a.destino_id, albaran_id: a.id, orden: ++orden })),
     ...clientes.map((c) => ({ ruta_id: rutaId, cliente_id: c, orden: ++orden })),
   ];
+  if (!filas.length) return { error: "Esos albaranes ya están en otra ruta." };
   const { error } = await sb.from("paradas").insert(filas);
-  if (error) return { error: /paradas_pedido_vivo/.test(error.message) ? "Algún pedido ya está en otra ruta." : mensajeError(error) };
+  if (error) return { error: /paradas_albaran_vivo|paradas_pedido_vivo/.test(error.message) ? "Algún albarán ya está en otra ruta." : mensajeError(error) };
   refresh();
   return { ok: `${filas.length} parada${filas.length === 1 ? "" : "s"} añadida${filas.length === 1 ? "" : "s"}.` };
 }

@@ -123,17 +123,19 @@ export function Campana({
           </Chip>
         ))}
       </div>
-      <label className="block text-sm font-medium">
-        Oferta
-        <select value={ofertaId ?? ""} onChange={(e) => cambiarOferta(e.target.value || null)} className={select}>
-          <option value="">Sin oferta (mensaje general)</option>
-          {ofertas.map((o) => (
-            <option key={o.id} value={o.id}>
-              {o.titulo}
-            </option>
-          ))}
-        </select>
-      </label>
+      {ofertas.length > 0 && (
+        <label className="block text-sm font-medium">
+          Oferta
+          <select value={ofertaId ?? ""} onChange={(e) => cambiarOferta(e.target.value || null)} className={select}>
+            <option value="">Sin oferta (mensaje general)</option>
+            {ofertas.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.titulo}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <label className="block text-sm font-medium">
         Plantilla
         <select value={plantillaId ?? ""} onChange={(e) => setPlantillaId(e.target.value || null)} className={select}>

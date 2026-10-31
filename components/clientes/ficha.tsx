@@ -9,7 +9,6 @@ import {
   Pencil,
   Phone,
   Plus,
-  ShoppingCart,
   Tag,
   Truck,
   User,
@@ -56,7 +55,7 @@ function Dato({ icono: Icono, etiqueta, children }: { icono: typeof Phone; etiqu
 }
 
 export function FichaCliente({ ficha, esAdmin }: { ficha: Ficha; esAdmin: boolean }) {
-  const { cliente: c, intereses, ofertas } = ficha;
+  const { cliente: c, interes } = ficha;
   const t = calcularTemperatura(c);
   const vencida = c.proxima_accion_fecha && c.proxima_accion_fecha < fechaDentroDe(0);
   const llegar = enlaceComoLlegar(c);
@@ -86,12 +85,9 @@ export function FichaCliente({ ficha, esAdmin }: { ficha: Ficha; esAdmin: boolea
         <BotonContacto href={llegar} icono={Navigation} texto="Llegar" nota="Sin dirección" />
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
-        <Link href={`/visita/nueva?cliente=${c.id}`} className="col-span-3 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-marca font-semibold text-marca-texto">
+      <div className="grid grid-cols-2 gap-2">
+        <Link href={`/visita/nueva?cliente=${c.id}`} className="col-span-2 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-marca font-semibold text-marca-texto">
           <Plus className="h-5 w-5" aria-hidden /> Registrar visita
-        </Link>
-        <Link href={`/clientes/${c.id}/pedido`} className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-borde bg-superficie text-sm font-medium">
-          <ShoppingCart className="h-4 w-4" aria-hidden /> Pedido
         </Link>
         <Link href={`/mensajes/enviar?cliente=${c.id}`} className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-borde bg-superficie text-sm font-medium">
           <MessageCircle className="h-4 w-4" aria-hidden /> Mensaje
@@ -111,39 +107,13 @@ export function FichaCliente({ ficha, esAdmin }: { ficha: Ficha; esAdmin: boolea
         </Tarjeta>
       )}
 
-      {intereses.length > 0 && (
+      {interes && (
         <section>
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-suave">Le interesa</h2>
-          <div className="flex flex-wrap gap-2">
-            {intereses.map((p) => (
-              <span key={p.id} className="rounded-full bg-orange-100 px-3 py-1.5 text-sm text-orange-900 dark:bg-orange-900/40 dark:text-orange-100">
-                {p.nombre}
-                {p.formato && <span className="ml-1 text-xs opacity-70">{p.formato}</span>}
-              </span>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {ofertas.length > 0 && (
-        <section>
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-suave">Ofertas que le encajan</h2>
-          <div className="space-y-2">
-            {ofertas.map((o) => (
-              <Tarjeta key={o.id} className="flex items-center gap-3 p-3">
-                <Tag className="h-5 w-5 shrink-0 text-marca" aria-hidden />
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium">{o.titulo}</p>
-                  <p className="text-xs text-suave">
-                    {o.condicion ? `${o.condicion} · ` : ""}hasta el {fecha(o.fecha_fin)}
-                  </p>
-                </div>
-                <Link href={`/mensajes/enviar?cliente=${c.id}&oferta=${o.id}`} className="shrink-0 rounded-lg bg-marca-suave px-3 py-2 text-sm font-semibold">
-                  Enviar
-                </Link>
-              </Tarjeta>
-            ))}
-          </div>
+          <p className="rounded-xl bg-orange-100 px-3 py-2 text-sm text-orange-900 dark:bg-orange-900/40 dark:text-orange-100">
+            {interes.texto}
+            <span className="block text-xs opacity-70">Apuntado el {fecha(interes.fecha)}</span>
+          </p>
         </section>
       )}
 

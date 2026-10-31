@@ -1,4 +1,4 @@
-// Pasos 3 a 7: Hoy, usuarios, catálogo, ofertas, plantillas, campañas, dirección e importación.
+// Pasos 3 a 7: Hoy, usuarios, plantillas, campañas, dirección e importación (sin catálogo ni ofertas).
 // Uso: node tests/e2e-fase1.mjs <carpeta-capturas>   (Supabase local con datos demo y la app en :3000)
 import assert from "node:assert/strict";
 import { abrirNavegador, APP, entrar, paso, sql } from "./e2e-util.mjs";
@@ -40,15 +40,15 @@ await page.goto(`${APP}/mensajes/enviar?cliente=${sinConsentimiento}`);
 await page.getByText(/no ha dado su consentimiento/).waitFor();
 assert.equal(await page.getByRole("link", { name: "Abrir WhatsApp" }).count(), 0);
 
-paso("Campaña (Ana) con la oferta de café o de barril");
-const oferta = sql("select id from ofertas where titulo = 'Arranque de barril'");
-await page.goto(`${APP}/mensajes/campana?oferta=${oferta}`);
+paso("Campaña (Ana): mensaje general, sin ofertas");
+await page.goto(`${APP}/mensajes/campana`);
 await page.getByText(/con permiso para WhatsApp/).waitFor();
 await page.screenshot({ path: `${SALIDA}/31-campana.png`, fullPage: true });
 const antes = Number(sql("select count(*) from mensajes"));
 const enlaceWa = await page.getByRole("link", { name: "WhatsApp" }).first().getAttribute("href");
 assert.match(enlaceWa, /^https:\/\/wa\.me\/34\d{9}\?text=Hola%20/);
-assert.match(decodeURIComponent(enlaceWa), /Arranque de barril[\s\S]*responde BAJA/);
+assert.match(decodeURIComponent(enlaceWa), /responde BAJA/);
+assert.equal(await page.getByText("Oferta", { exact: true }).count(), 0, "sin selector de ofertas");
 // Se abre en otra pestaña (aquí sin internet carga una página de error: da igual)
 const [popup] = await Promise.all([ctx.waitForEvent("page"), page.getByRole("link", { name: "WhatsApp" }).first().click()]);
 await popup.close();
@@ -110,32 +110,10 @@ await page.locator("li", { hasText: "marta.e2e@demo.local" }).getByText("Desacti
 assert.equal(sql("select (banned_until > now())::text from auth.users where email = 'marta.e2e@demo.local'"), "true");
 await page.screenshot({ path: `${SALIDA}/33-usuarios.png` });
 
-paso("Catálogo: crear producto destacado");
-await page.goto(`${APP}/catalogo/nuevo`);
-await page.getByLabel("Nombre *").fill("Agua con gas E2E");
-await page.getByLabel("Categoría").selectOption("agua");
-await page.getByLabel("Formato").fill("Caja 24 × 25 cl");
-await page.getByLabel(/Precio tarifa/).fill("9,90");
-await page.getByLabel(/Destacado/).check();
-await page.getByRole("button", { name: "Crear producto" }).click();
-await page.waitForURL("**/catalogo");
-await page.getByText("Agua con gas E2E").waitFor();
-assert.equal(sql("select precio_tarifa || '|' || destacado from productos where nombre = 'Agua con gas E2E'"), "9.90|true");
-await page.screenshot({ path: `${SALIDA}/34-catalogo.png` });
-
-paso("Ofertas: crear oferta para bares con vista previa del segmento");
-await page.goto(`${APP}/ofertas/nueva`);
-await page.getByLabel("Título *").fill("Vermut de verano E2E");
-await page.getByLabel(/Condición/).fill("2 cajas + 1 gratis");
-await page.getByRole("button", { name: "Bar", exact: true }).click();
-const previa = Number((await page.getByText(/Llegaría a/).textContent()).match(/(\d+)/)[1]);
-const bares = Number(sql("select count(*) from clientes where tipo = 'bar'"));
-assert.equal(previa, bares);
-await page.screenshot({ path: `${SALIDA}/35-oferta-form.png`, fullPage: true });
-await page.getByRole("button", { name: "Crear oferta" }).click();
-await page.waitForURL("**/ofertas");
-await page.locator("li", { hasText: "Vermut de verano E2E" }).getByText(new RegExp(`${bares}\\s+clientes encajan`)).waitFor();
-await page.screenshot({ path: `${SALIDA}/36-ofertas.png` });
+paso("El catálogo y las ofertas ya no existen");
+for (const ruta of ["/catalogo", "/ofertas"]) assert.equal((await page.goto(`${APP}${ruta}`)).status(), 404, `${ruta} eliminado`);
+await page.goto(`${APP}/mas`);
+assert.equal(await page.getByRole("link", { name: /Catálogo|Ofertas/ }).count(), 0);
 
 paso("Plantillas: variable inexistente → error; corregida → guardada");
 await page.goto(`${APP}/mensajes/plantillas/nueva`);

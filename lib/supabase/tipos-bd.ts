@@ -591,14 +591,14 @@ isOneToOne: false
                   ]
                 },"visitas": {
                   Row: {
-                    "cliente_id": string,"comercial_id": string,"fecha": string,"id": string,"is_seed": boolean,"lat": number | null,"lng": number | null,"material_entregado": (string)[],"notas": string | null,"precision_m": number | null,"proxima_accion": string | null,"proxima_accion_fecha": string | null,"resultado": Database["public"]['Enums']["resultado_visita"],"sincronizado_at": string,"tipo": Database["public"]['Enums']["tipo_visita"]
+                    "cliente_id": string,"comercial_id": string,"fecha": string,"id": string,"interes_texto": string | null,"is_seed": boolean,"lat": number | null,"lng": number | null,"material_entregado": (string)[],"notas": string | null,"precision_m": number | null,"proxima_accion": string | null,"proxima_accion_fecha": string | null,"resultado": Database["public"]['Enums']["resultado_visita"],"sincronizado_at": string,"tipo": Database["public"]['Enums']["tipo_visita"]
                   }
                   ComputedFields: never
                   Insert: {
-                    "cliente_id": string,"comercial_id"?: string,"fecha"?: string,"id"?: string,"is_seed"?: boolean,"lat"?: number | null,"lng"?: number | null,"material_entregado"?: (string)[],"notas"?: string | null,"precision_m"?: number | null,"proxima_accion"?: string | null,"proxima_accion_fecha"?: string | null,"resultado": Database["public"]['Enums']["resultado_visita"],"sincronizado_at"?: string,"tipo": Database["public"]['Enums']["tipo_visita"]
+                    "cliente_id": string,"comercial_id"?: string,"fecha"?: string,"id"?: string,"interes_texto"?: string | null,"is_seed"?: boolean,"lat"?: number | null,"lng"?: number | null,"material_entregado"?: (string)[],"notas"?: string | null,"precision_m"?: number | null,"proxima_accion"?: string | null,"proxima_accion_fecha"?: string | null,"resultado": Database["public"]['Enums']["resultado_visita"],"sincronizado_at"?: string,"tipo": Database["public"]['Enums']["tipo_visita"]
                   }
                   Update: {
-                    "cliente_id"?: string,"comercial_id"?: string,"fecha"?: string,"id"?: string,"is_seed"?: boolean,"lat"?: number | null,"lng"?: number | null,"material_entregado"?: (string)[],"notas"?: string | null,"precision_m"?: number | null,"proxima_accion"?: string | null,"proxima_accion_fecha"?: string | null,"resultado"?: Database["public"]['Enums']["resultado_visita"],"sincronizado_at"?: string,"tipo"?: Database["public"]['Enums']["tipo_visita"]
+                    "cliente_id"?: string,"comercial_id"?: string,"fecha"?: string,"id"?: string,"interes_texto"?: string | null,"is_seed"?: boolean,"lat"?: number | null,"lng"?: number | null,"material_entregado"?: (string)[],"notas"?: string | null,"precision_m"?: number | null,"proxima_accion"?: string | null,"proxima_accion_fecha"?: string | null,"resultado"?: Database["public"]['Enums']["resultado_visita"],"sincronizado_at"?: string,"tipo"?: Database["public"]['Enums']["tipo_visita"]
                   }
                   Relationships: [
                     {

@@ -10,7 +10,7 @@ import { clientesParaSegmentar } from "@/lib/datos/segmento";
 
 export const metadata: Metadata = { title: "Campaña" };
 
-export default function PaginaCampana({ searchParams }: PageProps<"/mensajes/campana">) {
+export default function PaginaCampana() {
   return (
     <>
       <Link href="/mensajes" className="inline-flex min-h-11 items-center gap-1 px-3 pt-3 text-sm text-suave">
@@ -18,15 +18,13 @@ export default function PaginaCampana({ searchParams }: PageProps<"/mensajes/cam
       </Link>
       <Cabecera titulo="Campaña" subtitulo="Un mensaje personalizado para cada cliente" />
       <Suspense fallback={<Cargando />}>
-        {searchParams.then((sp) => (
-          <Contenido ofertaId={sp.oferta ? String(sp.oferta) : null} />
-        ))}
+        <Contenido />
       </Suspense>
     </>
   );
 }
 
-async function Contenido({ ofertaId }: { ofertaId: string | null }) {
+async function Contenido() {
   const [usuario, clientes, datos] = await Promise.all([usuarioActual(), clientesParaSegmentar(), datosParaMensajes()]);
-  return <Campana clientes={clientes} plantillas={datos.plantillas} ofertas={datos.ofertas} comercial={usuario.nombre} ofertaInicial={ofertaId} esAdmin={usuario.rol === "admin"} />;
+  return <Campana clientes={clientes} plantillas={datos.plantillas} ofertas={[]} comercial={usuario.nombre} ofertaInicial={null} esAdmin={usuario.rol === "admin"} />;
 }

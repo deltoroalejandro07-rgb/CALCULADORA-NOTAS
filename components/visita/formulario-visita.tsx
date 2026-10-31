@@ -36,7 +36,6 @@ import {
   normalizarTelefono,
   proximoLunes,
   SUGERENCIA_PROXIMA,
-  type MarcaProducto,
 } from "@/lib/dominio/visita";
 import { fecha } from "@/lib/formato";
 import { useDictado, useEnLinea, useUbicacion } from "@/lib/navegador";
@@ -44,7 +43,6 @@ import { baseLocal, type ClienteLocal, type ClienteNuevo, type VisitaNueva } fro
 import { encolarVisita } from "@/lib/offline/sincronizar";
 import { Fotos, type FotoBorrador } from "./fotos";
 import { SelectorCliente, type BorradorCliente } from "./selector-cliente";
-import { SelectorProductos } from "./selector-productos";
 
 const RESULTADOS: { valor: ResultadoVisita; icono: typeof Flame; clase: string }[] = [
   { valor: "no_estaba", icono: DoorClosed, clase: "border-slate-400 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100" },
@@ -93,7 +91,7 @@ export function FormularioVisita() {
   const [nuevo, setNuevo] = useState<BorradorCliente | null>(null);
   const [tipo, setTipo] = useState<TipoVisita>(tipoGuardado);
   const [resultado, setResultado] = useState<ResultadoVisita | null>(null);
-  const [marcas, setMarcas] = useState<Record<string, MarcaProducto>>({});
+  const [interes, setInteres] = useState("");
   const [nota, setNota] = useState("");
   const [fotos, setFotos] = useState<FotoBorrador[]>([]);
   const [materiales, setMateriales] = useState<string[]>([]);
@@ -124,7 +122,7 @@ export function FormularioVisita() {
     setCliente(null);
     setNuevo(null);
     setResultado(null);
-    setMarcas({});
+    setInteres("");
     setNota("");
     setFotos([]);
     setMateriales([]);
@@ -168,7 +166,8 @@ export function FormularioVisita() {
       notas: nota.trim() || null,
       proxima_accion: proxima.texto.trim() || null,
       proxima_accion_fecha: proxima.fecha || null,
-      productos: Object.entries(marcas).map(([producto_id, relacion]) => ({ producto_id, relacion })),
+      productos: [],
+      interes_texto: interes.trim() || null,
       fotos: fotos.map((f) => ({ id: f.id, tipo: f.tipo })),
       consentimientos: (["whatsapp", "email"] as const).filter((c) => consiente[c]).map((canal) => ({ id: crypto.randomUUID(), canal })),
     };
@@ -261,8 +260,15 @@ export function FormularioVisita() {
         </div>
       </Seccion>
 
-      <Seccion titulo="Productos" opcional>
-        <SelectorProductos marcas={marcas} onCambio={setMarcas} />
+      <Seccion titulo="¿Qué productos le interesan?" opcional>
+        <input
+          value={interes}
+          onChange={(e) => setInteres(e.target.value)}
+          maxLength={1000}
+          placeholder="Cerveza de barril, agua con gas, café…"
+          aria-label="Productos que le interesan"
+          className="min-h-12 w-full rounded-xl border border-borde bg-superficie px-3 outline-none focus:border-marca"
+        />
       </Seccion>
 
       <Seccion titulo="Nota" opcional>

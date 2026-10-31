@@ -1,4 +1,4 @@
-// Paso 2: lista, filtros, mapa, ficha, edición, consentimiento y pedido.
+// Paso 2: lista, filtros, mapa, ficha, edición y consentimiento.
 // Uso: node tests/e2e-clientes.mjs <carpeta-capturas>
 import assert from "node:assert/strict";
 import { abrirNavegador, APP, entrar, paso, sql } from "./e2e-util.mjs";
@@ -85,30 +85,14 @@ await page.getByText("Email: acepta ofertas").waitFor();
 await page.getByText(/Consentimiento email \(de palabra/).waitFor();
 assert.equal(sql(`select consiente_email from clientes where id = '${clienteId}'`), "t");
 
-paso("Pedido de 2 productos → total y cliente pasa a cliente");
-await page.getByRole("link", { name: "Pedido" }).click();
-await page.getByRole("heading", { name: "Nuevo pedido" }).waitFor();
-const productos = page.locator("ul li button").filter({ hasText: "€" });
-await productos.nth(0).click();
-await productos.nth(0).click();
-await page.getByRole("button", { name: "Más" }).first().click(); // 2 uds del primero
-await page.screenshot({ path: `${SALIDA}/25-pedido.png` });
-const totalPantalla = (await page.getByText("Total (sin IVA)").locator("..").locator("p").nth(1).textContent()).replace(/\s/g, " ");
-await page.getByRole("button", { name: "Guardar pedido" }).click();
-await page.waitForURL(`**/clientes/${clienteId}`);
-await page.getByText(/^Pedido · /).first().waitFor();
-const totalBd = sql(`select importe_total from pedidos where cliente_id = '${clienteId}' order by creado_at desc limit 1`);
-const enEuros = Number(totalBd).toLocaleString("es-ES", { style: "currency", currency: "EUR" }).replace(/\s/g, " ");
-assert.equal(totalPantalla, enEuros);
-assert.equal(sql(`select estado from clientes where id = '${clienteId}'`), "cliente");
-console.log(`  pedido ${totalPantalla}; cliente ahora «cliente»`);
+assert.equal(await page.getByRole("link", { name: "Pedido" }).count(), 0, "sin catálogo: los pedidos se hacen en Holded");
 
 paso("Exportación RGPD descarga un JSON con el historial");
 const r = await page.request.get(`${APP}/api/rgpd/${clienteId}`);
 assert.equal(r.status(), 200);
 const json = await r.json();
 assert.equal(json.cliente.id, clienteId);
-assert.ok(json.visitas.length > 0 && json.pedidos.length > 0 && json.consentimientos.length > 0);
+assert.ok(json.visitas.length > 0 && json.consentimientos.length > 0);
 const ajeno = sql("select c.id from clientes c join perfiles p on p.id = c.comercial_id where p.email = 'luis@demo.local' limit 1");
 assert.equal((await page.request.get(`${APP}/api/rgpd/${ajeno}`)).status(), 404, "no debe exportar clientes de otro comercial");
 await page.goto(`${APP}/clientes/${ajeno}`);

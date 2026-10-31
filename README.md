@@ -1,6 +1,6 @@
 # CRM dliverygo
 
-App web instalable (PWA, móvil primero) para el equipo comercial de una distribuidora al canal hostelería: registro de visitas en menos de 30 segundos (también sin cobertura), ficha y estado de cada cliente, panel diario con ruta, catálogo y ofertas, mensajes y campañas por WhatsApp y email con consentimiento (RGPD/LSSI), panel de dirección e importación/exportación.
+App web instalable (PWA, móvil primero) para una distribuidora al canal hostelería: **CRM de visitas comerciales** (registro en menos de 30 segundos, también sin cobertura; ficha, seguimientos y control), mensajes y campañas por WhatsApp y email con consentimiento (RGPD/LSSI), panel de dirección e importación/exportación, y **logística**: albaranes de Holded, ruta automática y app del conductor con firma. Los pedidos, la facturación y el catálogo viven en Holded.
 
 **Producción:** https://crm-comercial-mu.vercel.app · **Cuentas y claves pendientes:** [`docs/GUIA-CUENTAS.md`](docs/GUIA-CUENTAS.md) · **Textos de privacidad:** [`docs/TEXTO-RGPD.md`](docs/TEXTO-RGPD.md)
 
@@ -11,17 +11,17 @@ App web instalable (PWA, móvil primero) para el equipo comercial de una distrib
 | Pantalla | Para qué |
 |---|---|
 | **Hoy** | Seguimientos vencidos y de hoy, oportunidades calientes, clientes sin visitar +30 días y ruta del día en el mapa (ordenada desde tu posición, con enlace a Google Maps). |
-| **Nueva visita (+)** | Cliente cercano por GPS o alta rápida con aviso de duplicados, resultado, productos presentados / de interés, nota o dictado, fotos, material, próxima acción y consentimiento. **Funciona sin cobertura** y se sube sola al volver la red. |
-| **Clientes** | Búsqueda, filtros (estado, temperatura, tipo, zona, vencidos…), mapa, alta. **Ficha**: llamar, WhatsApp, email, cómo llegar, próxima acción, intereses, ofertas que le encajan, consentimiento por canal, historial (visitas con fotos, mensajes, pedidos), pedido sencillo, exportar datos (RGPD). |
+| **Nueva visita (+)** | Cliente cercano por GPS o alta rápida con aviso de duplicados, resultado, qué productos le interesan (texto libre), nota o dictado, fotos, material, próxima acción y consentimiento. **Funciona sin cobertura** y se sube sola al volver la red. |
+| **Clientes** | Búsqueda, filtros (estado, temperatura, tipo, zona, vencidos…), mapa, alta. **Ficha**: llamar, WhatsApp, email, cómo llegar, próxima acción, lo que le interesa, consentimiento por canal, historial (visitas con fotos, mensajes), exportar datos (RGPD). |
 | **Mensajes** | Historial de envíos, plantillas con variables, envío individual y **campañas por segmento** (abre WhatsApp/email con el texto personalizado y lo registra). Solo a clientes con consentimiento; aviso de baja automático. |
-| **Más** | Catálogo (destacados, nº de interesados), ofertas con segmento y vista previa, tema claro/oscuro, cerrar sesión. Para el administrador: panel de dirección, usuarios e importar/exportar. |
+| **Más** | Mi reparto, tema claro/oscuro, cambiar contraseña, cerrar sesión. Para el administrador: panel de dirección, usuarios, importar/exportar y logística. |
 | **Logística** (admin) | Vehículos y almacén; rutas por día con los pedidos por repartir, orden por cercanía, hoja de carga; entregas con firma y **albarán** imprimible. |
 | **Ruta automática** (admin) | Subir los PDF de albarán de Holded (se leen sin IA: cliente, dirección de envío, productos, campos «Horario» y «Ruta»), alta manual, zonas por días de la semana y **cálculo de la mejor ruta** (ventanas horarias, descarga, capacidad, varios vehículos; OpenRouteService con perfil de camión o estimación). Al aceptar, la ruta llega al conductor con la hora prevista de cada parada. |
 | **Mi reparto** | La app del conductor (cualquier usuario con una ruta asignada): ruta del día descargada en el móvil, navegar/llamar, **entrega con firma** (cantidades, envases retornables, cobro, fotos) o incidencia. **Funciona sin cobertura**; cada entrega se registra una sola vez y no se puede modificar. |
 
 **Acceso:** email y contraseña (el administrador la pone al dar de alta y cada uno puede cambiarla); como alternativa, código/enlace por email.
 
-**Roles:** el *administrador* lo ve todo y gestiona catálogo, ofertas, plantillas, usuarios e importación. El *comercial* ve y edita solo sus clientes (lo garantiza RLS en la base de datos, no solo la interfaz), registra visitas y pedidos y lanza campañas a sus clientes.
+**Roles:** el *administrador* lo ve todo y gestiona plantillas, usuarios, importación y logística. El *comercial* ve y edita solo sus clientes (lo garantiza RLS en la base de datos, no solo la interfaz), registra visitas y lanza campañas a sus clientes. Quien tenga una ruta asignada la ve en *Mi reparto*.
 
 ## Arrancar en local
 
@@ -64,9 +64,9 @@ El service worker (uso sin cobertura) solo se activa en producción: `npm run bu
 |---|---|
 | `node tests/e2e-capturas.mjs <dir>` | Login, navegación, permisos, tema oscuro |
 | `node tests/e2e-visita.mjs <dir>` | Visita con y sin cobertura, arranque sin red, subida automática |
-| `node tests/e2e-clientes.mjs <dir>` | Lista, filtros, mapa, ficha, edición, consentimiento, pedido, RGPD |
+| `node tests/e2e-clientes.mjs <dir>` | Lista, filtros, mapa, ficha, edición, consentimiento, RGPD |
 | `node tests/e2e-enlace.mjs` | Acceso con el enlace del email |
-| `node tests/e2e-fase1.mjs <dir>` | Hoy, usuarios, catálogo, ofertas, plantillas, campañas, dirección, importar/exportar |
+| `node tests/e2e-fase1.mjs <dir>` | Hoy, usuarios, plantillas, campañas, dirección, importar/exportar |
 | `node tests/e2e-planificar.mjs <dir>` | Ruta automática: zonas, subir PDF de Holded, no duplicar, alta manual, calcular, aceptar y entregar |
 | `node tests/e2e-reparto.mjs <dir>` | Logística: planificar ruta, entregar con firma sin cobertura, arranque sin red, subida y albarán |
 

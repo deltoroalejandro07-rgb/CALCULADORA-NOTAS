@@ -1,4 +1,4 @@
-import { BarChart3, ChevronRight, FileSpreadsheet, Package, Route, Tag, Truck, UserCog } from "lucide-react";
+import { BarChart3, ChevronRight, FileSpreadsheet, Route, Truck, UserCog } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -21,8 +21,6 @@ async function Contenido() {
   const esAdmin = usuario.rol === "admin";
 
   const secciones = [
-    { texto: "Catálogo de productos", icono: Package, href: "/catalogo" },
-    { texto: "Ofertas", icono: Tag, href: "/ofertas" },
     ...(esAdmin
       ? [
           { texto: "Panel de dirección", icono: BarChart3, href: "/direccion" },

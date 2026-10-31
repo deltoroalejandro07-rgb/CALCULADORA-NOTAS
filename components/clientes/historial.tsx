@@ -32,6 +32,11 @@ export function Historial({ ficha }: { ficha: Ficha }) {
         <>
           <Cabeza icono={Footprints} titulo={`${TEXTO_TIPO_VISITA[v.tipo]} · ${TEXTO_RESULTADO[v.resultado]}`} cuando={fechaHora(v.fecha)} quien={v.comercial?.nombre} />
           {v.notas && <p className="mt-1 whitespace-pre-line text-sm">{v.notas}</p>}
+          {v.interes_texto && (
+            <p className="mt-1 text-xs text-suave">
+              <strong className="text-orange-700 dark:text-orange-300">Le interesa:</strong> {v.interes_texto}
+            </p>
+          )}
           {v.visita_productos.length > 0 && (
             <p className="mt-1 text-xs text-suave">
               {v.visita_productos.filter((p) => p.relacion === "interes").length > 0 && (

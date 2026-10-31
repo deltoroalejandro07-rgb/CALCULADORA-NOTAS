@@ -59,7 +59,10 @@ export interface VisitaNueva {
   notas: string | null;
   proxima_accion: string | null;
   proxima_accion_fecha: string | null;
+  /** Sin catálogo: siempre vacío en visitas nuevas (se conserva por las que quedaran en cola). */
   productos: { producto_id: string; relacion: MarcaProducto }[];
+  /** Qué productos le interesan, escrito por el comercial. */
+  interes_texto?: string | null;
   fotos: { id: string; tipo: TipoFoto }[];
   consentimientos: { id: string; canal: "whatsapp" | "email" }[];
 }

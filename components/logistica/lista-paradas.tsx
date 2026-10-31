@@ -86,7 +86,7 @@ function EditarParada({ p, alCerrar }: { p: ParadaOficina; alCerrar: () => void 
 export function ListaParadas({ rutaId, paradas, editable, reordenable }: { rutaId: string; paradas: ParadaOficina[]; editable: boolean; reordenable: boolean }) {
   const [editando, setEditando] = useState<string | null>(null);
   if (!paradas.length) {
-    return <p className="rounded-2xl border border-dashed border-borde p-4 text-center text-sm text-suave">Esta ruta aún no tiene paradas. Añade pedidos abajo.</p>;
+    return <p className="rounded-2xl border border-dashed border-borde p-4 text-center text-sm text-suave">Esta ruta aún no tiene paradas. Añade albaranes abajo.</p>;
   }
   return (
     <section className="space-y-2">
@@ -130,7 +130,7 @@ export function ListaParadas({ rutaId, paradas, editable, reordenable }: { rutaI
                     {p.albaran ? `Albarán ${p.albaran}` : p.pedido.importe != null ? `Pedido ${euros(p.pedido.importe)}` : "Entrega"}: <span className="text-suave">{p.pedido.lineas.join(", ") || "sin líneas"}</span>
                   </p>
                 ) : (
-                  <p className="mt-1 text-sm text-suave">Parada sin pedido (recogida, visita…)</p>
+                  <p className="mt-1 text-sm text-suave">Parada sin albarán (recogida, visita…)</p>
                 )}
                 {p.notas_oficina && <p className="text-sm text-amber-700 dark:text-amber-300">Nota: {p.notas_oficina}</p>}
                 {p.estado === "entregada" && (
@@ -143,7 +143,7 @@ export function ListaParadas({ rutaId, paradas, editable, reordenable }: { rutaI
                 )}
                 {p.estado === "fallida" && (
                   <p className="mt-1 text-sm text-red-700 dark:text-red-300">
-                    No entregada: {p.motivo_fallo} {p.realizada_at && `(${fechaHora(p.realizada_at)})`}. El pedido vuelve a «por repartir».
+                    No entregada: {p.motivo_fallo} {p.realizada_at && `(${fechaHora(p.realizada_at)})`}. El albarán vuelve a «por repartir».
                   </p>
                 )}
                 {p.estado !== "pendiente" && (
@@ -180,7 +180,7 @@ export function ListaParadas({ rutaId, paradas, editable, reordenable }: { rutaI
                   <form
                     action={quitarParada}
                     onSubmit={(e) => {
-                      if (!confirm(`¿Quitar ${p.cliente.nombre} de la ruta? El pedido vuelve a «por repartir».`)) e.preventDefault();
+                      if (!confirm(`¿Quitar ${p.cliente.nombre} de la ruta? Su albarán vuelve a «por repartir».`)) e.preventDefault();
                     }}
                   >
                     <input type="hidden" name="ruta_id" value={rutaId} />

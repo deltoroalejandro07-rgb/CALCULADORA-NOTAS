@@ -43,7 +43,7 @@ async function Contenido({ id }: { id: string }) {
       )
       .eq("id", id)
       .maybeSingle(),
-    sb.from("pedidos_por_repartir").select("id, fecha, importe_total, clientes(nombre_negocio, zona)").order("fecha"),
+    sb.from("albaranes").select("id, numero, fecha, destinos(nombre, localidad, zonas_reparto(nombre))").eq("estado", "pendiente").order("creado_at"),
     sb.from("clientes").select("id, nombre_negocio, zona").order("nombre_negocio"),
     sb.from("ajustes_logistica").select("almacen_lat, almacen_lng").single(),
   ]);
@@ -124,7 +124,7 @@ async function Contenido({ id }: { id: string }) {
         {editable && (
           <AnadirParadas
             rutaId={ruta.id}
-            pedidos={(porRepartir ?? []).map((p) => ({ id: p.id!, fecha: p.fecha!, importe: Number(p.importe_total), cliente: p.clientes?.nombre_negocio ?? "—", zona: p.clientes?.zona ?? null }))}
+            albaranes={(porRepartir ?? []).map((a) => ({ id: a.id, numero: a.numero, fecha: a.fecha, cliente: a.destinos?.nombre ?? "—", zona: a.destinos?.zonas_reparto?.nombre ?? a.destinos?.localidad ?? null }))}
             clientes={clientes ?? []}
           />
         )}

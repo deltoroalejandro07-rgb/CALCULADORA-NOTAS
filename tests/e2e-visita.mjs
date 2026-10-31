@@ -54,7 +54,7 @@ await page.getByLabel("Código").fill(await codigoDe("ana@demo.local"));
 await page.getByRole("button", { name: "Entrar" }).click();
 await page.waitForURL("**/hoy");
 
-paso("Visita con cobertura: cliente cercano, pide oferta, productos, nota, foto, consentimiento");
+paso("Visita con cobertura: cliente cercano, pide oferta, qué le interesa, nota, foto, consentimiento");
 await page.getByRole("link", { name: "Registrar visita", exact: true }).click();
 await page.getByText("Más cercanos a ti").waitFor();
 await page.screenshot({ path: `${SALIDA}/10-visita-vacia.png` });
@@ -63,10 +63,7 @@ const nombreCliente = (await primero.locator("p").first().textContent()).trim();
 const t0 = Date.now();
 await primero.click();
 await page.getByRole("radio", { name: "Pide oferta" }).click();
-const chips = page.getByRole("button", { name: /: sin marcar$/ });
-await chips.nth(0).click(); // presentado
-await chips.nth(0).click(); // el siguiente sin marcar → presentado
-await page.getByRole("button", { name: /: presentado$/ }).first().click(); // → le interesa
+await page.getByLabel("Productos que le interesan").fill("Cerveza de barril y vermut");
 await page.getByLabel("Nota", { exact: true }).fill("E2E: quiere precio de barril antes del viernes");
 await page.locator('input[type="file"]').setInputFiles("tests/fixtures/barra.jpg");
 await page.getByRole("button", { name: "Quitar foto" }).waitFor();
@@ -80,14 +77,14 @@ await page.screenshot({ path: `${SALIDA}/12-visita-guardada.png` });
 
 // Esperar a que suba
 for (let i = 0; i < 30 && sql("select count(*) from visitas where notas like 'E2E: quiere%'") !== "1"; i++) await page.waitForTimeout(300);
-const fila = sql(`select c.estado || '|' || c.proxima_accion || '|' || (select count(*) from visita_fotos f where f.visita_id = v.id) || '|' || (select count(*) from visita_productos p where p.visita_id = v.id) || '|' || (v.lat is not null)
+const fila = sql(`select c.estado || '|' || c.proxima_accion || '|' || (select count(*) from visita_fotos f where f.visita_id = v.id) || '|' || coalesce(v.interes_texto, '') || '|' || (v.lat is not null)
                   from visitas v join clientes c on c.id = v.cliente_id where v.notas like 'E2E: quiere%'`);
 console.log("  en BD:", fila);
-const [estado, accion, nFotos, nProductos, conGps] = fila.split("|");
+const [estado, accion, nFotos, interes, conGps] = fila.split("|");
 assert.ok(["interesado", "cliente"].includes(estado), "el cliente debe quedar interesado (o seguir cliente)");
 assert.equal(accion, "Preparar y enviar oferta");
 assert.equal(nFotos, "1");
-assert.equal(nProductos, "2");
+assert.equal(interes, "Cerveza de barril y vermut");
 assert.equal(conGps, "true");
 const tamFoto = Number(sql("select (metadata->>'size') from storage.objects where bucket_id = 'visitas' order by created_at desc limit 1"));
 console.log(`  foto comprimida: ${Math.round(tamFoto / 1024)} KB (original 177 KB a 3000×2000)`);

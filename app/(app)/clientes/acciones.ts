@@ -98,42 +98,6 @@ export async function registrarConsentimiento(form: FormData) {
   refresh();
 }
 
-const esquemaPedido = z.object({
-  cliente_id: z.guid(),
-  fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  notas: z.string().max(2000).optional(),
-  lineas: z
-    .array(
-      z.object({
-        producto_id: z.guid().nullable(),
-        descripcion: z.string().min(1),
-        cantidad: z.number().positive(),
-        precio_unitario: z.number().min(0),
-      }),
-    )
-    .min(1, "Añade al menos un producto"),
-});
-
-export async function crearPedido(datos: z.input<typeof esquemaPedido>): Promise<{ error?: string }> {
-  const usuario = await usuarioActual();
-  const r = esquemaPedido.safeParse(datos);
-  if (!r.success) return { error: r.error.issues[0]?.message ?? "Datos no válidos" };
-  const { lineas, ...pedido } = r.data;
-  const sb = await supabaseServidor();
-  const { data, error } = await sb
-    .from("pedidos")
-    .insert({ ...pedido, notas: pedido.notas || null, comercial_id: usuario.id })
-    .select("id")
-    .single();
-  if (error) return { error: error.message };
-  const { error: e2 } = await sb.from("pedido_lineas").insert(lineas.map((l) => ({ ...l, pedido_id: data.id })));
-  if (e2) {
-    await sb.from("pedidos").delete().eq("id", data.id);
-    return { error: e2.message };
-  }
-  redirect(`/clientes/${pedido.cliente_id}`);
-}
-
 /** Derecho de supresión (RGPD): borra el cliente y en cascada visitas, fotos, mensajes y pedidos. Solo admin. */
 export async function borrarCliente(form: FormData) {
   const usuario = await usuarioActual();

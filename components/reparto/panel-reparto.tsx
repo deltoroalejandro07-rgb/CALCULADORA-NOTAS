@@ -36,7 +36,8 @@ async function quienSoy(): Promise<string | null> {
 }
 
 function avisarServiceWorker(mensaje: "preferir-reparto" | "preferir-visita") {
-  navigator.serviceWorker?.controller?.postMessage(mensaje);
+  // `ready` espera a que haya un service worker activo (recién instalado puede no controlar aún la página)
+  void navigator.serviceWorker?.ready.then((r) => r.active?.postMessage(mensaje)).catch(() => {});
 }
 
 type Vista = { tipo: "lista" } | { tipo: "parada"; id: string } | { tipo: "entrega"; id: string; modo: "entregada" | "fallida" } | { tipo: "carga" };

@@ -5,15 +5,15 @@ import { startTransition, useActionState, useMemo, useState } from "react";
 import { anadirParadas, type EstadoForm } from "@/app/(app)/logistica/acciones";
 import { Tarjeta } from "@/components/app/piezas";
 import { Boton } from "@/components/ui/boton";
-import { euros, fecha } from "@/lib/formato";
+import { fecha } from "@/lib/formato";
 
 export function AnadirParadas({
   rutaId,
-  pedidos,
+  albaranes,
   clientes,
 }: {
   rutaId: string;
-  pedidos: { id: string; fecha: string; importe: number; cliente: string; zona: string | null }[];
+  albaranes: { id: string; numero: string | null; fecha: string | null; cliente: string; zona: string | null }[];
   clientes: { id: string; nombre_negocio: string; zona: string | null }[];
 }) {
   const [estado, accion, pendiente] = useActionState<EstadoForm, FormData>(anadirParadas, {});
@@ -53,18 +53,17 @@ export function AnadirParadas({
         <p className="font-semibold">Añadir paradas</p>
 
         <div>
-          <p className="text-sm font-medium">Pedidos por repartir ({pedidos.length})</p>
-          {pedidos.length ? (
+          <p className="text-sm font-medium">Albaranes por repartir ({albaranes.length})</p>
+          {albaranes.length ? (
             <ul className="mt-2 max-h-80 divide-y divide-borde overflow-y-auto rounded-xl border border-borde">
-              {pedidos.map((p) => (
-                <li key={p.id}>
+              {albaranes.map((a) => (
+                <li key={a.id}>
                   <label className="flex min-h-12 items-center gap-3 px-3 py-2">
-                    <input type="checkbox" name="pedido" value={p.id} checked={marcados.has(p.id)} onChange={() => alternar(p.id)} className="h-5 w-5 accent-[var(--marca)]" />
+                    <input type="checkbox" name="albaran" value={a.id} checked={marcados.has(a.id)} onChange={() => alternar(a.id)} className="h-5 w-5 accent-[var(--marca)]" />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium">{p.cliente}</span>
+                      <span className="block truncate font-medium">{a.cliente}</span>
                       <span className="text-xs text-suave">
-                        {fecha(p.fecha)} · {euros(p.importe)}
-                        {p.zona && ` · ${p.zona}`}
+                        {[a.numero, a.fecha && fecha(a.fecha), a.zona].filter(Boolean).join(" · ")}
                       </span>
                     </span>
                   </label>
@@ -72,17 +71,17 @@ export function AnadirParadas({
               ))}
             </ul>
           ) : (
-            <p className="mt-1 text-sm text-suave">No hay pedidos pendientes. Los que metan los comerciales aparecerán aquí.</p>
+            <p className="mt-1 text-sm text-suave">No hay albaranes pendientes. Súbelos en Logística → Albaranes.</p>
           )}
-          {pedidos.length > 1 && (
-            <button type="button" onClick={() => setMarcados(marcados.size === pedidos.length ? new Set() : new Set(pedidos.map((p) => p.id)))} className="mt-1 text-sm text-marca underline">
-              {marcados.size === pedidos.length ? "Quitar todos" : "Marcar todos"}
+          {albaranes.length > 1 && (
+            <button type="button" onClick={() => setMarcados(marcados.size === albaranes.length ? new Set() : new Set(albaranes.map((a) => a.id)))} className="mt-1 text-sm text-marca underline">
+              {marcados.size === albaranes.length ? "Quitar todos" : "Marcar todos"}
             </button>
           )}
         </div>
 
         <div>
-          <p className="text-sm font-medium">Parada sin pedido</p>
+          <p className="text-sm font-medium">Parada sin albarán (cliente del CRM)</p>
           <p className="text-xs text-suave">Recoger envases, llevar material, una devolución…</p>
           <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar cliente" className="mt-2 min-h-11 w-full rounded-xl border border-borde bg-superficie px-3 outline-none focus:border-marca" />
           {coincidencias.length > 0 && (

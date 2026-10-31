@@ -41,6 +41,9 @@ Cada vez que el esquema cambia hay un fichero nuevo en `supabase/migrations/`. H
 Migraciones pendientes de aplicar en producción:
 
 - `supabase/migrations/20261031000005_reparto_zonas.sql` (ruta automática: zonas y días, destinos y albaranes de Holded). Solo añade; amplía las paradas de la logística para que puedan ser de albaranes.
+- `supabase/migrations/20261031000006_interes_texto.sql` (sin catálogo: «qué le interesa» como texto en la visita). Solo añade una columna.
+
+Ejecútalas **en este orden**, una cada vez.
 
 > Si algún día montas un proyecto de Supabase nuevo, basta con pegar `supabase/instalar.sql`, que ya incluye todas las migraciones.
 

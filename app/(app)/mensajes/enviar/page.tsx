@@ -15,13 +15,13 @@ export default function PaginaEnviar({ searchParams }: PageProps<"/mensajes/envi
   return (
     <Suspense fallback={<Cargando />}>
       {searchParams.then((sp) => (
-        <Contenido clienteId={String(sp.cliente ?? "")} ofertaId={sp.oferta ? String(sp.oferta) : null} />
+        <Contenido clienteId={String(sp.cliente ?? "")} />
       ))}
     </Suspense>
   );
 }
 
-async function Contenido({ clienteId, ofertaId }: { clienteId: string; ofertaId: string | null }) {
+async function Contenido({ clienteId }: { clienteId: string }) {
   if (!/^[0-9a-f-]{36}$/i.test(clienteId)) notFound();
   const usuario = await usuarioActual();
   const sb = await supabaseServidor();
@@ -36,7 +36,7 @@ async function Contenido({ clienteId, ofertaId }: { clienteId: string; ofertaId:
         <ChevronLeft className="h-5 w-5" aria-hidden /> {c.nombre_negocio}
       </Link>
       <Cabecera titulo="Enviar mensaje" subtitulo={c.nombre_negocio} />
-      <EnvioIndividual cliente={c} comercial={usuario.nombre} plantillas={datos.plantillas} ofertas={datos.ofertas} ofertaInicial={ofertaId} />
+      <EnvioIndividual cliente={c} comercial={usuario.nombre} plantillas={datos.plantillas} ofertas={[]} ofertaInicial={null} />
     </>
   );
 }

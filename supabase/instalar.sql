@@ -1141,3 +1141,10 @@ language sql stable security definer set search_path = public as $$
       and (r.fecha >= hoy_madrid() - 1 or r.estado <> 'terminada')
   ) t;
 $$;
+
+-- ---- migrations/20261031000006_interes_texto.sql ----
+-- =====================================================================
+-- Sin catálogo: lo que le interesa al cliente se apunta en la visita como texto libre.
+-- Solo añade una columna; los productos y ofertas ya guardados se conservan.
+-- =====================================================================
+alter table visitas add column interes_texto text check (char_length(interes_texto) <= 1000);
