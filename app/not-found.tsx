@@ -6,7 +6,7 @@ export default function NoEncontrado() {
       <p className="text-5xl font-bold text-marca">404</p>
       <h1 className="mt-2 text-xl font-semibold">No encontrado</h1>
       <p className="mt-1 text-sm text-suave">No existe o no tienes acceso a esta página.</p>
-      <Link href="/hoy" className="mt-6 rounded-xl bg-marca px-5 py-3 font-semibold text-marca-texto">
+      <Link href="/hoy" className="mt-6 rounded-lg bg-marca px-5 py-3 font-semibold text-marca-texto">
         Ir a Hoy
       </Link>
     </main>

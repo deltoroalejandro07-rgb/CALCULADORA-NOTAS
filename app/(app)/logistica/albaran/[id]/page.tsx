@@ -50,7 +50,7 @@ async function Contenido({ id }: { id: string }) {
       <Link href={volver} className="no-imprimir inline-flex min-h-11 items-center gap-1 px-3 pt-3 text-sm text-suave">
         <ChevronLeft className="h-5 w-5" aria-hidden /> Volver
       </Link>
-      <article className="mx-4 my-4 space-y-4 rounded-2xl border border-borde bg-superficie p-5 text-sm print:border-0 print:p-0">
+      <article className="mx-4 my-4 space-y-4 rounded-xl border border-borde bg-superficie p-5 text-sm print:border-0 print:p-0">
         <header className="flex items-start justify-between gap-3 border-b border-borde pb-3">
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -70,12 +70,12 @@ async function Contenido({ id }: { id: string }) {
         </header>
 
         <section>
-          <p className="text-xs font-semibold uppercase tracking-wide text-suave">Cliente</p>
+          <p className="text-xs font-semibold text-suave">Cliente</p>
           <p className="font-semibold">{cliente.nombre}</p>
           <p className="text-suave">{[cliente.direccion, cliente.codigo_postal, cliente.localidad].filter(Boolean).join(", ")}</p>
         </section>
 
-        <section className={p.estado === "fallida" ? "rounded-xl bg-red-50 p-3 dark:bg-red-950/40" : ""}>
+        <section className={p.estado === "fallida" ? "rounded-lg bg-red-50 p-3 dark:bg-red-950/40" : ""}>
           <p className="font-semibold">
             {TEXTO_ESTADO_PARADA[p.estado]} · {p.realizada_at && fechaHora(p.realizada_at)}
           </p>
@@ -108,15 +108,15 @@ async function Contenido({ id }: { id: string }) {
 
         {(p.envases_entregados > 0 || p.envases_recogidos > 0 || (p.cobrado != null && Number(p.cobrado) > 0)) && (
           <section className="grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-xl bg-fondo p-2">
+            <div className="rounded-lg bg-fondo p-2">
               <p className="text-lg font-bold tabular-nums">{p.envases_entregados}</p>
               <p className="text-xs text-suave">Envases entregados</p>
             </div>
-            <div className="rounded-xl bg-fondo p-2">
+            <div className="rounded-lg bg-fondo p-2">
               <p className="text-lg font-bold tabular-nums">{p.envases_recogidos}</p>
               <p className="text-xs text-suave">Envases recogidos</p>
             </div>
-            <div className="rounded-xl bg-fondo p-2">
+            <div className="rounded-lg bg-fondo p-2">
               <p className="text-lg font-bold tabular-nums">{p.cobrado != null ? euros(p.cobrado) : "—"}</p>
               <p className="text-xs text-suave">Cobrado{p.forma_cobro && ` (${p.forma_cobro})`}</p>
             </div>
@@ -127,10 +127,10 @@ async function Contenido({ id }: { id: string }) {
 
         {p.firma_path && (
           <section>
-            <p className="text-xs font-semibold uppercase tracking-wide text-suave">Firma del cliente{p.firmante && `: ${p.firmante}`}</p>
+            <p className="text-xs font-semibold text-suave">Firma del cliente{p.firmante && `: ${p.firmante}`}</p>
             {url(p.firma_path) ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={url(p.firma_path)!} alt={`Firma de ${p.firmante ?? "el cliente"}`} className="mt-1 h-32 w-full rounded-xl border border-borde bg-white object-contain" />
+              <img src={url(p.firma_path)!} alt={`Firma de ${p.firmante ?? "el cliente"}`} className="mt-1 h-32 w-full rounded-lg border border-borde bg-white object-contain" />
             ) : (
               <p className="text-suave">La firma se está subiendo desde el móvil del repartidor.</p>
             )}
@@ -139,12 +139,12 @@ async function Contenido({ id }: { id: string }) {
 
         {p.fotos.length > 0 && (
           <section>
-            <p className="text-xs font-semibold uppercase tracking-wide text-suave">Fotos de la entrega</p>
+            <p className="text-xs font-semibold text-suave">Fotos de la entrega</p>
             <div className="mt-1 grid grid-cols-2 gap-2">
               {p.fotos.map((f) =>
                 url(f) ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img key={f} src={url(f)!} alt="Foto de la entrega" className="aspect-square w-full rounded-xl object-cover" />
+                  <img key={f} src={url(f)!} alt="Foto de la entrega" className="aspect-square w-full rounded-lg object-cover" />
                 ) : null,
               )}
             </div>

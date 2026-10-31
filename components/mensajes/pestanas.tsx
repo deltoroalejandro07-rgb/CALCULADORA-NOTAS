@@ -9,7 +9,7 @@ export function Pestanas({ pestanas }: { pestanas: { id: string; titulo: string;
   const [activa, setActiva] = useState(pestanas.some((p) => p.id === inicial) ? inicial! : pestanas[0].id);
   return (
     <>
-      <div role="tablist" className="mx-4 mb-3 grid grid-cols-2 rounded-xl border border-borde p-1">
+      <div role="tablist" className="mx-4 mb-3 grid grid-cols-2 rounded-lg border border-borde p-1">
         {pestanas.map((p) => (
           <button
             key={p.id}

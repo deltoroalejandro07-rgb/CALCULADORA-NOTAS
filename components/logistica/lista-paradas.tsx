@@ -26,12 +26,12 @@ export interface ParadaOficina {
   pedido: { fecha: string | null; importe: number | null; lineas: string[] } | null;
 }
 
-const campo = "mt-1 min-h-11 w-full rounded-xl border border-borde bg-superficie px-3 text-sm outline-none focus:border-marca";
+const campo = "mt-1 min-h-11 w-full rounded-lg border border-borde bg-superficie px-3 text-sm outline-none focus:border-marca";
 
 function EditarParada({ p, alCerrar }: { p: ParadaOficina; alCerrar: () => void }) {
   const [estado, accion, pendiente] = useActionState<EstadoForm, FormData>(guardarEntregaCliente, {});
   return (
-    <div className="mt-3 space-y-3 rounded-xl bg-fondo p-3">
+    <div className="mt-3 space-y-3 rounded-lg bg-fondo p-3">
       {p.cliente.tipo === "destino" ? (
         <p className="text-sm text-suave">
           El horario y el acceso de este cliente se cambian en{" "}
@@ -49,7 +49,7 @@ function EditarParada({ p, alCerrar }: { p: ParadaOficina; alCerrar: () => void 
         }}
         className="space-y-2"
       >
-        <p className="text-xs font-semibold uppercase tracking-wide text-suave">Datos de entrega del cliente (para todas sus rutas)</p>
+        <p className="text-xs font-semibold text-suave">Datos de entrega del cliente (para todas sus rutas)</p>
         <input type="hidden" name="cliente_id" value={p.cliente.id} />
         <label className="block text-sm">
           Horario de descarga
@@ -86,12 +86,12 @@ function EditarParada({ p, alCerrar }: { p: ParadaOficina; alCerrar: () => void 
 export function ListaParadas({ rutaId, paradas, editable, reordenable }: { rutaId: string; paradas: ParadaOficina[]; editable: boolean; reordenable: boolean }) {
   const [editando, setEditando] = useState<string | null>(null);
   if (!paradas.length) {
-    return <p className="rounded-2xl border border-dashed border-borde p-4 text-center text-sm text-suave">Esta ruta aún no tiene paradas. Añade albaranes abajo.</p>;
+    return <p className="rounded-xl border border-dashed border-borde p-4 text-center text-sm text-suave">Esta ruta aún no tiene paradas. Añade albaranes abajo.</p>;
   }
   return (
     <section className="space-y-2">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-suave">Paradas ({paradas.length})</h2>
+        <h2 className="text-[13px] font-semibold text-suave">Paradas ({paradas.length})</h2>
         {reordenable && paradas.length > 1 && (
           <form action={ordenarPorCercania}>
             <input type="hidden" name="ruta_id" value={rutaId} />
@@ -103,7 +103,7 @@ export function ListaParadas({ rutaId, paradas, editable, reordenable }: { rutaI
       </div>
       <ol className="space-y-2">
         {paradas.map((p, i) => (
-          <li key={p.id} className={cn("rounded-2xl border bg-superficie p-3", p.estado === "fallida" ? "border-red-300 dark:border-red-900" : "border-borde")}>
+          <li key={p.id} className={cn("rounded-xl border bg-superficie p-3", p.estado === "fallida" ? "border-red-300 dark:border-red-900" : "border-borde")}>
             <div className="flex items-start gap-3">
               <span
                 className={cn(

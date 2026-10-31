@@ -27,7 +27,7 @@ interface Props {
 }
 
 const campo =
-  "w-full rounded-xl border border-borde bg-superficie px-4 py-3 text-base outline-none focus:border-marca focus:ring-2 focus:ring-marca/30";
+  "w-full rounded-lg border border-borde bg-superficie px-4 py-3 text-base outline-none focus:border-marca focus:ring-2 focus:ring-marca/30";
 
 export function SelectorCliente({ seleccionado, onSeleccionar, nuevo, onNuevo, pos }: Props) {
   const [busqueda, setBusqueda] = useState("");
@@ -55,7 +55,7 @@ export function SelectorCliente({ seleccionado, onSeleccionar, nuevo, onNuevo, p
 
   if (seleccionado) {
     return (
-      <div className="flex items-center gap-3 rounded-2xl border-2 border-marca bg-superficie p-4">
+      <div className="flex items-center gap-3 rounded-xl border-2 border-marca bg-superficie p-4">
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-2 font-semibold">
             <span className="truncate">{seleccionado.nombre_negocio}</span>
@@ -70,7 +70,7 @@ export function SelectorCliente({ seleccionado, onSeleccionar, nuevo, onNuevo, p
             <EtiquetaEstado estado={seleccionado.estado} />
           </div>
         </div>
-        <button type="button" onClick={() => onSeleccionar(null)} className="min-h-11 rounded-xl px-3 text-sm font-medium text-marca">
+        <button type="button" onClick={() => onSeleccionar(null)} className="min-h-11 rounded-lg px-3 text-sm font-medium text-marca">
           Cambiar
         </button>
       </div>
@@ -96,7 +96,7 @@ export function SelectorCliente({ seleccionado, onSeleccionar, nuevo, onNuevo, p
         />
       </label>
       {!busqueda && pos && <p className="px-1 text-xs text-suave">Más cercanos a ti</p>}
-      <ul className="divide-y divide-borde overflow-hidden rounded-2xl border border-borde bg-superficie">
+      <ul className="divide-y divide-borde overflow-hidden rounded-xl border border-borde bg-superficie">
         {lista.map(({ c, d }) => (
           <li key={c.id}>
             <button type="button" onClick={() => onSeleccionar(c)} className="flex min-h-14 w-full items-center gap-3 px-4 py-2 text-left active:bg-fondo">
@@ -121,7 +121,7 @@ export function SelectorCliente({ seleccionado, onSeleccionar, nuevo, onNuevo, p
       <button
         type="button"
         onClick={() => onNuevo({ nombre_negocio: busqueda.trim(), tipo: "bar", telefono: "", contacto_nombre: "" })}
-        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-marca text-sm font-semibold text-marca"
+        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-marca text-sm font-semibold text-marca"
       >
         <Plus className="h-5 w-5" aria-hidden />
         {busqueda.trim() ? `Crear «${busqueda.trim()}»` : "Cliente nuevo"}
@@ -173,7 +173,7 @@ function AltaRapida({
   const visibles = nombre.length < 3 ? [] : duplicados;
 
   return (
-    <div className="space-y-3 rounded-2xl border-2 border-marca bg-superficie p-4">
+    <div className="space-y-3 rounded-xl border-2 border-marca bg-superficie p-4">
       <div className="flex items-center justify-between">
         <p className="font-semibold">Cliente nuevo</p>
         <button type="button" onClick={() => onCambio(null)} aria-label="Cancelar cliente nuevo" className="-mr-2 p-2 text-suave">
@@ -190,7 +190,7 @@ function AltaRapida({
         autoCapitalize="words"
       />
       {visibles.length > 0 && (
-        <div className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-900/30 dark:text-amber-100">
+        <div className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-900/30 dark:text-amber-100">
           <p className="mb-1 flex items-center gap-1.5 font-semibold">
             <AlertTriangle className="h-4 w-4" aria-hidden /> ¿Ya existe?
           </p>

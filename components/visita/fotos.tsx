@@ -17,7 +17,7 @@ function Miniatura({ foto, onTipo, onQuitar }: { foto: FotoBorrador; onTipo: (t:
   return (
     <div className="relative w-28 shrink-0">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={foto.url} alt="" className="h-28 w-28 rounded-xl object-cover" />
+      <img src={foto.url} alt="" className="h-28 w-28 rounded-lg object-cover" />
       <button
         type="button"
         onClick={onQuitar}
@@ -86,7 +86,7 @@ export function Fotos({ fotos, onCambio }: { fotos: FotoBorrador[]; onCambio: (f
           type="button"
           onClick={() => entrada.current?.click()}
           disabled={procesando}
-          className="flex h-28 w-28 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-borde text-sm text-suave"
+          className="flex h-28 w-28 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-borde text-sm text-suave"
         >
           {procesando ? <Loader2 className="h-7 w-7 animate-spin" aria-hidden /> : <Camera className="h-7 w-7" aria-hidden />}
           {fotos.length ? "Otra foto" : "Hacer foto"}

@@ -19,7 +19,7 @@ import {
 import { comprimirFoto, useUbicacion } from "@/lib/navegador";
 import { baseReparto, guardarEntrega } from "@/lib/offline/reparto";
 
-const campo = "mt-1 min-h-12 w-full rounded-xl border border-borde bg-superficie px-3 outline-none focus:border-marca";
+const campo = "mt-1 min-h-12 w-full rounded-lg border border-borde bg-superficie px-3 outline-none focus:border-marca";
 
 function Contador({ valor, alCambiar, etiqueta }: { valor: number; alCambiar: (v: number) => void; etiqueta: string }) {
   return (
@@ -143,14 +143,14 @@ export function RegistrarEntrega({
         <ChevronLeft className="h-5 w-5" aria-hidden /> Volver
       </button>
       <div>
-        <p className="text-sm font-semibold uppercase tracking-wide text-suave">{modo === "entregada" ? "Entrega" : "No se pudo entregar"}</p>
+        <p className="text-[13px] font-semibold text-suave">{modo === "entregada" ? "Entrega" : "No se pudo entregar"}</p>
         <h1 className="text-2xl font-bold">{parada.cliente.nombre}</h1>
       </div>
 
       {modo === "entregada" ? (
         <>
           {lineas.length > 0 && (
-            <section className="rounded-2xl border border-borde bg-superficie p-4">
+            <section className="rounded-xl border border-borde bg-superficie p-4">
               <p className="mb-2 text-sm font-medium">Lo entregado {esEntregaParcial(lineas) && <span className="text-amber-700 dark:text-amber-300">· entrega parcial</span>}</p>
               <ul className="divide-y divide-borde">
                 {lineas.map((l, i) => (
@@ -166,7 +166,7 @@ export function RegistrarEntrega({
             </section>
           )}
 
-          <section className="grid grid-cols-2 gap-3 rounded-2xl border border-borde bg-superficie p-4">
+          <section className="grid grid-cols-2 gap-3 rounded-xl border border-borde bg-superficie p-4">
             <div>
               <p className="mb-1 text-sm font-medium">Envases dejados</p>
               <Contador valor={envasesEntregados} alCambiar={setEnvasesEntregados} etiqueta="envases dejados" />
@@ -177,7 +177,7 @@ export function RegistrarEntrega({
             </div>
           </section>
 
-          <section className="rounded-2xl border border-borde bg-superficie p-4">
+          <section className="rounded-xl border border-borde bg-superficie p-4">
             <label className="flex items-center gap-3 text-sm font-medium">
               <input type="checkbox" checked={cobro} onChange={(e) => setCobro(e.target.checked)} className="h-5 w-5 accent-[var(--marca)]" /> Ha pagado ahora
             </label>
@@ -200,7 +200,7 @@ export function RegistrarEntrega({
 
         </>
       ) : (
-        <section className="rounded-2xl border border-borde bg-superficie p-4">
+        <section className="rounded-xl border border-borde bg-superficie p-4">
           <p className="mb-2 text-sm font-medium">¿Qué ha pasado?</p>
           <div className="flex flex-wrap gap-2">
             {MOTIVOS_FALLO.map((m) => (
@@ -216,12 +216,12 @@ export function RegistrarEntrega({
         </section>
       )}
 
-      <section className="space-y-3 rounded-2xl border border-borde bg-superficie p-4">
+      <section className="space-y-3 rounded-xl border border-borde bg-superficie p-4">
         <div className="flex gap-2 overflow-x-auto">
           {fotos.map((f, i) => (
             <div key={f.url} className="relative shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={f.url} alt="" className="h-24 w-24 rounded-xl object-cover" />
+              <img src={f.url} alt="" className="h-24 w-24 rounded-lg object-cover" />
               <button
                 type="button"
                 onClick={() => {
@@ -240,7 +240,7 @@ export function RegistrarEntrega({
               type="button"
               onClick={() => entradaFoto.current?.click()}
               disabled={procesandoFoto}
-              className="flex h-24 w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-borde text-xs text-suave"
+              className="flex h-24 w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-borde text-xs text-suave"
             >
               {procesandoFoto ? <Loader2 className="h-6 w-6 animate-spin" /> : <Camera className="h-6 w-6" />}
               Foto (opcional)
@@ -255,7 +255,7 @@ export function RegistrarEntrega({
       </section>
 
       {error && (
-        <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm font-medium text-red-700 dark:bg-red-950/50 dark:text-red-300">
+        <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-700 dark:bg-red-950/50 dark:text-red-300">
           {error}
         </p>
       )}

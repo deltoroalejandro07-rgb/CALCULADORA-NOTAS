@@ -112,10 +112,10 @@ export function Importador({ comerciales, yo, existentes }: { comerciales: { id:
         </p>
         <p className="mt-1 text-sm text-suave">Todos los clientes con contacto, estado, comercial, intereses y consentimientos. Sirve como copia o para pasarlos a un ERP.</p>
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <a href="/api/exportar/clientes?formato=xlsx" className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-marca text-sm font-semibold text-marca-texto">
+          <a href="/api/exportar/clientes?formato=xlsx" className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-marca text-sm font-semibold text-marca-texto">
             <FileSpreadsheet className="h-4 w-4" aria-hidden /> Excel (.xlsx)
           </a>
-          <a href="/api/exportar/clientes?formato=csv" className="flex min-h-11 items-center justify-center rounded-xl border border-borde text-sm font-semibold">
+          <a href="/api/exportar/clientes?formato=csv" className="flex min-h-11 items-center justify-center rounded-lg border border-borde text-sm font-semibold">
             CSV
           </a>
         </div>
@@ -131,7 +131,7 @@ export function Importador({ comerciales, yo, existentes }: { comerciales: { id:
             Descargar plantilla
           </button>
         </p>
-        <label className="mt-3 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-marca text-sm font-semibold text-marca">
+        <label className="mt-3 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-marca text-sm font-semibold text-marca">
           <FileSpreadsheet className="h-5 w-5" aria-hidden /> {archivo ?? "Elegir fichero"}
           <input type="file" accept=".xlsx,.csv,.txt,.xls" hidden aria-label="Fichero de clientes" onChange={(e) => abrir(e.target.files?.[0])} />
         </label>
@@ -154,7 +154,7 @@ export function Importador({ comerciales, yo, existentes }: { comerciales: { id:
       {filas.length > 0 && (
         <>
           <section>
-            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-suave">1. Columnas</h2>
+            <h2 className="mb-2 text-[13px] font-semibold text-suave">1. Columnas</h2>
             <ul className="space-y-2">
               {encabezados.map((h, i) => (
                 <li key={i} className="grid grid-cols-2 items-center gap-2 text-sm">
@@ -185,7 +185,7 @@ export function Importador({ comerciales, yo, existentes }: { comerciales: { id:
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-suave">2. Opciones</h2>
+            <h2 className="text-[13px] font-semibold text-suave">2. Opciones</h2>
             <label className="block text-sm font-medium">
               Asignar a
               <select value={comercial} onChange={(e) => setComercial(e.target.value)} className={`${select} mt-1 min-h-12`}>
@@ -202,7 +202,7 @@ export function Importador({ comerciales, yo, existentes }: { comerciales: { id:
               <input type="checkbox" checked={omitirDuplicados} onChange={(e) => setOmitirDuplicados(e.target.checked)} className="h-5 w-5 accent-[var(--marca)]" />
             </label>
             {tieneConsentimiento && (
-              <label className="flex items-start justify-between gap-3 rounded-xl border border-amber-400 bg-amber-50 p-3 text-sm dark:bg-amber-950/40">
+              <label className="flex items-start justify-between gap-3 rounded-lg border border-amber-400 bg-amber-50 p-3 text-sm dark:bg-amber-950/40">
                 <span>
                   Importar también los consentimientos (columnas «Acepta WhatsApp / email»). Márcalo <strong>solo si tienes ese consentimiento documentado</strong> (hoja firmada,
                   formulario…): queda registrado como prueba.
@@ -213,11 +213,11 @@ export function Importador({ comerciales, yo, existentes }: { comerciales: { id:
           </section>
 
           <section>
-            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-suave">3. Revisión</h2>
+            <h2 className="mb-2 text-[13px] font-semibold text-suave">3. Revisión</h2>
             <p className="text-sm">
               <strong>{validas.length}</strong> se importarán · {errores.length} con errores · {omitirDuplicados ? `${duplicados.length} duplicados se saltan` : `${duplicados.length} duplicados se importarán igualmente`}
             </p>
-            <div className="mt-2 overflow-x-auto rounded-xl border border-borde">
+            <div className="mt-2 overflow-x-auto rounded-lg border border-borde">
               <table className="w-full text-xs">
                 <thead className="bg-fondo text-left text-suave">
                   <tr>

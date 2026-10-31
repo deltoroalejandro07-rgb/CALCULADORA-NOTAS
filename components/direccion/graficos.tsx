@@ -8,7 +8,7 @@ export const COLOR_SERIE = ["var(--serie-1)", "var(--serie-2)", "var(--serie-3)"
 
 export function Tarjeta({ titulo, subtitulo, children, className }: { titulo: string; subtitulo?: string; children: React.ReactNode; className?: string }) {
   return (
-    <section className={cn("rounded-2xl border border-borde bg-superficie p-4", className)}>
+    <section className={cn("rounded-xl border border-borde bg-superficie p-4", className)}>
       <h2 className="font-semibold">{titulo}</h2>
       {subtitulo && <p className="text-xs text-suave">{subtitulo}</p>}
       <div className="mt-3">{children}</div>
@@ -18,7 +18,7 @@ export function Tarjeta({ titulo, subtitulo, children, className }: { titulo: st
 
 export function Cifra({ valor, etiqueta, detalle }: { valor: string; etiqueta: string; detalle?: string }) {
   return (
-    <div className="rounded-2xl border border-borde bg-superficie p-4">
+    <div className="rounded-xl border border-borde bg-superficie p-4">
       <p className="text-3xl font-bold tabular-nums">{valor}</p>
       <p className="text-sm leading-tight">{etiqueta}</p>
       {detalle && <p className="mt-0.5 text-xs text-suave">{detalle}</p>}

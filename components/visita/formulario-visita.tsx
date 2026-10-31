@@ -67,7 +67,7 @@ function tipoGuardado(): TipoVisita {
 function Seccion({ titulo, children, opcional }: { titulo: string; children: React.ReactNode; opcional?: boolean }) {
   return (
     <section className="space-y-2">
-      <h2 className="px-1 text-sm font-semibold uppercase tracking-wide text-suave">
+      <h2 className="px-1 text-[13px] font-semibold text-suave">
         {titulo}
         {opcional && <span className="ml-1 font-normal normal-case tracking-normal">(opcional)</span>}
       </h2>
@@ -200,7 +200,7 @@ export function FormularioVisita() {
           <Boton className="w-full" onClick={reiniciar}>
             Registrar otra visita
           </Boton>
-          <Link href="/hoy" className="flex min-h-12 items-center justify-center rounded-xl border border-borde bg-superficie font-semibold">
+          <Link href="/hoy" className="flex min-h-12 items-center justify-center rounded-lg border border-borde bg-superficie font-semibold">
             Volver a Hoy
           </Link>
         </div>
@@ -211,7 +211,7 @@ export function FormularioVisita() {
   const estadoActual = cliente?.estado ?? (nuevo ? "prospecto" : null);
   const estadoNuevo = estadoActual && resultado ? siguienteEstado(estadoActual, resultado) : null;
   const faltaConsentimiento = nuevo ? { whatsapp: true, email: true } : cliente ? { whatsapp: !cliente.consiente_whatsapp, email: !cliente.consiente_email } : null;
-  const campo = "w-full rounded-xl border border-borde bg-superficie px-4 py-3 text-base outline-none focus:border-marca focus:ring-2 focus:ring-marca/30";
+  const campo = "w-full rounded-lg border border-borde bg-superficie px-4 py-3 text-base outline-none focus:border-marca focus:ring-2 focus:ring-marca/30";
 
   return (
     <div className="space-y-6 px-4 pb-28">
@@ -234,7 +234,7 @@ export function FormularioVisita() {
               aria-checked={resultado === valor}
               onClick={() => elegirResultado(valor)}
               className={cn(
-                "flex min-h-16 items-center gap-2 rounded-2xl border-2 px-3 text-left text-sm font-semibold leading-tight transition active:scale-[0.97]",
+                "flex min-h-16 items-center gap-2 rounded-xl border-2 px-3 text-left text-sm font-semibold leading-tight transition active:scale-[0.97]",
                 resultado === valor ? clase : "border-borde bg-superficie",
               )}
             >
@@ -244,7 +244,7 @@ export function FormularioVisita() {
           ))}
         </div>
         {estadoActual && estadoNuevo && estadoNuevo !== estadoActual && (
-          <p className="flex items-center gap-1.5 rounded-xl bg-marca-suave px-3 py-2 text-sm">
+          <p className="flex items-center gap-1.5 rounded-lg bg-marca-suave px-3 py-2 text-sm">
             Pasará de <strong>{TEXTO_ESTADO[estadoActual]}</strong> <ArrowRight className="h-4 w-4" aria-hidden /> <strong>{TEXTO_ESTADO[estadoNuevo]}</strong>
           </p>
         )}
@@ -267,7 +267,7 @@ export function FormularioVisita() {
           maxLength={1000}
           placeholder="Cerveza de barril, agua con gas, café…"
           aria-label="Productos que le interesan"
-          className="min-h-12 w-full rounded-xl border border-borde bg-superficie px-3 outline-none focus:border-marca"
+          className="min-h-12 w-full rounded-lg border border-borde bg-superficie px-3 outline-none focus:border-marca"
         />
       </Seccion>
 
@@ -357,7 +357,7 @@ export function FormularioVisita() {
 
       {faltaConsentimiento && (faltaConsentimiento.whatsapp || faltaConsentimiento.email) && (
         <Seccion titulo="Comunicaciones comerciales">
-          <div className="space-y-2 rounded-2xl border border-borde bg-superficie p-4">
+          <div className="space-y-2 rounded-xl border border-borde bg-superficie p-4">
             <p className="text-sm text-suave">¿Ha aceptado recibir ofertas? Márcalo solo si lo ha dicho expresamente.</p>
             <div className="flex flex-wrap gap-2">
               {faltaConsentimiento.whatsapp && (

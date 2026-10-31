@@ -85,7 +85,7 @@ export function FormularioLogin() {
   }
 
   const campo =
-    "w-full rounded-xl border border-borde bg-superficie px-4 py-3.5 text-lg outline-none focus:border-marca focus:ring-2 focus:ring-marca/30";
+    "w-full rounded-lg border border-borde bg-superficie px-4 py-3.5 text-lg outline-none focus:border-marca focus:ring-2 focus:ring-marca/30";
 
   const campoEmail = (
     <>

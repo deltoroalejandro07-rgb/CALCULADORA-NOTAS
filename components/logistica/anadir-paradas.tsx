@@ -55,7 +55,7 @@ export function AnadirParadas({
         <div>
           <p className="text-sm font-medium">Albaranes por repartir ({albaranes.length})</p>
           {albaranes.length ? (
-            <ul className="mt-2 max-h-80 divide-y divide-borde overflow-y-auto rounded-xl border border-borde">
+            <ul className="mt-2 max-h-80 divide-y divide-borde overflow-y-auto rounded-lg border border-borde">
               {albaranes.map((a) => (
                 <li key={a.id}>
                   <label className="flex min-h-12 items-center gap-3 px-3 py-2">
@@ -83,9 +83,9 @@ export function AnadirParadas({
         <div>
           <p className="text-sm font-medium">Parada sin albarán (cliente del CRM)</p>
           <p className="text-xs text-suave">Recoger envases, llevar material, una devolución…</p>
-          <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar cliente" className="mt-2 min-h-11 w-full rounded-xl border border-borde bg-superficie px-3 outline-none focus:border-marca" />
+          <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar cliente" className="mt-2 min-h-11 w-full rounded-lg border border-borde bg-superficie px-3 outline-none focus:border-marca" />
           {coincidencias.length > 0 && (
-            <ul className="mt-1 divide-y divide-borde rounded-xl border border-borde">
+            <ul className="mt-1 divide-y divide-borde rounded-lg border border-borde">
               {coincidencias.map((c) => (
                 <li key={c.id}>
                   <button

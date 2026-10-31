@@ -103,8 +103,8 @@ export function Planificador({ fecha, dia, zonas, albaranes, vehiculos, conducto
 
   return (
     <div className="space-y-4 px-4 pb-8">
-      <div className="flex items-center justify-between rounded-2xl border border-borde bg-superficie p-2">
-        <Link href={`/logistica/planificar?fecha=${sumarDias(fecha, -1)}`} aria-label="Día anterior" className="rounded-xl p-3 active:bg-fondo">
+      <div className="flex items-center justify-between rounded-xl border border-borde bg-superficie p-2">
+        <Link href={`/logistica/planificar?fecha=${sumarDias(fecha, -1)}`} aria-label="Día anterior" className="rounded-lg p-3 active:bg-fondo">
           <ChevronLeft className="h-5 w-5" />
         </Link>
         <div className="text-center">
@@ -113,7 +113,7 @@ export function Planificador({ fecha, dia, zonas, albaranes, vehiculos, conducto
           </p>
           <p className="text-xs text-suave">{fecha === fechaDentroDe(0) ? "Hoy" : fecha === fechaDentroDe(1) ? "Mañana" : ""}</p>
         </div>
-        <Link href={`/logistica/planificar?fecha=${sumarDias(fecha, 1)}`} aria-label="Día siguiente" className="rounded-xl p-3 active:bg-fondo">
+        <Link href={`/logistica/planificar?fecha=${sumarDias(fecha, 1)}`} aria-label="Día siguiente" className="rounded-lg p-3 active:bg-fondo">
           <ChevronRight className="h-5 w-5" />
         </Link>
       </div>
@@ -233,7 +233,7 @@ export function Planificador({ fecha, dia, zonas, albaranes, vehiculos, conducto
             </div>
           </Tarjeta>
 
-          {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm font-medium text-red-700 dark:bg-red-950/50 dark:text-red-300">{error}</p>}
+          {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-700 dark:bg-red-950/50 dark:text-red-300">{error}</p>}
           <Boton type="button" className="min-h-14 w-full text-lg" cargando={calculando} disabled={!seleccionados.length || !vehiculosSel.length || !almacen} onClick={calcular}>
             <Sparkles className="h-6 w-6" aria-hidden /> {calculando ? "Calculando la mejor ruta…" : "Calcular la mejor ruta"}
           </Boton>
@@ -263,7 +263,7 @@ export function Planificador({ fecha, dia, zonas, albaranes, vehiculos, conducto
             <p className="text-xs text-suave">Tiempos estimados. Con la clave de OpenRouteService se calculan con carreteras reales para camión.</p>
           )}
           {plan.avisos.map((a) => (
-            <p key={a} className="flex items-start gap-2 rounded-xl bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-900/50 dark:text-amber-100">
+            <p key={a} className="flex items-start gap-2 rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-900/50 dark:text-amber-100">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden /> {a}
             </p>
           ))}
@@ -282,7 +282,7 @@ export function Planificador({ fecha, dia, zonas, albaranes, vehiculos, conducto
               <HojaCarga albaranes={albaranes.filter((a) => r.paradas.some((p) => p.albaranIds.includes(a.id)))} titulo={`Hoja de carga · ${r.vehiculo}`} />
               <label className="block text-sm font-medium">
                 Conductor
-                <select value={conductorDe[r.vehiculoId] ?? ""} onChange={(e) => setConductorDe((c) => ({ ...c, [r.vehiculoId]: e.target.value }))} className="mt-1 min-h-11 w-full rounded-xl border border-borde bg-superficie px-3">
+                <select value={conductorDe[r.vehiculoId] ?? ""} onChange={(e) => setConductorDe((c) => ({ ...c, [r.vehiculoId]: e.target.value }))} className="mt-1 min-h-11 w-full rounded-lg border border-borde bg-superficie px-3">
                   <option value="">Elige quién conduce</option>
                   {conductores.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -291,7 +291,7 @@ export function Planificador({ fecha, dia, zonas, albaranes, vehiculos, conducto
                   ))}
                 </select>
               </label>
-              <ol className="divide-y divide-borde overflow-hidden rounded-2xl border border-borde bg-superficie">
+              <ol className="divide-y divide-borde overflow-hidden rounded-xl border border-borde bg-superficie">
                 {r.paradas.map((p, i) => (
                   <li key={p.destinoId} className="flex gap-3 p-3">
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: p.retraso > 0 ? "#dc2626" : COLORES[k % COLORES.length] }}>
@@ -314,7 +314,7 @@ export function Planificador({ fecha, dia, zonas, albaranes, vehiculos, conducto
             </section>
           ))}
 
-          {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm font-medium text-red-700 dark:bg-red-950/50 dark:text-red-300">{error}</p>}
+          {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-700 dark:bg-red-950/50 dark:text-red-300">{error}</p>}
           <Boton type="button" className="min-h-14 w-full text-lg" cargando={aceptando} onClick={aceptar}>
             Aceptar y enviar al conductor
           </Boton>

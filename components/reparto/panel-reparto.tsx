@@ -133,7 +133,7 @@ export function PanelReparto() {
     );
   }
   if (!usuarioId) {
-    return <p className="mx-4 rounded-2xl border border-borde bg-superficie p-4 text-sm">Abre la app con cobertura e inicia sesión para descargar tu ruta.</p>;
+    return <p className="mx-4 rounded-xl border border-borde bg-superficie p-4 text-sm">Abre la app con cobertura e inicia sesión para descargar tu ruta.</p>;
   }
 
   const estadoDe = (p: ParadaReparto): { estado: EstadoParada; local?: EntregaLocal } => {
@@ -201,24 +201,24 @@ export function PanelReparto() {
   const barraEstado = (
     <div className="space-y-2 px-4">
       {!enLinea && (
-        <p className="flex items-center gap-2 rounded-xl bg-slate-200 px-3 py-2 text-sm font-medium text-slate-800 dark:bg-slate-700 dark:text-slate-100">
+        <p className="flex items-center gap-2 rounded-lg bg-slate-200 px-3 py-2 text-sm font-medium text-slate-800 dark:bg-slate-700 dark:text-slate-100">
           <CloudOff className="h-4 w-4 shrink-0" aria-hidden /> Sin cobertura: puedes seguir entregando, todo se guarda en el móvil.
         </p>
       )}
       {pendientes > 0 && (
-        <p className="flex items-center gap-2 rounded-xl bg-amber-100 px-3 py-2 text-sm font-medium text-amber-900 dark:bg-amber-900/60 dark:text-amber-100">
+        <p className="flex items-center gap-2 rounded-lg bg-amber-100 px-3 py-2 text-sm font-medium text-amber-900 dark:bg-amber-900/60 dark:text-amber-100">
           {actualizando ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden /> : <CloudUpload className="h-4 w-4 shrink-0" aria-hidden />}
           {pendientes} {pendientes === 1 ? "entrega guardada" : "entregas guardadas"} en el móvil{enLinea ? ", subiendo…" : ": se subirán solas con cobertura"}
         </p>
       )}
       {conflictos.length > 0 && (
-        <p role="alert" className="flex items-start gap-2 rounded-xl bg-red-100 px-3 py-2 text-sm font-medium text-red-800 dark:bg-red-900/60 dark:text-red-100">
+        <p role="alert" className="flex items-start gap-2 rounded-lg bg-red-100 px-3 py-2 text-sm font-medium text-red-800 dark:bg-red-900/60 dark:text-red-100">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
           {conflictos.length === 1 ? "Una entrega ya estaba registrada" : `${conflictos.length} entregas ya estaban registradas`} desde otro móvil. Lo tuyo sigue guardado aquí: avisa a la oficina.
         </p>
       )}
       {conError.length > 0 && (
-        <div role="alert" className="rounded-xl bg-red-100 px-3 py-2 text-sm text-red-800 dark:bg-red-900/60 dark:text-red-100">
+        <div role="alert" className="rounded-lg bg-red-100 px-3 py-2 text-sm text-red-800 dark:bg-red-900/60 dark:text-red-100">
           <p className="flex items-center gap-2 font-medium">
             <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden /> {conError.length} sin poder subir: {conError[0].error}
           </p>
@@ -235,7 +235,7 @@ export function PanelReparto() {
         </div>
       )}
       {aviso && (
-        <p className="flex items-center justify-between gap-2 rounded-xl bg-emerald-100 px-3 py-2 text-sm font-medium text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-100">
+        <p className="flex items-center justify-between gap-2 rounded-lg bg-emerald-100 px-3 py-2 text-sm font-medium text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-100">
           {aviso}
           <button type="button" onClick={() => setAviso(null)} aria-label="Cerrar aviso">
             <X className="h-4 w-4" />
@@ -249,7 +249,7 @@ export function PanelReparto() {
     return (
       <div className="space-y-3">
         {barraEstado}
-        <div className="mx-4 rounded-2xl border border-dashed border-borde p-6 text-center">
+        <div className="mx-4 rounded-xl border border-dashed border-borde p-6 text-center">
           <Truck className="mx-auto h-8 w-8 text-suave" aria-hidden />
           <p className="mt-2 font-medium">No tienes rutas de reparto asignadas.</p>
           <p className="text-sm text-suave">Cuando la oficina te asigne una, aparecerá aquí.</p>
@@ -260,7 +260,7 @@ export function PanelReparto() {
           )}
         </div>
         {enLinea && (
-          <Link href="/reparto/dias" className="mx-4 flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-borde bg-superficie text-sm font-medium active:bg-fondo">
+          <Link href="/reparto/dias" className="mx-4 flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-borde bg-superficie text-sm font-medium active:bg-fondo">
             <CalendarDays className="h-4 w-4" aria-hidden /> Ver rutas por días (días pasados)
           </Link>
         )}
@@ -297,7 +297,7 @@ export function PanelReparto() {
           <ChevronLeft className="h-5 w-5" aria-hidden /> Ruta
         </button>
         <h2 className="text-xl font-bold">Hoja de carga</h2>
-        <div className="rounded-2xl border border-borde bg-superficie p-4">
+        <div className="rounded-xl border border-borde bg-superficie p-4">
           <p className="mb-2 font-semibold">Total a cargar</p>
           <ul className="divide-y divide-borde text-sm">
             {totalCarga(porEntregar).map((l) => (
@@ -308,7 +308,7 @@ export function PanelReparto() {
             ))}
           </ul>
         </div>
-        <div className="rounded-2xl border border-borde bg-superficie p-4">
+        <div className="rounded-xl border border-borde bg-superficie p-4">
           <p className="font-semibold">Orden de carga</p>
           <p className="mb-2 text-sm text-suave">Lo último que se entrega, al fondo.</p>
           <ol className="space-y-2 text-sm">
@@ -346,7 +346,7 @@ export function PanelReparto() {
         </div>
       )}
 
-      <section className="mx-4 rounded-2xl border border-borde bg-superficie p-4">
+      <section className="mx-4 rounded-xl border border-borde bg-superficie p-4">
         <div className="flex items-start justify-between gap-2">
           <div>
             <p className="text-lg font-bold">
@@ -369,11 +369,11 @@ export function PanelReparto() {
         </div>
         {ruta.notas && <p className="mt-2 text-sm text-amber-700 dark:text-amber-300">Oficina: {ruta.notas}</p>}
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <button type="button" onClick={() => setVista({ tipo: "carga" })} className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-borde text-sm font-medium active:bg-fondo">
+          <button type="button" onClick={() => setVista({ tipo: "carga" })} className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-borde text-sm font-medium active:bg-fondo">
             <ClipboardList className="h-4 w-4" aria-hidden /> Hoja de carga
           </button>
           {enlaceRuta ? (
-            <a href={enlaceRuta} target="_blank" rel="noreferrer" className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-borde text-sm font-medium active:bg-fondo">
+            <a href={enlaceRuta} target="_blank" rel="noreferrer" className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-borde text-sm font-medium active:bg-fondo">
               <Navigation className="h-4 w-4" aria-hidden /> Ruta en Maps
             </a>
           ) : (
@@ -383,27 +383,27 @@ export function PanelReparto() {
       </section>
 
       {enLinea && (
-        <Link href="/reparto/dias" className="mx-4 flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-borde bg-superficie text-sm font-medium active:bg-fondo">
+        <Link href="/reparto/dias" className="mx-4 flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-borde bg-superficie text-sm font-medium active:bg-fondo">
           <CalendarDays className="h-4 w-4" aria-hidden /> Ver rutas por días (días pasados)
         </Link>
       )}
 
       {siguiente ? (
         <section className="px-4">
-          <p className="mb-1 text-sm font-semibold uppercase tracking-wide text-suave">Siguiente parada</p>
+          <p className="mb-1 text-[13px] font-semibold text-suave">Siguiente parada</p>
           <FichaParada parada={siguiente} estado="pendiente" destacada numero={ordenadas.indexOf(siguiente) + 1} onEntregar={(modo) => setVista({ tipo: "entrega", id: siguiente.id, modo })} onRapido={() => entregarRapido(siguiente)} />
         </section>
       ) : (
         total > 0 && (
-          <p className="mx-4 rounded-2xl bg-emerald-100 p-4 text-center font-semibold text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-100">
+          <p className="mx-4 rounded-xl bg-emerald-100 p-4 text-center font-semibold text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-100">
             ✓ Ruta terminada{pendientes ? ". Se subirá todo al tener cobertura." : "."}
           </p>
         )
       )}
 
       <section>
-        <p className="mb-1 px-4 text-sm font-semibold uppercase tracking-wide text-suave">Todas las paradas</p>
-        <ol className="divide-y divide-borde border-y border-borde bg-superficie lg:mx-4 lg:overflow-hidden lg:rounded-2xl lg:border-x">
+        <p className="mb-1 px-4 text-[13px] font-semibold text-suave">Todas las paradas</p>
+        <ol className="divide-y divide-borde border-y border-borde bg-superficie lg:mx-4 lg:overflow-hidden lg:rounded-xl lg:border-x">
           {ordenadas.map((p, i) => {
             const { estado, local } = estadoDe(p);
             return (
@@ -467,7 +467,7 @@ function FichaParada({
   const c = parada.cliente;
   const comoLlegar = enlaceComoLlegar({ lat: c.lat, lng: c.lng, direccion: c.direccion, localidad: c.localidad });
   return (
-    <div className={cn("rounded-2xl border bg-superficie p-4", destacada ? "border-marca shadow-sm" : "border-borde")}>
+    <div className={cn("rounded-xl border bg-superficie p-4", destacada ? "border-marca shadow-sm" : "border-borde")}>
       <div className="flex items-start gap-3">
         {numero != null && <NumeroParada n={numero} estado={estado} />}
         <div className="min-w-0 flex-1">
@@ -483,7 +483,7 @@ function FichaParada({
         </div>
       </div>
       {(c.horario_entrega || c.notas_acceso || parada.notas_oficina) && (
-        <div className="mt-3 space-y-1 rounded-xl bg-fondo p-3 text-sm">
+        <div className="mt-3 space-y-1 rounded-lg bg-fondo p-3 text-sm">
           {c.horario_entrega && <p>🕘 Descarga: {c.horario_entrega}</p>}
           {c.notas_acceso && <p>🚪 {c.notas_acceso}</p>}
           {parada.notas_oficina && <p className="font-medium text-amber-700 dark:text-amber-300">📝 {parada.notas_oficina}</p>}
@@ -500,12 +500,12 @@ function FichaParada({
       )}
       <div className="mt-3 grid grid-cols-2 gap-2">
         {comoLlegar && (
-          <a href={comoLlegar} target="_blank" rel="noreferrer" className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-borde font-medium active:bg-fondo">
+          <a href={comoLlegar} target="_blank" rel="noreferrer" className="flex min-h-12 items-center justify-center gap-1.5 rounded-lg border border-borde font-medium active:bg-fondo">
             <Navigation className="h-5 w-5" aria-hidden /> Navegar
           </a>
         )}
         {c.telefono && (
-          <a href={enlaceLlamada(c.telefono)} className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-borde font-medium active:bg-fondo">
+          <a href={enlaceLlamada(c.telefono)} className="flex min-h-12 items-center justify-center gap-1.5 rounded-lg border border-borde font-medium active:bg-fondo">
             <Phone className="h-5 w-5" aria-hidden /> Llamar
           </a>
         )}
@@ -516,18 +516,18 @@ function FichaParada({
             <Check className="h-6 w-6" aria-hidden /> Entregado
           </Boton>
           <div className="mt-2 grid grid-cols-2 gap-2">
-            <button type="button" onClick={() => onEntregar("entregada")} className="min-h-11 rounded-xl border border-borde text-sm font-medium active:bg-fondo">
+            <button type="button" onClick={() => onEntregar("entregada")} className="min-h-11 rounded-lg border border-borde text-sm font-medium active:bg-fondo">
               Con cambios
               <span className="block text-[11px] font-normal text-suave">falta algo, envases, cobro</span>
             </button>
-            <button type="button" onClick={() => onEntregar("fallida")} className="min-h-11 rounded-xl border border-red-200 text-sm font-medium text-red-700 active:bg-fondo dark:border-red-900 dark:text-red-300">
+            <button type="button" onClick={() => onEntregar("fallida")} className="min-h-11 rounded-lg border border-red-200 text-sm font-medium text-red-700 active:bg-fondo dark:border-red-900 dark:text-red-300">
               No entregado
               <span className="block text-[11px] font-normal opacity-75">cerrado, no lo quiere…</span>
             </button>
           </div>
         </>
       ) : (
-        <p className={cn("mt-3 rounded-xl p-3 text-sm font-medium", estado === "entregada" ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-100" : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-100")}>
+        <p className={cn("mt-3 rounded-lg p-3 text-sm font-medium", estado === "entregada" ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-100" : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-100")}>
           {estado === "entregada" ? "✓ Entregada" : `No entregada${local?.datos.motivo_fallo ? `: ${local.datos.motivo_fallo}` : ""}`}
           {local?.subida === "pendiente" && " · guardada en el móvil, se subirá con cobertura"}
           {local?.subida === "subida" && " · subida"}

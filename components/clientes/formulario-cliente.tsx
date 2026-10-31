@@ -7,7 +7,7 @@ import { Boton } from "@/components/ui/boton";
 import type { DatosCliente } from "@/lib/dominio/cliente";
 import { ESTADOS_CLIENTE, TEXTO_ESTADO, TEXTO_TIPO_NEGOCIO, TIPOS_NEGOCIO, type EstadoCliente } from "@/lib/dominio/tipos";
 
-const campo = "mt-1 min-h-12 w-full rounded-xl border border-borde bg-superficie px-3 outline-none focus:border-marca focus:ring-2 focus:ring-marca/30";
+const campo = "mt-1 min-h-12 w-full rounded-lg border border-borde bg-superficie px-3 outline-none focus:border-marca focus:ring-2 focus:ring-marca/30";
 
 function Campo({
   nombre,
@@ -27,8 +27,8 @@ function Campo({
 
 function Grupo({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
-    <fieldset className="space-y-3 rounded-2xl border border-borde bg-superficie p-4">
-      <legend className="px-1 text-sm font-semibold uppercase tracking-wide text-suave">{titulo}</legend>
+    <fieldset className="space-y-3 rounded-xl border border-borde bg-superficie p-4">
+      <legend className="px-1 text-[13px] font-semibold text-suave">{titulo}</legend>
       {children}
     </fieldset>
   );
@@ -173,7 +173,7 @@ export function FormularioCliente({
           onSubmit={(ev) => {
             if (!confirm(`¿Borrar «${inicial.nombre_negocio}» y TODO su historial (visitas, fotos, mensajes, pedidos)? No se puede deshacer.`)) ev.preventDefault();
           }}
-          className="mx-4 mb-8 rounded-2xl border border-red-300 p-4 dark:border-red-900"
+          className="mx-4 mb-8 rounded-xl border border-red-300 p-4 dark:border-red-900"
         >
           <input type="hidden" name="id" value={inicial.id} />
           <p className="text-sm font-semibold text-red-700 dark:text-red-300">Zona peligrosa</p>

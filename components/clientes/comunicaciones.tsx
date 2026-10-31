@@ -41,7 +41,7 @@ export function Comunicaciones({ clienteId, whatsapp, email, fecha: fechaConsent
 
   return (
     <section>
-      <h2 className="mb-1 flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-suave">
+      <h2 className="mb-1 flex items-center gap-1.5 text-[13px] font-semibold text-suave">
         <ShieldCheck className="h-4 w-4" aria-hidden /> Comunicaciones comerciales
       </h2>
       <Tarjeta className="py-1">
@@ -63,7 +63,7 @@ export function Comunicaciones({ clienteId, whatsapp, email, fecha: fechaConsent
                 }
               });
             }}
-            className="mb-2 space-y-2 rounded-xl bg-fondo p-3"
+            className="mb-2 space-y-2 rounded-lg bg-fondo p-3"
           >
             <input type="hidden" name="cliente_id" value={clienteId} />
             <input type="hidden" name="canal" value={editando.canal} />
@@ -73,7 +73,7 @@ export function Comunicaciones({ clienteId, whatsapp, email, fecha: fechaConsent
             </p>
             <label className="block text-sm">
               ¿Cómo lo ha comunicado?
-              <select name="origen" defaultValue={editando.otorgar ? "verbal_visita" : editando.canal} className="mt-1 min-h-11 w-full rounded-xl border border-borde bg-superficie px-3">
+              <select name="origen" defaultValue={editando.otorgar ? "verbal_visita" : editando.canal} className="mt-1 min-h-11 w-full rounded-lg border border-borde bg-superficie px-3">
                 {ORIGENES.map(([v, t]) => (
                   <option key={v} value={v}>
                     {t}
@@ -84,7 +84,7 @@ export function Comunicaciones({ clienteId, whatsapp, email, fecha: fechaConsent
             <input
               name="evidencia"
               placeholder={editando.otorgar ? "Prueba (opcional): «firmó la hoja de alta»" : "Detalle (opcional): «respondió BAJA»"}
-              className="min-h-11 w-full rounded-xl border border-borde bg-superficie px-3 text-sm"
+              className="min-h-11 w-full rounded-lg border border-borde bg-superficie px-3 text-sm"
             />
             {error && <p className="text-sm text-red-600">{error}</p>}
             <div className="flex gap-2">

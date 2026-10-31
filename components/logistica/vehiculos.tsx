@@ -7,7 +7,7 @@ import { Tarjeta } from "@/components/app/piezas";
 import { Boton } from "@/components/ui/boton";
 import { ETIQUETAS_AMBIENTALES, TEXTO_ETIQUETA } from "@/lib/dominio/reparto";
 
-const campo = "mt-1 min-h-12 w-full rounded-xl border border-borde bg-superficie px-3 outline-none focus:border-marca";
+const campo = "mt-1 min-h-12 w-full rounded-lg border border-borde bg-superficie px-3 outline-none focus:border-marca";
 
 interface Vehiculo {
   id: string;
@@ -103,7 +103,7 @@ export function Vehiculos({ vehiculos, conductores }: { vehiculos: Vehiculo[]; c
 
   return (
     <section className="space-y-2">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-suave">Vehículos</h2>
+      <h2 className="text-[13px] font-semibold text-suave">Vehículos</h2>
       {vehiculos.map((v) =>
         editando === v.id ? (
           <Tarjeta key={v.id}>

@@ -8,7 +8,7 @@ import { Boton } from "@/components/ui/boton";
 import { cn } from "@/lib/cn";
 import { DIAS_SEMANA } from "@/lib/dominio/destinos";
 
-const campo = "mt-1 min-h-12 w-full rounded-xl border border-borde bg-superficie px-3 outline-none focus:border-marca";
+const campo = "mt-1 min-h-12 w-full rounded-lg border border-borde bg-superficie px-3 outline-none focus:border-marca";
 
 interface Zona {
   id: string;
@@ -45,7 +45,7 @@ function Formulario({ z, vehiculos, alTerminar }: { z: Zona | null; vehiculos: {
         <p className="text-sm font-medium">Días de reparto</p>
         <div className="mt-1 grid grid-cols-7 gap-1">
           {DIAS_SEMANA.map((d) => (
-            <label key={d.n} className={cn("flex min-h-11 cursor-pointer items-center justify-center rounded-xl border text-sm font-semibold", dias.includes(d.n) ? "border-marca bg-marca-suave" : "border-borde")}>
+            <label key={d.n} className={cn("flex min-h-11 cursor-pointer items-center justify-center rounded-lg border text-sm font-semibold", dias.includes(d.n) ? "border-marca bg-marca-suave" : "border-borde")}>
               <input type="checkbox" name="dia" value={d.n} checked={dias.includes(d.n)} onChange={() => setDias((x) => (x.includes(d.n) ? x.filter((y) => y !== d.n) : [...x, d.n]))} className="sr-only" aria-label={d.largo} />
               {d.corto}
             </label>

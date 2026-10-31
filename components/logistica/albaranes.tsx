@@ -14,7 +14,7 @@ import { textoFranja } from "@/lib/dominio/horario";
 import { fecha as formatoFecha } from "@/lib/formato";
 import { supabaseNavegador } from "@/lib/supabase/navegador";
 
-const campo = "mt-1 min-h-11 w-full rounded-xl border border-borde bg-superficie px-3 outline-none focus:border-marca";
+const campo = "mt-1 min-h-11 w-full rounded-lg border border-borde bg-superficie px-3 outline-none focus:border-marca";
 
 function enviar(accion: (f: FormData) => void) {
   return (e: React.FormEvent<HTMLFormElement>) => {
@@ -86,7 +86,7 @@ export function SubirAlbaranes() {
             {nuevos} {nuevos === 1 ? "albarán nuevo" : "albaranes nuevos"}
           </p>
           {resultado.archivos.map((a) => (
-            <div key={a.path} className="rounded-xl bg-fondo p-2">
+            <div key={a.path} className="rounded-lg bg-fondo p-2">
               <p className="truncate text-xs text-suave">{a.nombre}</p>
               {a.error && <p className="text-red-600">{a.error}</p>}
               {a.albaranes.map((x, i) => (
@@ -142,7 +142,7 @@ export function AltaManual({ destinos, zonas }: { destinos: { id: string; nombre
       <form onSubmit={enviar(accion)} className="space-y-3" key={estado.ok}>
         <p className="font-semibold">Entrega a mano</p>
         {dest ? (
-          <div className="flex items-center justify-between rounded-xl bg-fondo p-3 text-sm">
+          <div className="flex items-center justify-between rounded-lg bg-fondo p-3 text-sm">
             <input type="hidden" name="destino_id" value={dest.id} />
             <span>
               <span className="font-medium">{dest.nombre}</span>
@@ -159,7 +159,7 @@ export function AltaManual({ destinos, zonas }: { destinos: { id: string; nombre
               <input name="nombre" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Busca uno conocido o escribe uno nuevo" autoComplete="off" className={campo} />
             </label>
             {coincidencias.length > 0 && (
-              <ul className="divide-y divide-borde rounded-xl border border-borde">
+              <ul className="divide-y divide-borde rounded-lg border border-borde">
                 {coincidencias.map((d) => (
                   <li key={d.id}>
                     <button type="button" onClick={() => setElegido(d.id)} className="w-full px-3 py-2 text-left text-sm active:bg-fondo">
@@ -260,8 +260,8 @@ export interface AlbaranPendiente {
 function EditarDestino({ d, zonas, alCerrar }: { d: Destino; zonas: { id: string; nombre: string }[]; alCerrar: () => void }) {
   const [estado, accion, pendiente] = useActionState<EstadoForm, FormData>(editarDestino, {});
   return (
-    <form onSubmit={enviar(accion)} className="mt-3 space-y-2 rounded-xl bg-fondo p-3 text-sm">
-      <p className="text-xs font-semibold uppercase tracking-wide text-suave">Datos de {d.nombre} (valen para todas sus entregas)</p>
+    <form onSubmit={enviar(accion)} className="mt-3 space-y-2 rounded-lg bg-fondo p-3 text-sm">
+      <p className="text-xs font-semibold text-suave">Datos de {d.nombre} (valen para todas sus entregas)</p>
       <input type="hidden" name="id" value={d.id} />
       <label className="block">
         Dirección
@@ -310,7 +310,7 @@ function EditarDestino({ d, zonas, alCerrar }: { d: Destino; zonas: { id: string
         Minutos de descarga aquí (vacío = el general)
         <input type="number" name="minutos_descarga" min={1} max={120} defaultValue={d.minutos_descarga ?? ""} className={campo} />
       </label>
-      <div className={cn("rounded-xl p-2", d.lat == null && "bg-red-50 dark:bg-red-950/40")}>
+      <div className={cn("rounded-lg p-2", d.lat == null && "bg-red-50 dark:bg-red-950/40")}>
         <label className="block">
           {d.lat == null ? "No lo encontramos en el mapa: pega aquí el enlace de Google Maps del sitio" : "Ubicación exacta (opcional): enlace de Google Maps o coordenadas"}
           <input name="coordenadas" placeholder="https://maps.app.goo.gl/… o 39.4699, -0.3763" className={campo} />
@@ -369,7 +369,7 @@ function SelectorZona({ destinos, actual, zonas, texto, aria }: { destinos: stri
 function ReubicarPendientes({ n }: { n: number }) {
   const [estado, accion, pendiente] = useActionState<EstadoForm, FormData>(reubicarPendientes, {});
   return (
-    <form action={accion} className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm dark:border-red-900 dark:bg-red-950/40">
+    <form action={accion} className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm dark:border-red-900 dark:bg-red-950/40">
       <p className="flex items-center gap-1.5 font-semibold text-red-800 dark:text-red-200">
         <MapPinOff className="h-4 w-4" aria-hidden /> {n} {n === 1 ? "cliente sin ubicación" : "clientes sin ubicación"} en el mapa
       </p>
@@ -459,10 +459,10 @@ export function ListaAlbaranes({ albaranes, zonas }: { albaranes: AlbaranPendien
 
   return (
     <section className="space-y-3">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-suave">Por repartir ({pendientes.length})</h2>
-      {!pendientes.length && <p className="rounded-2xl border border-dashed border-borde p-4 text-center text-sm text-suave">No hay albaranes pendientes. Sube los PDF del día.</p>}
+      <h2 className="text-[13px] font-semibold text-suave">Por repartir ({pendientes.length})</h2>
+      {!pendientes.length && <p className="rounded-xl border border-dashed border-borde p-4 text-center text-sm text-suave">No hay albaranes pendientes. Sube los PDF del día.</p>}
       {pendientes.length > 0 && !zonas.length && (
-        <p className="flex items-center gap-2 rounded-2xl border border-amber-300 bg-amber-50 p-3 text-sm dark:border-amber-800 dark:bg-amber-950/40">
+        <p className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm dark:border-amber-800 dark:bg-amber-950/40">
           <MapPinned className="h-5 w-5 shrink-0 text-amber-700" aria-hidden />
           <span>
             Para asignar zonas, primero{" "}
@@ -478,7 +478,7 @@ export function ListaAlbaranes({ albaranes, zonas }: { albaranes: AlbaranPendien
         return n ? <ReubicarPendientes n={n} /> : null;
       })()}
       {grupos.map((g) => (
-        <div key={g.id} className="overflow-hidden rounded-2xl border border-borde bg-superficie">
+        <div key={g.id} className="overflow-hidden rounded-xl border border-borde bg-superficie">
           <p className={cn("flex items-center justify-between px-3 py-2 text-sm font-semibold", g.id === "sin" ? "bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200" : "bg-fondo")}>
             <span>
               {g.titulo} ({g.lista.length})
@@ -505,7 +505,7 @@ export function ListaAlbaranes({ albaranes, zonas }: { albaranes: AlbaranPendien
           <button type="button" onClick={() => setVerPlanificados((v) => !v)} className="flex items-center gap-1 text-sm text-suave">
             <ChevronDown className={cn("h-4 w-4 transition", verPlanificados && "rotate-180")} aria-hidden /> Ya en una ruta ({planificados.length})
           </button>
-          {verPlanificados && <ul className="mt-2 divide-y divide-borde overflow-hidden rounded-2xl border border-borde bg-superficie opacity-75">{planificados.map(fila)}</ul>}
+          {verPlanificados && <ul className="mt-2 divide-y divide-borde overflow-hidden rounded-xl border border-borde bg-superficie opacity-75">{planificados.map(fila)}</ul>}
         </div>
       )}
       {(() => {
@@ -522,7 +522,7 @@ export function VaciarAlbaranes() {
   const [estado, accion, pendiente] = useActionState<EstadoForm, FormData>(vaciarAlbaranes, {});
   const [abierto, setAbierto] = useState(false);
   return (
-    <section className="rounded-2xl border border-red-200 p-4 dark:border-red-900">
+    <section className="rounded-xl border border-red-200 p-4 dark:border-red-900">
       <button type="button" onClick={() => setAbierto((v) => !v)} className="flex w-full items-center justify-between text-sm font-semibold text-red-700 dark:text-red-300">
         <span className="flex items-center gap-1.5">
           <Trash2 className="h-4 w-4" aria-hidden /> Borrar todo y empezar de cero

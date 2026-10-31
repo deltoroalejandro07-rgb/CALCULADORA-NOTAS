@@ -55,7 +55,7 @@ export function SelectorTema() {
           aria-checked={tema === valor}
           onClick={() => aplicarTema(valor)}
           className={cn(
-            "flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl border text-sm",
+            "flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg border text-sm",
             tema === valor ? "border-marca bg-marca-suave font-semibold" : "border-borde",
           )}
         >
@@ -110,7 +110,7 @@ export function CambiarContrasena() {
       </button>
     );
   }
-  const campo = "mt-1 min-h-12 w-full rounded-xl border border-borde bg-superficie px-3 outline-none focus:border-marca";
+  const campo = "mt-1 min-h-12 w-full rounded-lg border border-borde bg-superficie px-3 outline-none focus:border-marca";
   return (
     <form
       onSubmit={async (e) => {

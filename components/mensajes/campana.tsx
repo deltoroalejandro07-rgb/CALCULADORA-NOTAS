@@ -103,7 +103,7 @@ export function Campana({
     return campanaId.current;
   }
 
-  const select = "mt-1 min-h-12 w-full rounded-xl border border-borde bg-superficie px-3";
+  const select = "mt-1 min-h-12 w-full rounded-lg border border-borde bg-superficie px-3";
 
   return (
     <div className="space-y-4 px-4 pb-8">
@@ -150,7 +150,7 @@ export function Campana({
         </select>
       </label>
 
-      <div className="rounded-2xl border border-borde bg-superficie">
+      <div className="rounded-xl border border-borde bg-superficie">
         <button type="button" onClick={() => setVerFiltros((v) => !v)} aria-expanded={verFiltros} className="flex min-h-12 w-full items-center justify-between px-4 text-sm font-medium">
           A quién: {segmento.length} cliente{segmento.length === 1 ? "" : "s"}
           {esAdmin ? " (de todo el equipo)" : ""}
@@ -199,7 +199,7 @@ export function Campana({
         {conPermiso.map((c) => {
           const texto = textoPara(c);
           return (
-            <li key={c.id} className={cn("rounded-2xl border bg-superficie p-3", enviados.has(c.id) ? "border-emerald-400" : "border-borde")}>
+            <li key={c.id} className={cn("rounded-xl border bg-superficie p-3", enviados.has(c.id) ? "border-emerald-400" : "border-borde")}>
               <div className="flex items-center gap-2">
                 <button type="button" onClick={() => setAbierto(abierto === c.id ? null : c.id)} className="min-w-0 flex-1 text-left" aria-expanded={abierto === c.id}>
                   <p className="truncate font-medium">{c.nombre_negocio}</p>
@@ -220,14 +220,14 @@ export function Campana({
                   onEnviado={() => setEnviados((s) => new Set(s).add(c.id))}
                 />
               </div>
-              {abierto === c.id && <p className="mt-2 whitespace-pre-line rounded-xl bg-fondo p-3 text-sm">{texto}</p>}
+              {abierto === c.id && <p className="mt-2 whitespace-pre-line rounded-lg bg-fondo p-3 text-sm">{texto}</p>}
             </li>
           );
         })}
       </ul>
 
       {sinPermiso.length > 0 && (
-        <details className="rounded-2xl border border-borde p-3">
+        <details className="rounded-xl border border-borde p-3">
           <summary className="flex cursor-pointer items-center gap-2 text-sm text-suave">
             <ShieldOff className="h-4 w-4" aria-hidden /> {sinPermiso.length} sin consentimiento o sin {canal === "whatsapp" ? "teléfono" : "email"} (no se les puede enviar)
           </summary>

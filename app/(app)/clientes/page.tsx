@@ -35,7 +35,7 @@ async function Lista() {
   return (
     <>
       <Cabecera titulo="Clientes" subtitulo={esAdmin ? "Todos los clientes" : "Asignados a ti"}>
-        <Link href="/clientes/nuevo" className="flex min-h-11 items-center gap-1 rounded-xl bg-marca px-4 text-sm font-semibold text-marca-texto">
+        <Link href="/clientes/nuevo" className="flex min-h-11 items-center gap-1 rounded-lg bg-marca px-4 text-sm font-semibold text-marca-texto shadow-sm hover:brightness-110 lg:min-h-10">
           <Plus className="h-5 w-5" aria-hidden /> Nuevo
         </Link>
       </Cabecera>

@@ -31,7 +31,7 @@ function CampoContrasena() {
       Contraseña
       <div className="mt-1 flex gap-2">
         <input name="contrasena" required minLength={8} value={valor} onChange={(e) => setValor(e.target.value)} autoComplete="off" placeholder="mínimo 8 caracteres" className={`${campo} mt-0 flex-1`} />
-        <button type="button" onClick={() => setValor(generarContrasena())} className="rounded-xl border border-borde px-3 text-sm font-medium">
+        <button type="button" onClick={() => setValor(generarContrasena())} className="rounded-lg border border-borde px-3 text-sm font-medium">
           Generar
         </button>
       </div>
@@ -39,7 +39,7 @@ function CampoContrasena() {
   );
 }
 
-const campo = "mt-1 min-h-12 w-full rounded-xl border border-borde bg-superficie px-3 outline-none focus:border-marca";
+const campo = "mt-1 min-h-12 w-full rounded-lg border border-borde bg-superficie px-3 outline-none focus:border-marca";
 
 export function GestionUsuarios({ yo, usuarios, claveConfigurada, urlApp }: { yo: string; usuarios: Usuario[]; claveConfigurada: boolean; urlApp: string | null }) {
   const [alta, accionAlta, creando] = useActionState<Resultado, FormData>(crearUsuario, {});
@@ -76,7 +76,7 @@ export function GestionUsuarios({ yo, usuarios, claveConfigurada, urlApp }: { yo
       )}
 
       <section>
-        <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-suave">
+        <h2 className="mb-2 flex items-center gap-1.5 text-[13px] font-semibold text-suave">
           <UserPlus className="h-4 w-4" aria-hidden /> Dar de alta
         </h2>
         <form
@@ -87,7 +87,7 @@ export function GestionUsuarios({ yo, usuarios, claveConfigurada, urlApp }: { yo
             const f = new FormData(e.currentTarget);
             startTransition(() => accionAlta(f));
           }}
-          className="space-y-3 rounded-2xl border border-borde bg-superficie p-4"
+          className="space-y-3 rounded-xl border border-borde bg-superficie p-4"
         >
           <label className="block text-sm font-medium">
             Nombre
@@ -107,7 +107,7 @@ export function GestionUsuarios({ yo, usuarios, claveConfigurada, urlApp }: { yo
           </label>
           {alta.error && <p className="text-sm text-red-600">{alta.error}</p>}
           {alta.ok && (
-            <p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-100">
+            <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-100">
               ✓ {alta.ok} Pásale estos datos y la dirección {urlApp ?? window.location.origin}. Podrá cambiar la contraseña en Más.
             </p>
           )}
@@ -118,12 +118,12 @@ export function GestionUsuarios({ yo, usuarios, claveConfigurada, urlApp }: { yo
       </section>
 
       <section>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-suave">Equipo ({activos.length} activos)</h2>
+        <h2 className="mb-2 text-[13px] font-semibold text-suave">Equipo ({activos.length} activos)</h2>
         {aviso.error && <p className="mb-2 text-sm text-red-600">{aviso.error}</p>}
-        {aviso.ok && aviso.ok !== "Hecho." && <p className="mb-2 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-100">✓ {aviso.ok}</p>}
+        {aviso.ok && aviso.ok !== "Hecho." && <p className="mb-2 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-100">✓ {aviso.ok}</p>}
         <ul className="space-y-2">
           {usuarios.map((u) => (
-            <li key={u.id} className={cn("rounded-2xl border border-borde bg-superficie p-4", !u.activo && "opacity-60")}>
+            <li key={u.id} className={cn("rounded-xl border border-borde bg-superficie p-4", !u.activo && "opacity-60")}>
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="font-semibold">

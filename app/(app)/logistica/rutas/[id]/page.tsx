@@ -103,10 +103,10 @@ async function Contenido({ id }: { id: string }) {
             {ruta.terminada_at && <span className="text-suave"> · terminó {fechaHora(ruta.terminada_at)}</span>}
           </p>
           {ruta.notas && <p className="mt-1 text-suave">Notas: {ruta.notas}</p>}
-          <a href={`/api/logistica/rutas/${ruta.id}/pdf`} target="_blank" rel="noreferrer" className="mt-3 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-marca font-semibold text-marca-texto active:opacity-90">
+          <a href={`/api/logistica/rutas/${ruta.id}/pdf`} target="_blank" rel="noreferrer" className="mt-3 flex min-h-12 items-center justify-center gap-2 rounded-lg bg-marca font-semibold text-marca-texto active:opacity-90">
             <FileDown className="h-5 w-5" aria-hidden /> Descargar PDF de la ruta
           </a>
-          <Link href={`/logistica/rutas/${ruta.id}/carga`} className="mt-2 flex min-h-11 items-center justify-center gap-2 rounded-xl border border-borde font-semibold active:bg-fondo">
+          <Link href={`/logistica/rutas/${ruta.id}/carga`} className="mt-2 flex min-h-11 items-center justify-center gap-2 rounded-lg border border-borde font-semibold active:bg-fondo">
             <ClipboardList className="h-5 w-5" aria-hidden /> Hoja de carga en pantalla
           </Link>
         </Tarjeta>

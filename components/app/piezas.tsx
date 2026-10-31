@@ -22,25 +22,25 @@ export function Cargando() {
     <div className="space-y-3 px-4 pt-6" aria-busy="true" aria-label="Cargando">
       <div className="h-7 w-40 animate-pulse rounded bg-borde" />
       {[0, 1, 2].map((i) => (
-        <div key={i} className="h-20 animate-pulse rounded-2xl bg-borde/60" />
+        <div key={i} className="h-20 animate-pulse rounded-xl bg-borde/60" />
       ))}
     </div>
   );
 }
 
 export function Tarjeta({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <div className={cn("rounded-2xl border border-borde bg-superficie p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]", className)}>{children}</div>;
+  return <div className={cn("rounded-xl border border-borde bg-superficie p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]", className)}>{children}</div>;
 }
 
 const COLOR_ESTADO: Record<EstadoCliente, string> = {
-  prospecto: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
-  interesado: "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200",
-  cliente: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200",
-  perdido: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+  prospecto: "bg-slate-50 text-slate-600 ring-slate-200 dark:bg-slate-800/60 dark:text-slate-300 dark:ring-slate-700",
+  interesado: "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:ring-amber-800/60",
+  cliente: "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:ring-emerald-800/60",
+  perdido: "bg-red-50 text-red-700 ring-red-200 dark:bg-red-900/30 dark:text-red-300 dark:ring-red-800/60",
 };
 
 export function EtiquetaEstado({ estado }: { estado: EstadoCliente }) {
-  return <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold", COLOR_ESTADO[estado])}>{TEXTO_ESTADO[estado]}</span>;
+  return <span className={cn("inline-flex rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset", COLOR_ESTADO[estado])}>{TEXTO_ESTADO[estado]}</span>;
 }
 
 const TEMP = {
@@ -62,7 +62,7 @@ export function IconoTemperatura({ t, conTexto }: { t: Temperatura; conTexto?: b
 /** Marca visible de los datos de ejemplo (is_seed). */
 export function Demo() {
   return (
-    <span className="rounded bg-fuchsia-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fuchsia-700 dark:bg-fuchsia-900/50 dark:text-fuchsia-300">
+    <span className="rounded border border-borde px-1 py-px text-[10px] font-medium uppercase tracking-wide text-suave">
       Demo
     </span>
   );

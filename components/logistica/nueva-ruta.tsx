@@ -6,7 +6,7 @@ import { crearRuta, type EstadoForm } from "@/app/(app)/logistica/acciones";
 import { Tarjeta } from "@/components/app/piezas";
 import { Boton } from "@/components/ui/boton";
 
-const campo = "mt-1 min-h-12 w-full rounded-xl border border-borde bg-superficie px-3 outline-none focus:border-marca";
+const campo = "mt-1 min-h-12 w-full rounded-lg border border-borde bg-superficie px-3 outline-none focus:border-marca";
 
 export function NuevaRuta({
   fecha,

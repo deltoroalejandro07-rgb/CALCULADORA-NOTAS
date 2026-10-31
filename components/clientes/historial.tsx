@@ -123,13 +123,13 @@ export function Historial({ ficha }: { ficha: Ficha }) {
 
   return (
     <section>
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-suave">Historial</h2>
+      <h2 className="mb-2 text-[13px] font-semibold text-suave">Historial</h2>
       {eventos.length === 0 ? (
         <p className="text-sm text-suave">Todavía no hay visitas, mensajes ni pedidos.</p>
       ) : (
         <ol className="relative space-y-3 border-l-2 border-borde pl-4">
           {eventos.map((e) => (
-            <li key={e.clave} className="relative rounded-2xl border border-borde bg-superficie p-3">
+            <li key={e.clave} className="relative rounded-xl border border-borde bg-superficie p-3">
               <span className="absolute -left-[1.42rem] top-4 h-3 w-3 rounded-full border-2 border-fondo bg-marca" aria-hidden />
               {e.nodo}
             </li>

@@ -4,15 +4,18 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 :root {
-  --fondo: #f4f5f7;
+  --fondo: #f5f6f8;
   --superficie: #ffffff;
-  --texto: #111827;
-  --texto-suave: #5b6472;
-  --borde: #e3e6eb;
+  /* Gris azulado (en vez de negro puro): más sobrio */
+  --texto: #18212f;
+  --texto-suave: #667085;
+  --borde: #e4e7ec;
   /* Verde dliverygo (#4aa49d) algo más oscuro: el texto blanco encima se lee bien */
   --marca: #2f7d77;
   --marca-texto: #ffffff;
-  --marca-suave: #dff1ef;
+  --marca-suave: #e6f3f1;
+  /* Rojo del logo: solo para avisos y lo urgente */
+  --acento: #c8412f;
   /* Gráficos: paleta categórica validada (orden fijo) y rampa ordinal azul */
   --serie-1: #2a78d6;
   --serie-2: #eb6834;
@@ -27,14 +30,15 @@
 }
 
 [data-theme="dark"] {
-  --fondo: #0d1117;
-  --superficie: #161b22;
-  --texto: #e6edf3;
-  --texto-suave: #9aa4b2;
-  --borde: #2a313c;
+  --fondo: #0e1218;
+  --superficie: #151a22;
+  --texto: #e7ebf0;
+  --texto-suave: #98a2b3;
+  --borde: #262d38;
   --marca: #4aa49d;
   --marca-texto: #06201e;
-  --marca-suave: #173a37;
+  --marca-suave: #15312f;
+  --acento: #ef6b5a;
   --serie-1: #3987e5;
   --serie-2: #d95926;
   --serie-3: #199e70;
@@ -56,6 +60,7 @@
   --color-marca: var(--marca);
   --color-marca-texto: var(--marca-texto);
   --color-marca-suave: var(--marca-suave);
+  --color-acento: var(--acento);
   --font-sans: var(--font-inter), system-ui, sans-serif;
 }
 

@@ -51,7 +51,7 @@ export function BotonEnviar({ canal, destino, clienteId, texto, asunto, ofertaId
           }
         }}
         className={cn(
-          "inline-flex items-center justify-center gap-1.5 rounded-xl font-semibold",
+          "inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold",
           compacto ? "min-h-10 px-3 text-sm" : "min-h-12 px-5",
           estado === "enviado" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-100" : canal === "whatsapp" ? "bg-[#25D366] text-white" : "bg-marca text-marca-texto",
         )}

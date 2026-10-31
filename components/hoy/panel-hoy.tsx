@@ -56,7 +56,7 @@ function Seccion({ titulo, icono: Icono, clase, filtro, total, children }: { tit
   if (!total) return null;
   return (
     <section>
-      <h2 className="mb-1 flex items-center gap-1.5 px-4 text-sm font-semibold uppercase tracking-wide text-suave">
+      <h2 className="mb-1 flex items-center gap-1.5 px-4 text-[13px] font-semibold text-suave">
         <Icono className={cn("h-4 w-4", clase)} aria-hidden /> {titulo} <span className="font-normal">({total})</span>
         {total > 5 && (
           <Link href={`/clientes?filtro=${filtro}`} className="ml-auto text-xs font-medium normal-case tracking-normal text-marca">
@@ -64,7 +64,7 @@ function Seccion({ titulo, icono: Icono, clase, filtro, total, children }: { tit
           </Link>
         )}
       </h2>
-      <ul className="divide-y divide-borde border-y border-borde bg-superficie lg:mx-4 lg:overflow-hidden lg:rounded-2xl lg:border-x">{children}</ul>
+      <ul className="divide-y divide-borde border-y border-borde bg-superficie lg:mx-4 lg:overflow-hidden lg:rounded-xl lg:border-x">{children}</ul>
     </section>
   );
 }
@@ -107,7 +107,7 @@ export function PanelHoy({ clientes }: { clientes: ClienteHoy[] }) {
           <Link
             key={texto}
             href={`/clientes?filtro=${filtro}`}
-            className="group rounded-2xl border border-borde bg-superficie p-3.5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition hover:border-marca/40 hover:shadow-md active:scale-[0.98] lg:p-5"
+            className="group rounded-xl border border-borde bg-superficie p-3.5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition hover:border-marca/40 hover:shadow-md active:scale-[0.98] lg:p-5"
           >
             <div className="flex items-start justify-between gap-2">
               <p className="text-[13px] font-medium leading-tight text-suave">{texto}</p>
@@ -120,13 +120,13 @@ export function PanelHoy({ clientes }: { clientes: ClienteHoy[] }) {
 
       {ruta.length > 0 && (
         <section className="space-y-2 px-4">
-          <h2 className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-suave">
+          <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-suave">
             <Navigation className="h-4 w-4 text-marca" aria-hidden /> Ruta del día
             <span className="font-normal normal-case tracking-normal">
               · {ruta.length} parada{ruta.length === 1 ? "" : "s"} · {textoDistancia(longitudRuta(ruta, pos))}
             </span>
           </h2>
-          <ol className="divide-y divide-borde overflow-hidden rounded-2xl border border-borde bg-superficie text-sm">
+          <ol className="divide-y divide-borde overflow-hidden rounded-xl border border-borde bg-superficie text-sm">
             {ruta.map((c, i) => (
               <li key={c.id} className="flex items-center gap-3 px-3 py-2">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-marca text-xs font-bold text-marca-texto">{i + 1}</span>
@@ -147,7 +147,7 @@ export function PanelHoy({ clientes }: { clientes: ClienteHoy[] }) {
             ))}
           </ol>
           {enlace && (
-            <a href={enlace} target="_blank" rel="noreferrer" className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-marca font-semibold text-marca-texto">
+            <a href={enlace} target="_blank" rel="noreferrer" className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-marca font-semibold text-marca-texto">
               <Navigation className="h-5 w-5" aria-hidden /> Toda la ruta en Google Maps
               {ruta.length > MAX_PARADAS_ENLACE && <span className="text-xs font-normal">(primeras {MAX_PARADAS_ENLACE})</span>}
             </a>
@@ -180,7 +180,7 @@ export function PanelHoy({ clientes }: { clientes: ClienteHoy[] }) {
       </Seccion>
 
       {!g.vencidos.length && !g.deHoy.length && !g.calientes.length && !g.olvidados.length && (
-        <div className="mx-4 rounded-2xl border border-dashed border-borde p-6 text-center text-sm text-suave">
+        <div className="mx-4 rounded-xl border border-dashed border-borde p-6 text-center text-sm text-suave">
           {clientes.length ? "Todo al día. ¡Buen trabajo!" : "Aún no tienes clientes. Registra tu primera visita con el botón +."}
         </div>
       )}

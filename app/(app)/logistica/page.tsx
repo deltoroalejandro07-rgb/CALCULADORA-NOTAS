@@ -55,8 +55,8 @@ async function Contenido({ dia }: { dia: string | null }) {
 
   return (
     <div className="space-y-4 px-4 pb-8">
-      <div className="flex items-center justify-between rounded-2xl border border-borde bg-superficie p-2">
-        <Link href={`/logistica?fecha=${sumarDias(fecha, -1)}`} aria-label="Día anterior" className="rounded-xl p-3 active:bg-fondo">
+      <div className="flex items-center justify-between rounded-xl border border-borde bg-superficie p-2">
+        <Link href={`/logistica?fecha=${sumarDias(fecha, -1)}`} aria-label="Día anterior" className="rounded-lg p-3 active:bg-fondo">
           <ChevronLeft className="h-5 w-5" />
         </Link>
         <div className="text-center">
@@ -67,7 +67,7 @@ async function Contenido({ dia }: { dia: string | null }) {
             </Link>
           )}
         </div>
-        <Link href={`/logistica?fecha=${sumarDias(fecha, 1)}`} aria-label="Día siguiente" className="rounded-xl p-3 active:bg-fondo">
+        <Link href={`/logistica?fecha=${sumarDias(fecha, 1)}`} aria-label="Día siguiente" className="rounded-lg p-3 active:bg-fondo">
           <ChevronRight className="h-5 w-5" />
         </Link>
       </div>
@@ -88,7 +88,7 @@ async function Contenido({ dia }: { dia: string | null }) {
 
       <Link
         href={`/logistica/planificar?fecha=${fecha}`}
-        className="flex min-h-16 items-center gap-3 rounded-2xl bg-marca px-4 py-3 text-marca-texto shadow-sm active:scale-[0.99]"
+        className="flex min-h-16 items-center gap-3 rounded-xl bg-marca px-4 py-3 text-marca-texto shadow-sm active:scale-[0.99]"
       >
         <Sparkles className="h-7 w-7 shrink-0" aria-hidden />
         <span className="flex-1">
@@ -101,13 +101,13 @@ async function Contenido({ dia }: { dia: string | null }) {
       </Link>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-suave">Rutas del día</h2>
+        <h2 className="text-[13px] font-semibold text-suave">Rutas del día</h2>
         {rutas?.length ? (
           <ul className="space-y-2">
             {rutas.map((r) => {
               const hechas = r.paradas.filter((p) => p.estado !== "pendiente").length;
               return (
-                <li key={r.id} className="overflow-hidden rounded-2xl border border-borde bg-superficie">
+                <li key={r.id} className="overflow-hidden rounded-xl border border-borde bg-superficie">
                   <Link href={`/logistica/rutas/${r.id}`} className="flex items-center gap-3 p-4 active:bg-fondo">
                     <Truck className="h-6 w-6 shrink-0 text-marca" aria-hidden />
                     <div className="min-w-0 flex-1">
@@ -129,13 +129,13 @@ async function Contenido({ dia }: { dia: string | null }) {
             })}
           </ul>
         ) : (
-          <p className="rounded-2xl border border-dashed border-borde p-4 text-center text-sm text-suave">No hay rutas este día.</p>
+          <p className="rounded-xl border border-dashed border-borde p-4 text-center text-sm text-suave">No hay rutas este día.</p>
         )}
       </section>
 
       <NuevaRuta fecha={fecha} vehiculos={vehiculos ?? []} conductores={perfiles ?? []} />
 
-      <ul className="divide-y divide-borde overflow-hidden rounded-2xl border border-borde bg-superficie">
+      <ul className="divide-y divide-borde overflow-hidden rounded-xl border border-borde bg-superficie">
         <li>
           <Link href="/logistica/albaranes" className="flex min-h-14 items-center gap-3 px-4 active:bg-fondo">
             <FileText className="h-5 w-5 text-marca" aria-hidden />

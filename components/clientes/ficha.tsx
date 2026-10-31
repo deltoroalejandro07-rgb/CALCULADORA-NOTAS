@@ -26,7 +26,7 @@ import { Comunicaciones } from "./comunicaciones";
 import { Historial } from "./historial";
 
 function BotonContacto({ href, icono: Icono, texto, nota }: { href: string | null; icono: typeof Phone; texto: string; nota?: string }) {
-  const clase = "flex flex-col items-center justify-center gap-1 rounded-2xl border border-borde bg-superficie py-3 text-xs font-medium";
+  const clase = "flex flex-col items-center justify-center gap-1 rounded-xl border border-borde bg-superficie py-3 text-xs font-medium";
   if (!href)
     return (
       <span className={cn(clase, "opacity-40")} aria-disabled title={nota}>
@@ -86,13 +86,13 @@ export function FichaCliente({ ficha, esAdmin }: { ficha: Ficha; esAdmin: boolea
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <Link href={`/visita/nueva?cliente=${c.id}`} className="col-span-2 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-marca font-semibold text-marca-texto">
+        <Link href={`/visita/nueva?cliente=${c.id}`} className="col-span-2 flex min-h-12 items-center justify-center gap-2 rounded-lg bg-marca font-semibold text-marca-texto">
           <Plus className="h-5 w-5" aria-hidden /> Registrar visita
         </Link>
-        <Link href={`/mensajes/enviar?cliente=${c.id}`} className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-borde bg-superficie text-sm font-medium">
+        <Link href={`/mensajes/enviar?cliente=${c.id}`} className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-borde bg-superficie text-sm font-medium">
           <MessageCircle className="h-4 w-4" aria-hidden /> Mensaje
         </Link>
-        <Link href={`/clientes/${c.id}/editar`} className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-borde bg-superficie text-sm font-medium">
+        <Link href={`/clientes/${c.id}/editar`} className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-borde bg-superficie text-sm font-medium">
           <Pencil className="h-4 w-4" aria-hidden /> Editar
         </Link>
       </div>
@@ -109,8 +109,8 @@ export function FichaCliente({ ficha, esAdmin }: { ficha: Ficha; esAdmin: boolea
 
       {interes && (
         <section>
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-suave">Le interesa</h2>
-          <p className="rounded-xl bg-orange-100 px-3 py-2 text-sm text-orange-900 dark:bg-orange-900/40 dark:text-orange-100">
+          <h2 className="mb-2 text-[13px] font-semibold text-suave">Le interesa</h2>
+          <p className="rounded-lg bg-orange-100 px-3 py-2 text-sm text-orange-900 dark:bg-orange-900/40 dark:text-orange-100">
             {interes.texto}
             <span className="block text-xs opacity-70">Apuntado el {fecha(interes.fecha)}</span>
           </p>
@@ -120,7 +120,7 @@ export function FichaCliente({ ficha, esAdmin }: { ficha: Ficha; esAdmin: boolea
       <Comunicaciones clienteId={c.id} whatsapp={c.consiente_whatsapp} email={c.consiente_email} fecha={c.consentimiento_at} />
 
       <section>
-        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-suave">Datos</h2>
+        <h2 className="mb-1 text-[13px] font-semibold text-suave">Datos</h2>
         <Tarjeta className="divide-y divide-borde py-1">
           <Dato icono={User} etiqueta="Contacto">
             {c.contacto_nombre ?? "—"}

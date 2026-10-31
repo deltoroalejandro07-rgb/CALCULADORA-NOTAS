@@ -15,7 +15,7 @@ interface Plantilla {
   activa: boolean;
 }
 
-const campo = "mt-1 min-h-12 w-full rounded-xl border border-borde bg-superficie px-3 outline-none focus:border-marca";
+const campo = "mt-1 min-h-12 w-full rounded-lg border border-borde bg-superficie px-3 outline-none focus:border-marca";
 
 export function FormularioPlantilla({ inicial, comercial }: { inicial?: Plantilla; comercial: string }) {
   const [estado, accion, pendiente] = useActionState<{ error?: string }, FormData>(guardarPlantilla, {});
@@ -85,12 +85,12 @@ export function FormularioPlantilla({ inicial, comercial }: { inicial?: Plantill
             </button>
           ))}
         </div>
-        <textarea id="cuerpo" ref={area} name="cuerpo" required rows={7} value={cuerpo} onChange={(e) => setCuerpo(e.target.value)} className="w-full rounded-xl border border-borde bg-superficie p-3" />
+        <textarea id="cuerpo" ref={area} name="cuerpo" required rows={7} value={cuerpo} onChange={(e) => setCuerpo(e.target.value)} className="w-full rounded-lg border border-borde bg-superficie p-3" />
         {malas.length > 0 && <p className="text-sm text-red-600">No existen: {malas.map((v) => `{${v}}`).join(", ")}</p>}
       </div>
       <div>
         <p className="text-sm font-medium">Así lo verá un cliente</p>
-        <p className="mt-1 whitespace-pre-line rounded-2xl bg-[#dcf8c6] p-3 text-sm text-slate-900">{ejemplo}</p>
+        <p className="mt-1 whitespace-pre-line rounded-xl bg-[#dcf8c6] p-3 text-sm text-slate-900">{ejemplo}</p>
         <p className="mt-1 text-xs text-suave">El aviso de baja se añade solo si la plantilla no lo incluye (obligatorio por la LSSI).</p>
       </div>
       <label className="flex min-h-11 items-center justify-between">

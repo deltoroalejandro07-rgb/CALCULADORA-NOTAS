@@ -60,28 +60,28 @@ export function HistorialReparto({ fecha, dias, rutas, esAdmin }: { fecha: strin
   };
   return (
     <div className="space-y-4 px-4 pb-8">
-      <section className="rounded-2xl border border-borde bg-superficie p-3">
+      <section className="rounded-xl border border-borde bg-superficie p-3">
         <label className="block text-sm font-medium">
           Día
           <div className="mt-1 flex gap-2">
-            <button type="button" onClick={() => mover(-1)} aria-label="Día anterior" className="min-h-11 rounded-xl border border-borde px-3 text-lg active:bg-fondo">
+            <button type="button" onClick={() => mover(-1)} aria-label="Día anterior" className="min-h-11 rounded-lg border border-borde px-3 text-lg active:bg-fondo">
               ‹
             </button>
-            <input type="date" value={fecha} onChange={(e) => e.target.value && ir(e.target.value)} className="min-h-11 flex-1 rounded-xl border border-borde bg-superficie px-3 outline-none focus:border-marca" />
-            <button type="button" onClick={() => mover(1)} aria-label="Día siguiente" className="min-h-11 rounded-xl border border-borde px-3 text-lg active:bg-fondo">
+            <input type="date" value={fecha} onChange={(e) => e.target.value && ir(e.target.value)} className="min-h-11 flex-1 rounded-lg border border-borde bg-superficie px-3 outline-none focus:border-marca" />
+            <button type="button" onClick={() => mover(1)} aria-label="Día siguiente" className="min-h-11 rounded-lg border border-borde px-3 text-lg active:bg-fondo">
               ›
             </button>
           </div>
         </label>
         {dias.length > 0 && (
           <>
-            <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-suave">Días con reparto</p>
+            <p className="mt-3 text-xs font-semibold text-suave">Días con reparto</p>
             <div className="mt-1 flex gap-2 overflow-x-auto pb-1">
               {dias.map((d) => (
                 <Link
                   key={d.fecha}
                   href={`/reparto/dias?fecha=${d.fecha}`}
-                  className={cn("shrink-0 rounded-xl border px-3 py-1.5 text-center text-sm", d.fecha === fecha ? "border-marca bg-marca-suave font-semibold" : "border-borde")}
+                  className={cn("shrink-0 rounded-lg border px-3 py-1.5 text-center text-sm", d.fecha === fecha ? "border-marca bg-marca-suave font-semibold" : "border-borde")}
                 >
                   {formatoFecha(d.fecha)}
                   <span className="block text-[11px] text-suave">
@@ -95,7 +95,7 @@ export function HistorialReparto({ fecha, dias, rutas, esAdmin }: { fecha: strin
       </section>
 
       <h2 className="text-lg font-bold">{nombreDia(fecha)}</h2>
-      {!rutas.length && <p className="rounded-2xl border border-dashed border-borde p-4 text-center text-sm text-suave">No hubo reparto este día.</p>}
+      {!rutas.length && <p className="rounded-xl border border-dashed border-borde p-4 text-center text-sm text-suave">No hubo reparto este día.</p>}
       {rutas.map((r) => (
         <TarjetaRuta key={r.id} r={r} esAdmin={esAdmin} />
       ))}
@@ -109,7 +109,7 @@ function TarjetaRuta({ r, esAdmin }: { r: RutaDelDia; esAdmin: boolean }) {
   const fallidas = r.paradas.filter((p) => p.estado === "fallida").length;
   const cobrado = r.paradas.reduce((s, p) => s + (Number(p.cobrado) || 0), 0);
   return (
-    <section className="overflow-hidden rounded-2xl border border-borde bg-superficie">
+    <section className="overflow-hidden rounded-xl border border-borde bg-superficie">
       <div className="p-4">
         <p className="font-semibold">
           {r.vehiculo ? `${r.vehiculo.nombre}${r.vehiculo.matricula ? ` (${r.vehiculo.matricula})` : ""}` : "Ruta"}

@@ -46,7 +46,7 @@ async function Contenido() {
           </div>
         </Tarjeta>
 
-        <ul className="divide-y divide-borde overflow-hidden rounded-2xl border border-borde bg-superficie">
+        <ul className="divide-y divide-borde overflow-hidden rounded-xl border border-borde bg-superficie">
           {secciones.map(({ texto, icono: Icono, href }) => (
             <li key={texto}>
               <Link href={href} className="flex min-h-14 items-center gap-3 px-4 active:bg-fondo">

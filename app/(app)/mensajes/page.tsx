@@ -24,7 +24,7 @@ export default function PaginaMensajes() {
   return (
     <>
       <Cabecera titulo="Mensajes" subtitulo="WhatsApp y email a tus clientes">
-        <Link href="/mensajes/campana" className="flex min-h-11 items-center gap-1 rounded-xl bg-marca px-4 text-sm font-semibold text-marca-texto">
+        <Link href="/mensajes/campana" className="flex min-h-11 items-center gap-1 rounded-lg bg-marca px-4 text-sm font-semibold text-marca-texto">
           <Send className="h-4 w-4" aria-hidden /> Campaña
         </Link>
       </Cabecera>
@@ -45,7 +45,7 @@ async function Contenido() {
   ]);
 
   const historial = (
-    <ul className="divide-y divide-borde border-y border-borde bg-superficie lg:mx-4 lg:overflow-hidden lg:rounded-2xl lg:border-x">
+    <ul className="divide-y divide-borde border-y border-borde bg-superficie lg:mx-4 lg:overflow-hidden lg:rounded-xl lg:border-x">
       {(mensajes ?? []).map((m) => (
         <li key={m.id} className="px-4 py-3">
           <div className="flex items-start gap-2">
@@ -79,11 +79,11 @@ async function Contenido() {
   const listaPlantillas = (
     <div className="space-y-2 px-4">
       {esAdmin && (
-        <Link href="/mensajes/plantillas/nueva" className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-dashed border-marca text-sm font-semibold text-marca">
+        <Link href="/mensajes/plantillas/nueva" className="flex min-h-12 items-center justify-center gap-2 rounded-lg border border-dashed border-marca text-sm font-semibold text-marca">
           <Plus className="h-5 w-5" aria-hidden /> Nueva plantilla
         </Link>
       )}
-      <ul className="divide-y divide-borde overflow-hidden rounded-2xl border border-borde bg-superficie">
+      <ul className="divide-y divide-borde overflow-hidden rounded-xl border border-borde bg-superficie">
         {(plantillas ?? []).map((p) => {
           const contenido = (
             <>

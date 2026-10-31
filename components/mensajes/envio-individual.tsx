@@ -82,7 +82,7 @@ export function EnvioIndividual({
               setPlantillaId(elegirPlantilla(canal, !!id)?.id ?? plantillaId);
               setEditado(null);
             }}
-            className="mt-1 min-h-12 w-full rounded-xl border border-borde bg-superficie px-3"
+            className="mt-1 min-h-12 w-full rounded-lg border border-borde bg-superficie px-3"
           >
             <option value="">Sin oferta</option>
             {ofertas.map((o) => (
@@ -102,7 +102,7 @@ export function EnvioIndividual({
             setPlantillaId(e.target.value || null);
             setEditado(null);
           }}
-          className="mt-1 min-h-12 w-full rounded-xl border border-borde bg-superficie px-3"
+          className="mt-1 min-h-12 w-full rounded-lg border border-borde bg-superficie px-3"
         >
           <option value="">Mensaje libre</option>
           {plantillas
@@ -118,11 +118,11 @@ export function EnvioIndividual({
       {canal === "email" && <p className="text-sm"><span className="text-suave">Asunto:</span> {asunto}</p>}
       <label className="block text-sm font-medium">
         Mensaje (puedes retocarlo)
-        <textarea value={texto} onChange={(e) => setEditado(e.target.value)} rows={8} className="mt-1 w-full rounded-xl border border-borde bg-superficie p-3 text-base" />
+        <textarea value={texto} onChange={(e) => setEditado(e.target.value)} rows={8} className="mt-1 w-full rounded-lg border border-borde bg-superficie p-3 text-base" />
       </label>
 
       {!consiente ? (
-        <div className="flex gap-2 rounded-2xl border border-amber-400 bg-amber-50 p-4 text-sm dark:bg-amber-950/40">
+        <div className="flex gap-2 rounded-xl border border-amber-400 bg-amber-50 p-4 text-sm dark:bg-amber-950/40">
           <ShieldAlert className="h-5 w-5 shrink-0 text-amber-600" aria-hidden />
           <p>
             {c.nombre_negocio} no ha dado su consentimiento para recibir comunicaciones comerciales por {canal === "whatsapp" ? "WhatsApp" : "email"}. Si te lo ha dado,{" "}
@@ -133,7 +133,7 @@ export function EnvioIndividual({
           </p>
         </div>
       ) : !destino ? (
-        <p className="rounded-2xl border border-borde p-4 text-sm text-suave">
+        <p className="rounded-xl border border-borde p-4 text-sm text-suave">
           Falta el {canal === "whatsapp" ? "teléfono" : "email"} del cliente.{" "}
           <Link href={`/clientes/${c.id}/editar`} className="font-semibold text-marca underline">
             Añádelo
