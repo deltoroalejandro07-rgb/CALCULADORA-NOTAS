@@ -59,7 +59,7 @@ assert.equal(sql("select direccion from destinos where nombre = 'CAFETERIA SOL D
 paso("Subir otra vez el mismo PDF no duplica");
 await page.getByLabel("Elegir PDF de albaranes").setInputFiles("tests/fixtures/albaran-holded-prueba-2.pdf");
 await page.getByText("0 albaranes nuevos").waitFor({ timeout: 60_000 });
-await page.getByText("Ya estaba importado: no se duplica.").first().waitFor();
+await page.getByText("Ya estaba importado: actualizado con esta lectura.").first().waitFor();
 assert.equal(sql("select count(*) from albaranes"), "3");
 
 paso("Alta manual de una entrega sin PDF");
@@ -67,12 +67,27 @@ await page.getByRole("button", { name: "Añadir entrega a mano" }).click();
 await page.getByLabel("Cliente").fill("KIOSKO DE PRUEBA");
 await page.getByLabel("Dirección de entrega").fill("Calle del Kiosko 3");
 await page.getByLabel("Localidad").fill("Valencia");
-await page.getByLabel("Zona").selectOption({ label: "Valencia Centro" });
 await page.getByLabel("Horario prioritario (opcional)").fill("a partir de las 12");
 await page.getByLabel("Productos (uno por línea)").fill("2 Caja agua\nHielo x3");
 await page.getByRole("button", { name: "Añadir entrega" }).click();
 await page.getByText(/Entrega para KIOSKO DE PRUEBA añadida/).waitFor();
 assert.equal(sql("select ventana_desde from destinos where nombre = 'KIOSKO DE PRUEBA'"), "12:00:00");
+await page.reload();
+await page.waitForLoadState("networkidle");
+
+paso("Zona a mano con el desplegable del albarán");
+await page.getByText("Sin zona (1)").waitFor();
+await page.getByLabel("Zona de KIOSKO DE PRUEBA").selectOption({ label: "Valencia Centro" });
+for (let i = 0; i < 30 && sql("select coalesce(z.nombre, '') from destinos d left join zonas_reparto z on z.id = d.zona_id where d.nombre = 'KIOSKO DE PRUEBA'") !== "Valencia Centro"; i++) await page.waitForTimeout(300);
+assert.equal(sql("select z.nombre from destinos d join zonas_reparto z on z.id = d.zona_id where d.nombre = 'KIOSKO DE PRUEBA'"), "Valencia Centro");
+
+paso("Sin ubicación: se pega el enlace de Google Maps del sitio");
+await page.getByText(/clientes? sin ubicación en el mapa/).waitFor();
+await page.getByRole("button", { name: "Editar KIOSKO DE PRUEBA" }).click();
+await page.getByPlaceholder("https://maps.app.goo.gl/… o 39.4699, -0.3763").fill("https://www.google.com/maps/place/Kiosko/@39.4800,-0.3700,17z/data=!3m1");
+await page.getByRole("button", { name: "Guardar", exact: true }).click();
+await page.getByText(/Ubicación fijada a mano/).waitFor();
+assert.equal(sql("select lat || ',' || lng || ',' || ubicacion_origen from destinos where nombre = 'KIOSKO DE PRUEBA'"), "39.48,-0.37,manual");
 ubicar();
 await page.reload();
 await page.getByText("Por repartir (4)").waitFor();

@@ -52,3 +52,47 @@ export function diaSemana(fecha: string): number {
   const d = new Date(fecha + "T12:00:00Z").getUTCDay();
   return d === 0 ? 7 : d;
 }
+
+const TIPOS_VIA = /^(c\/|calle|carrer|avda\.?|av\.?|avenida|avinguda|paseo|passeig|pg\.?|camino|cami|camí|plaza|plaça|pl\.?|ronda|carretera|ctra\.?|travesia|travessera|gran via)\s+(de\s+(la\s+|los\s+|las\s+|l'|el\s+)?|del\s+|d')?/i;
+
+/** Quita lo que confunde al buscador de mapas: «- BJ 1», «OFICINA 7», «LOCAL 2», «PISO 3»… */
+export function limpiarDireccion(direccion: string): string {
+  return direccion
+    .split(/\s+-\s+/)[0]
+    .replace(/,?\s*\b(oficina|of\.|local|bajo|bj|piso|pta\.?|puerta|esc\.?|escalera|nave|planta|dcha\.?|izda\.?)\b.*$/i, "")
+    .replace(/\s+/g, " ")
+    .replace(/[,\s]+$/, "")
+    .trim();
+}
+
+/** Formas de escribir la dirección para buscarla, de la más precisa a la más flexible. */
+export function variantesDireccion(direccion: string | null, codigoPostal: string | null, localidad: string | null): string[] {
+  const loc = localidad?.trim() || "Valencia";
+  if (!direccion?.trim()) return [];
+  const limpia = limpiarDireccion(direccion);
+  const sinTipo = limpia.replace(TIPOS_VIA, "").trim();
+  const v = [
+    [limpia, [codigoPostal, loc].filter(Boolean).join(" "), "España"].join(", "),
+    [limpia, loc, "Valencia", "España"].join(", "),
+    sinTipo !== limpia ? [sinTipo, codigoPostal, loc].filter(Boolean).join(", ") : null,
+  ];
+  return [...new Set(v.filter((x): x is string => !!x))];
+}
+
+/**
+ * Coordenadas pegadas a mano: «39.4699, -0.3763» o un enlace de Google Maps
+ * (…/@39.4699,-0.3763,17z… · ?q=39.46,-0.37 · !3d39.46!4d-0.37).
+ */
+export function leerCoordenadas(texto: string): { lat: number; lng: number } | null {
+  const t = texto.trim();
+  const m =
+    t.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/) ??
+    t.match(/@(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/) ??
+    t.match(/[?&](?:q|query|ll|destination)=(-?\d+(?:\.\d+)?)(?:,|%2C)\s*(-?\d+(?:\.\d+)?)/i) ??
+    t.match(/^(-?\d{1,2}(?:[.,]\d+)?)[,;\s]+(-?\d{1,3}(?:[.,]\d+)?)$/);
+  if (!m) return null;
+  const lat = Number(m[1].replace(",", "."));
+  const lng = Number(m[2].replace(",", "."));
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+  return { lat, lng };
+}

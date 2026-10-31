@@ -133,7 +133,12 @@ export function leerAlbaranesHolded(paginas: Fila[][]): AlbaranLeido[] {
         const t = texto(f);
         if (/BASE IMPONIBLE|^TOTAL\b|^IVA\b/i.test(t) || RE_PAG.test(t) || /^(Horario|Ruta)\b/i.test(t)) break;
         const concepto = f.filter((e) => e.x < xPrecio - 10).map((e) => e.texto).join(" ").trim();
-        const unid = f.find((e) => e.x >= xPrecio + 5 && e.x < xSub - 5 && leerNumero(e.texto) != null);
+        // Unidades: el número sin «€» más cercano a la columna UNIDADES (los precios van alineados
+        // a la derecha y, si son cortos, caen cerca: nunca se toman porque llevan «€»)
+        const centro = xUnid + 20;
+        const unid = f
+          .filter((e) => e.x > xPrecio - 10 && e.x < xSub - 5 && !e.texto.includes("€") && leerNumero(e.texto) != null)
+          .sort((a, b) => Math.abs(a.x - centro) - Math.abs(b.x - centro))[0];
         if (concepto && unid) actual.lineas.push({ descripcion: concepto, cantidad: leerNumero(unid.texto)! });
       }
     }

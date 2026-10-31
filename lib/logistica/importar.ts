@@ -4,7 +4,7 @@ import { claveDestino, elegirZona } from "@/lib/dominio/destinos";
 import { interpretarHorario } from "@/lib/dominio/horario";
 import type { Database } from "@/lib/supabase/tipos-bd";
 import type { AlbaranLeido } from "./holded-pdf";
-import { geocodificar } from "./mapas";
+import { ubicarDireccion } from "./mapas";
 
 type Cliente = SupabaseClient<Database>;
 
@@ -70,7 +70,7 @@ export async function guardarAlbaranes(sb: Cliente, leidos: AlbaranLeido[], orig
     }
 
     if (destino.lat == null && (destino.direccion || destino.localidad)) {
-      const punto = await geocodificar([destino.direccion, destino.codigo_postal, destino.localidad, "España"].filter(Boolean).join(", "));
+      const punto = await ubicarDireccion(destino);
       if (punto) {
         await sb.from("destinos").update({ lat: punto.lat, lng: punto.lng, ubicacion_origen: "direccion" }).eq("id", destino.id);
         destino = { ...destino, lat: punto.lat, lng: punto.lng };
@@ -93,7 +93,16 @@ export async function guardarAlbaranes(sb: Cliente, leidos: AlbaranLeido[], orig
       : await sb.from("albaranes").insert(fila).select("id");
     if (error) throw error;
     const repetido = !nuevo?.length;
-    if (repetido) avisos.unshift("Ya estaba importado: no se duplica.");
+    if (repetido && a.numero) {
+      // Ya estaba: si sigue pendiente, se actualiza con la nueva lectura (p. ej. cantidades corregidas)
+      const { data: act } = await sb
+        .from("albaranes")
+        .update({ lineas: fila.lineas, notas: fila.notas, fecha: fila.fecha, destino_id: destino.id })
+        .eq("numero", a.numero)
+        .eq("estado", "pendiente")
+        .select("id");
+      avisos.unshift(act?.length ? "Ya estaba importado: actualizado con esta lectura." : "Ya estaba importado y en una ruta: no se cambia.");
+    }
     resultados.push({ numero: a.numero, cliente: a.cliente, destinoId: destino.id, albaranId: nuevo?.[0]?.id ?? null, repetido, avisos });
   }
   return resultados;

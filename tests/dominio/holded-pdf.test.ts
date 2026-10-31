@@ -58,6 +58,21 @@ describe("leerAlbaranesHolded", () => {
     ]);
   });
 
+  it("no confunde un precio corto con las unidades", () => {
+    const pag = pagina({ lineas: false });
+    const i = pag.findIndex((fila) => fila.some((e) => e.texto === "CONCEPTO"));
+    pag.splice(
+      i + 1,
+      0,
+      f([49, "ENVASE CERVEZA TURIA"], [342, "3,31€"], [414, "2"], [441, "6,62€"], [493, "21%"], [519, "8,01€"]),
+      f([49, "FANTA LIMON 2 L"], [345, "8,51€"], [417, "10"], [441, "85,10€"], [493, "10%"], [519, "93,61€"]),
+    );
+    expect(leerAlbaranesHolded([pag])[0].lineas).toEqual([
+      { descripcion: "ENVASE CERVEZA TURIA", cantidad: 2 },
+      { descripcion: "FANTA LIMON 2 L", cantidad: 10 },
+    ]);
+  });
+
   it("sin dirección de envío usa la del cliente", () => {
     const [a] = leerAlbaranesHolded([pagina({ envio: false })]);
     expect(a).toMatchObject({ direccion: "CALLE FISCAL, 21", localidad: "PATERNA", codigo_postal: "46980" });

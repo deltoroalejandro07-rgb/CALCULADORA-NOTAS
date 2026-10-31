@@ -1,9 +1,10 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, ChevronDown, FileUp, MapPinOff, Pencil, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronDown, ExternalLink, FileUp, MapPinned, MapPinOff, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { startTransition, useActionState, useMemo, useRef, useState } from "react";
-import { altaManual, anularAlbaran, editarDestino, type EstadoForm } from "@/app/(app)/logistica/acciones-planificar";
+import { altaManual, anularAlbaran, asignarZona, editarDestino, reubicarPendientes, type EstadoForm } from "@/app/(app)/logistica/acciones-planificar";
 import type { RespuestaImportar } from "@/app/api/logistica/albaranes/route";
 import { Tarjeta } from "@/components/app/piezas";
 import { Boton } from "@/components/ui/boton";
@@ -308,6 +309,20 @@ function EditarDestino({ d, zonas, alCerrar }: { d: Destino; zonas: { id: string
         Minutos de descarga aquí (vacío = el general)
         <input type="number" name="minutos_descarga" min={1} max={120} defaultValue={d.minutos_descarga ?? ""} className={campo} />
       </label>
+      <div className={cn("rounded-xl p-2", d.lat == null && "bg-red-50 dark:bg-red-950/40")}>
+        <label className="block">
+          {d.lat == null ? "No lo encontramos en el mapa: pega aquí el enlace de Google Maps del sitio" : "Ubicación exacta (opcional): enlace de Google Maps o coordenadas"}
+          <input name="coordenadas" placeholder="https://maps.app.goo.gl/… o 39.4699, -0.3763" className={campo} />
+        </label>
+        <a
+          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([d.nombre, d.direccion, d.codigo_postal, d.localidad].filter(Boolean).join(", "))}`}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-marca underline"
+        >
+          <ExternalLink className="h-3.5 w-3.5" aria-hidden /> Buscarlo en Google Maps (luego «Compartir → Copiar enlace»)
+        </a>
+      </div>
       {estado.error && <p className="text-red-600">{estado.error}</p>}
       {estado.ok && <p className="text-emerald-700 dark:text-emerald-300">✓ {estado.ok}</p>}
       <div className="flex gap-2">
@@ -318,6 +333,50 @@ function EditarDestino({ d, zonas, alCerrar }: { d: Destino; zonas: { id: string
           Cerrar
         </Boton>
       </div>
+    </form>
+  );
+}
+
+/** Desplegable de zona: al elegir, se guarda al momento (para uno o varios clientes). */
+function SelectorZona({ destinos, actual, zonas, texto, aria }: { destinos: string[]; actual: string | null; zonas: { id: string; nombre: string }[]; texto: string; aria: string }) {
+  return (
+    <form action={asignarZona} className="flex items-center gap-2 text-xs">
+      {destinos.map((d) => (
+        <input key={d} type="hidden" name="destino_id" value={d} />
+      ))}
+      <label className="flex items-center gap-2">
+        <span className="text-suave">{texto}</span>
+        <select
+          name="zona_id"
+          defaultValue={actual ?? ""}
+          aria-label={aria}
+          onChange={(e) => e.currentTarget.form?.requestSubmit()}
+          className={cn("min-h-9 rounded-lg border px-2 text-sm", actual ? "border-borde bg-superficie" : "border-amber-400 bg-amber-50 dark:bg-amber-950/40")}
+        >
+          <option value="">Elegir zona…</option>
+          {zonas.map((z) => (
+            <option key={z.id} value={z.id}>
+              {z.nombre}
+            </option>
+          ))}
+        </select>
+      </label>
+    </form>
+  );
+}
+
+function ReubicarPendientes({ n }: { n: number }) {
+  const [estado, accion, pendiente] = useActionState<EstadoForm, FormData>(reubicarPendientes, {});
+  return (
+    <form action={accion} className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm dark:border-red-900 dark:bg-red-950/40">
+      <p className="flex items-center gap-1.5 font-semibold text-red-800 dark:text-red-200">
+        <MapPinOff className="h-4 w-4" aria-hidden /> {n} {n === 1 ? "cliente sin ubicación" : "clientes sin ubicación"} en el mapa
+      </p>
+      <p className="mt-1 text-xs text-red-800/80 dark:text-red-200/80">Sin ubicación no pueden entrar en la ruta. Vuelve a buscarlos; si alguno sigue sin salir, pulsa su lápiz y pega el enlace de Google Maps.</p>
+      {estado.ok && <p className="mt-1 text-xs font-medium text-emerald-800 dark:text-emerald-300">✓ {estado.ok}</p>}
+      <Boton type="submit" variante="secundario" cargando={pendiente} className="mt-2 min-h-11 w-full text-sm">
+        <Search className="h-4 w-4" aria-hidden /> {pendiente ? "Buscando (1 por segundo)…" : "Volver a buscar en el mapa"}
+      </Boton>
     </form>
   );
 }
@@ -350,7 +409,12 @@ export function ListaAlbaranes({ albaranes, zonas }: { albaranes: AlbaranPendien
               {franja ? <span className="font-medium text-marca">🕘 {franja}</span> : a.destino.horario_texto ? <span className="text-amber-700 dark:text-amber-300">🕘 «{a.destino.horario_texto}» sin interpretar</span> : <span className="text-suave">Sin horario</span>}
               {a.lineas.length > 0 && <span className="text-suave"> · {a.lineas.map((l) => `${l.cantidad} × ${l.descripcion}`).join(", ")}</span>}
             </p>
-            {a.destino.lat == null && <p className="text-xs font-medium text-red-600">No está en el mapa: corrige la dirección para que entre en la ruta.</p>}
+            {a.destino.lat == null && <p className="text-xs font-medium text-red-600">No está en el mapa: pulsa el lápiz y corrige la dirección o pega el enlace de Google Maps.</p>}
+            {a.estado === "pendiente" && zonas.length > 0 && (
+              <div className="mt-2">
+                <SelectorZona key={a.destino.zona_id ?? "sin"} destinos={[a.destino.id]} actual={a.destino.zona_id} zonas={zonas} texto="Zona:" aria={`Zona de ${a.destino.nombre}`} />
+              </div>
+            )}
           </div>
           {a.estado === "pendiente" && (
             <div className="flex shrink-0 gap-1">
@@ -380,6 +444,22 @@ export function ListaAlbaranes({ albaranes, zonas }: { albaranes: AlbaranPendien
     <section className="space-y-3">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-suave">Por repartir ({pendientes.length})</h2>
       {!pendientes.length && <p className="rounded-2xl border border-dashed border-borde p-4 text-center text-sm text-suave">No hay albaranes pendientes. Sube los PDF del día.</p>}
+      {pendientes.length > 0 && !zonas.length && (
+        <p className="flex items-center gap-2 rounded-2xl border border-amber-300 bg-amber-50 p-3 text-sm dark:border-amber-800 dark:bg-amber-950/40">
+          <MapPinned className="h-5 w-5 shrink-0 text-amber-700" aria-hidden />
+          <span>
+            Para asignar zonas, primero{" "}
+            <Link href="/logistica/zonas" className="font-medium text-marca underline">
+              crea tus zonas y días
+            </Link>
+            .
+          </span>
+        </p>
+      )}
+      {(() => {
+        const n = new Set(pendientes.filter((a) => a.destino.lat == null).map((a) => a.destino.id)).size;
+        return n ? <ReubicarPendientes n={n} /> : null;
+      })()}
       {grupos.map((g) => (
         <div key={g.id} className="overflow-hidden rounded-2xl border border-borde bg-superficie">
           <p className={cn("flex items-center justify-between px-3 py-2 text-sm font-semibold", g.id === "sin" ? "bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200" : "bg-fondo")}>
@@ -388,6 +468,18 @@ export function ListaAlbaranes({ albaranes, zonas }: { albaranes: AlbaranPendien
             </span>
             {g.dias.length > 0 && <span className="text-xs font-normal text-suave">{DIAS_SEMANA.filter((d) => g.dias.includes(d.n)).map((d) => d.corto).join(" ")}</span>}
           </p>
+          {g.lista.length > 1 && zonas.length > 0 && (
+            <div className="border-b border-borde px-3 py-2">
+              <SelectorZona
+                key={`${g.id}-${g.lista.length}`}
+                destinos={[...new Set(g.lista.map((x) => x.destino.id))]}
+                actual={null}
+                zonas={zonas}
+                texto={g.id === "sin" ? `Asignar los ${g.lista.length} a:` : `Mover los ${g.lista.length} a:`}
+                aria={`Zona para todos los de ${g.titulo}`}
+              />
+            </div>
+          )}
           <ul className="divide-y divide-borde">{g.lista.map(fila)}</ul>
         </div>
       ))}

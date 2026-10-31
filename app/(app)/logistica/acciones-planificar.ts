@@ -4,10 +4,10 @@ import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { exigirAdmin } from "@/lib/auth";
-import { leerLineasTexto } from "@/lib/dominio/destinos";
+import { leerCoordenadas, leerLineasTexto } from "@/lib/dominio/destinos";
 import { interpretarHorario } from "@/lib/dominio/horario";
 import { guardarAlbaranes } from "@/lib/logistica/importar";
-import { geocodificar } from "@/lib/logistica/mapas";
+import { ubicarDireccion } from "@/lib/logistica/mapas";
 import { calcularPlan, type PlanPropuesto } from "@/lib/logistica/planificar";
 import { supabaseServidor } from "@/lib/supabase/servidor";
 
@@ -132,10 +132,13 @@ export async function editarDestino(_: EstadoForm, form: FormData): Promise<Esta
       horario_texto: texto,
       notas_acceso: texto,
       minutos_descarga: z.preprocess((v) => (v === "" || v == null ? null : Number(v)), z.number().int().min(1).max(120).nullable()),
+      coordenadas: texto,
     })
     .safeParse(Object.fromEntries(form));
   if (!r.success) return { error: r.error.issues[0].message };
-  const { id: did, ...datos } = r.data;
+  const { id: did, coordenadas, ...datos } = r.data;
+  const manual = coordenadas ? leerCoordenadas(coordenadas) : null;
+  if (coordenadas && !manual) return { error: "No entiendo esas coordenadas. Pega un enlace de Google Maps o «39.47, -0.37»." };
   // Si escriben el horario en texto y no las horas, se interpreta
   if (!datos.ventana_desde && !datos.ventana_hasta && datos.horario_texto) {
     const f = interpretarHorario(datos.horario_texto);
@@ -149,15 +152,53 @@ export async function editarDestino(_: EstadoForm, form: FormData): Promise<Esta
   const cambiaDireccion = antes && (antes.direccion !== datos.direccion || antes.localidad !== datos.localidad || antes.codigo_postal !== datos.codigo_postal);
   let ubicacion = {};
   let nota = "";
-  if (cambiaDireccion || antes?.lat == null) {
-    const p = await geocodificar([datos.direccion, datos.codigo_postal, datos.localidad, "España"].filter(Boolean).join(", "));
-    if (p) ubicacion = { lat: p.lat, lng: p.lng, ubicacion_origen: "direccion" };
-    else nota = " No hemos encontrado la dirección en el mapa: revísala.";
+  if (manual) {
+    ubicacion = { lat: manual.lat, lng: manual.lng, ubicacion_origen: "manual" };
+    nota = " Ubicación fijada a mano.";
+  } else if (cambiaDireccion || antes?.lat == null) {
+    const p = await ubicarDireccion(datos);
+    if (p) {
+      ubicacion = { lat: p.lat, lng: p.lng, ubicacion_origen: "direccion" };
+      nota = " Encontrada en el mapa.";
+    } else nota = " No la encontramos en el mapa: pega abajo un enlace de Google Maps del sitio.";
   }
   const { error } = await sb.from("destinos").update({ ...datos, ...ubicacion, actualizado_at: new Date().toISOString() }).eq("id", did);
   if (error) return { error: error.message };
   refresh();
   return { ok: "Guardado." + nota };
+}
+
+/** Asigna zona a uno o varios clientes de reparto (vale para todos sus albaranes, también los futuros). */
+export async function asignarZona(form: FormData) {
+  await exigirAdmin();
+  const ids = form.getAll("destino_id").map(String).filter((v) => id.safeParse(v).success);
+  const zona = String(form.get("zona_id") ?? "");
+  if (!ids.length) return;
+  const sb = await supabaseServidor();
+  await sb.from("destinos").update({ zona_id: id.safeParse(zona).success ? zona : null, actualizado_at: new Date().toISOString() }).in("id", ids);
+  refresh();
+}
+
+/** Vuelve a buscar en el mapa los clientes con albaranes pendientes que aún no tienen ubicación. */
+export async function reubicarPendientes(): Promise<EstadoForm> {
+  await exigirAdmin();
+  const sb = await supabaseServidor();
+  const { data } = await sb.from("albaranes").select("destinos(id, direccion, codigo_postal, localidad, lat)").eq("estado", "pendiente");
+  const sinUbicar = [...new Map((data ?? []).map((a) => a.destinos).filter((d) => d && d.lat == null).map((d) => [d!.id, d!])).values()];
+  let encontrados = 0;
+  for (const d of sinUbicar) {
+    const p = await ubicarDireccion(d);
+    if (p) {
+      await sb.from("destinos").update({ lat: p.lat, lng: p.lng, ubicacion_origen: "direccion" }).eq("id", d.id);
+      encontrados++;
+    }
+  }
+  refresh();
+  if (!sinUbicar.length) return { ok: "Todos tienen ubicación." };
+  const faltan = sinUbicar.length - encontrados;
+  return faltan
+    ? { ok: `Encontrados ${encontrados} de ${sinUbicar.length}. A los ${faltan} que faltan, pulsa el lápiz y pega un enlace de Google Maps del sitio.` }
+    : { ok: `Encontrados los ${encontrados}.` };
 }
 
 // ---------- Planificar ----------
