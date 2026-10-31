@@ -47,6 +47,9 @@ export interface ParadaReparto {
   realizada_at: string | null;
   notas_oficina: string | null;
   pedido_id: string | null;
+  /** Hora calculada por el optimizador (HH:MM) y nº de albarán de Holded, si los hay. */
+  llegada_prevista?: string | null;
+  albaran?: string | null;
   cliente: {
     id: string;
     nombre: string;

@@ -28,14 +28,20 @@ async function Contenido({ id }: { id: string }) {
   const sb = await supabaseServidor();
   const { data: ruta } = await sb
     .from("rutas")
-    .select("id, fecha, vehiculos(nombre, matricula), conductor:perfiles!rutas_conductor_id_fkey(nombre), paradas(orden, estado, clientes(nombre_negocio), pedidos(pedido_lineas(producto_id, descripcion, cantidad)))")
+    .select("id, fecha, vehiculos(nombre, matricula), conductor:perfiles!rutas_conductor_id_fkey(nombre), paradas(orden, estado, clientes(nombre_negocio), destinos(nombre), albaranes(lineas), pedidos(pedido_lineas(producto_id, descripcion, cantidad)))")
     .eq("id", id)
     .maybeSingle();
   if (!ruta) notFound();
 
   const paradas = ruta.paradas
     .filter((p) => p.estado === "pendiente")
-    .map((p) => ({ orden: p.orden, cliente: p.clientes?.nombre_negocio ?? "—", lineas: (p.pedidos?.pedido_lineas ?? []).map((l) => ({ ...l, cantidad: Number(l.cantidad) })) }));
+    .map((p) => ({
+      orden: p.orden,
+      cliente: p.clientes?.nombre_negocio ?? p.destinos?.nombre ?? "—",
+      lineas: p.pedidos
+        ? p.pedidos.pedido_lineas.map((l) => ({ ...l, cantidad: Number(l.cantidad) }))
+        : ((p.albaranes?.lineas as { descripcion: string; cantidad: number }[] | undefined) ?? []).map((l) => ({ producto_id: null, descripcion: l.descripcion, cantidad: Number(l.cantidad) })),
+    }));
   const total = totalCarga(paradas);
   const enOrden = [...paradas].sort((a, b) => a.orden - b.orden);
   const numero = new Map(enOrden.map((p, i) => [p.orden, i + 1]));

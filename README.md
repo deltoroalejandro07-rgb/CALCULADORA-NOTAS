@@ -16,6 +16,7 @@ App web instalable (PWA, móvil primero) para el equipo comercial de una distrib
 | **Mensajes** | Historial de envíos, plantillas con variables, envío individual y **campañas por segmento** (abre WhatsApp/email con el texto personalizado y lo registra). Solo a clientes con consentimiento; aviso de baja automático. |
 | **Más** | Catálogo (destacados, nº de interesados), ofertas con segmento y vista previa, tema claro/oscuro, cerrar sesión. Para el administrador: panel de dirección, usuarios e importar/exportar. |
 | **Logística** (admin) | Vehículos y almacén; rutas por día con los pedidos por repartir, orden por cercanía, hoja de carga; entregas con firma y **albarán** imprimible. |
+| **Ruta automática** (admin) | Subir los PDF de albarán de Holded (se leen sin IA: cliente, dirección de envío, productos, campos «Horario» y «Ruta»), alta manual, zonas por días de la semana y **cálculo de la mejor ruta** (ventanas horarias, descarga, capacidad, varios vehículos; OpenRouteService con perfil de camión o estimación). Al aceptar, la ruta llega al conductor con la hora prevista de cada parada. |
 | **Mi reparto** | La app del conductor (cualquier usuario con una ruta asignada): ruta del día descargada en el móvil, navegar/llamar, **entrega con firma** (cantidades, envases retornables, cobro, fotos) o incidencia. **Funciona sin cobertura**; cada entrega se registra una sola vez y no se puede modificar. |
 
 **Acceso:** email y contraseña (el administrador la pone al dar de alta y cada uno puede cambiarla); como alternativa, código/enlace por email.
@@ -66,6 +67,7 @@ El service worker (uso sin cobertura) solo se activa en producción: `npm run bu
 | `node tests/e2e-clientes.mjs <dir>` | Lista, filtros, mapa, ficha, edición, consentimiento, pedido, RGPD |
 | `node tests/e2e-enlace.mjs` | Acceso con el enlace del email |
 | `node tests/e2e-fase1.mjs <dir>` | Hoy, usuarios, catálogo, ofertas, plantillas, campañas, dirección, importar/exportar |
+| `node tests/e2e-planificar.mjs <dir>` | Ruta automática: zonas, subir PDF de Holded, no duplicar, alta manual, calcular, aceptar y entregar |
 | `node tests/e2e-reparto.mjs <dir>` | Logística: planificar ruta, entregar con firma sin cobertura, arranque sin red, subida y albarán |
 
 ## Variables de entorno

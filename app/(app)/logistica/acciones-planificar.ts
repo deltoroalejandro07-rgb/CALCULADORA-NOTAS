@@ -1,0 +1,204 @@
+"use server";
+
+import { refresh } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
+import { exigirAdmin } from "@/lib/auth";
+import { leerLineasTexto } from "@/lib/dominio/destinos";
+import { interpretarHorario } from "@/lib/dominio/horario";
+import { guardarAlbaranes } from "@/lib/logistica/importar";
+import { geocodificar } from "@/lib/logistica/mapas";
+import { calcularPlan, type PlanPropuesto } from "@/lib/logistica/planificar";
+import { supabaseServidor } from "@/lib/supabase/servidor";
+
+export interface EstadoForm {
+  error?: string;
+  ok?: string;
+}
+
+const vacioANull = (v: unknown) => (v == null || (typeof v === "string" && v.trim() === "") ? null : typeof v === "string" ? v.trim() : v);
+const texto = z.preprocess(vacioANull, z.string().max(2000).nullable());
+const id = z.guid();
+const hora = z.preprocess(vacioANull, z.string().regex(/^\d{2}:\d{2}$/, "Hora no válida").nullable());
+
+// ---------- Zonas y ajustes ----------
+
+export async function guardarZona(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+  await exigirAdmin();
+  const r = z
+    .object({
+      nombre: z.string().trim().min(1, "Pon un nombre a la zona"),
+      vehiculo_id: z.preprocess(vacioANull, id.nullable()),
+      color: texto,
+    })
+    .safeParse(Object.fromEntries(form));
+  if (!r.success) return { error: r.error.issues[0].message };
+  const dias = form.getAll("dia").map(Number).filter((n) => n >= 1 && n <= 7);
+  const zid = form.get("id") as string | null;
+  const sb = await supabaseServidor();
+  const datos = { ...r.data, dias };
+  const { error } = zid ? await sb.from("zonas_reparto").update(datos).eq("id", zid) : await sb.from("zonas_reparto").insert(datos);
+  if (error) return { error: error.message };
+  refresh();
+  return { ok: zid ? "Zona guardada." : "Zona añadida." };
+}
+
+export async function borrarZona(form: FormData) {
+  await exigirAdmin();
+  const sb = await supabaseServidor();
+  await sb.from("zonas_reparto").update({ activa: false }).eq("id", id.parse(form.get("id")));
+  refresh();
+}
+
+export async function guardarAjustesPlan(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+  await exigirAdmin();
+  const r = z
+    .object({
+      minutos_descarga: z.coerce.number().int().min(1, "Mínimo 1 minuto").max(120),
+      hora_salida: z.string().regex(/^\d{2}:\d{2}$/, "Hora no válida"),
+      volver_almacen: z.preprocess((v) => v === "on", z.boolean()),
+    })
+    .safeParse(Object.fromEntries(form));
+  if (!r.success) return { error: r.error.issues[0].message };
+  const sb = await supabaseServidor();
+  const { error } = await sb.from("ajustes_logistica").update(r.data).eq("id", true);
+  if (error) return { error: error.message };
+  refresh();
+  return { ok: "Ajustes guardados." };
+}
+
+// ---------- Albaranes ----------
+
+/** Alta a mano (sin PDF): para un destino ya conocido o uno nuevo. */
+export async function altaManual(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+  await exigirAdmin();
+  const r = z
+    .object({
+      destino_id: z.preprocess(vacioANull, id.nullable()),
+      nombre: texto,
+      direccion: texto,
+      localidad: texto,
+      codigo_postal: texto,
+      telefono: texto,
+      horario: texto,
+      zona: texto,
+      numero: texto,
+      productos: texto,
+      notas: texto,
+    })
+    .safeParse(Object.fromEntries(form));
+  if (!r.success) return { error: r.error.issues[0].message };
+  const d = r.data;
+  const sb = await supabaseServidor();
+  let base = { cliente: d.nombre ?? "", direccion: d.direccion, localidad: d.localidad, codigo_postal: d.codigo_postal, telefono: d.telefono };
+  if (d.destino_id) {
+    const { data: dest } = await sb.from("destinos").select("*").eq("id", d.destino_id).single();
+    if (!dest) return { error: "Ese cliente ya no existe." };
+    base = { cliente: dest.nombre, direccion: dest.direccion, localidad: dest.localidad, codigo_postal: dest.codigo_postal, telefono: dest.telefono };
+  } else if (!d.nombre || (!d.direccion && !d.localidad)) {
+    return { error: "Pon el nombre del cliente y la dirección de entrega." };
+  }
+  const { data: zona } = d.zona ? await sb.from("zonas_reparto").select("nombre").eq("id", d.zona).maybeSingle() : { data: null };
+  const [res] = await guardarAlbaranes(
+    sb,
+    [{ ...base, numero: d.numero?.toUpperCase() ?? null, fecha: null, nif: null, lineas: d.productos ? leerLineasTexto(d.productos) : [], horario: d.horario, ruta: zona?.nombre ?? null, notas: d.notas }],
+    "manual",
+    null,
+  );
+  refresh();
+  if (res.repetido) return { error: `El albarán ${res.numero} ya estaba importado.` };
+  return { ok: `Entrega para ${res.cliente} añadida.${res.avisos.length ? " " + res.avisos.join(" ") : ""}` };
+}
+
+export async function anularAlbaran(form: FormData) {
+  await exigirAdmin();
+  const sb = await supabaseServidor();
+  await sb.from("albaranes").update({ estado: "anulado" }).eq("id", id.parse(form.get("id"))).eq("estado", "pendiente");
+  refresh();
+}
+
+/** Corrige un destino: zona, horario, dirección (se vuelve a situar en el mapa), acceso y descarga. */
+export async function editarDestino(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+  await exigirAdmin();
+  const r = z
+    .object({
+      id,
+      direccion: texto,
+      localidad: texto,
+      codigo_postal: texto,
+      zona_id: z.preprocess(vacioANull, id.nullable()),
+      ventana_desde: hora,
+      ventana_hasta: hora,
+      horario_texto: texto,
+      notas_acceso: texto,
+      minutos_descarga: z.preprocess((v) => (v === "" || v == null ? null : Number(v)), z.number().int().min(1).max(120).nullable()),
+    })
+    .safeParse(Object.fromEntries(form));
+  if (!r.success) return { error: r.error.issues[0].message };
+  const { id: did, ...datos } = r.data;
+  // Si escriben el horario en texto y no las horas, se interpreta
+  if (!datos.ventana_desde && !datos.ventana_hasta && datos.horario_texto) {
+    const f = interpretarHorario(datos.horario_texto);
+    if (!f) return { error: `No entiendo el horario «${datos.horario_texto}». Pon las horas (desde / hasta).` };
+    datos.ventana_desde = f.desde;
+    datos.ventana_hasta = f.hasta;
+  }
+  if (datos.ventana_desde && datos.ventana_hasta && datos.ventana_desde >= datos.ventana_hasta) return { error: "La hora «desde» tiene que ser anterior a «hasta»." };
+  const sb = await supabaseServidor();
+  const { data: antes } = await sb.from("destinos").select("direccion, localidad, codigo_postal, lat").eq("id", did).single();
+  const cambiaDireccion = antes && (antes.direccion !== datos.direccion || antes.localidad !== datos.localidad || antes.codigo_postal !== datos.codigo_postal);
+  let ubicacion = {};
+  let nota = "";
+  if (cambiaDireccion || antes?.lat == null) {
+    const p = await geocodificar([datos.direccion, datos.codigo_postal, datos.localidad, "España"].filter(Boolean).join(", "));
+    if (p) ubicacion = { lat: p.lat, lng: p.lng, ubicacion_origen: "direccion" };
+    else nota = " No hemos encontrado la dirección en el mapa: revísala.";
+  }
+  const { error } = await sb.from("destinos").update({ ...datos, ...ubicacion, actualizado_at: new Date().toISOString() }).eq("id", did);
+  if (error) return { error: error.message };
+  refresh();
+  return { ok: "Guardado." + nota };
+}
+
+// ---------- Planificar ----------
+
+export async function calcularPlanAccion(fecha: string, albaranIds: string[], vehiculoIds: string[]): Promise<{ plan?: PlanPropuesto; error?: string }> {
+  await exigirAdmin();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return { error: "Fecha no válida" };
+  const ids = z.array(id).safeParse(albaranIds);
+  const vs = z.array(id).safeParse(vehiculoIds);
+  if (!ids.success || !vs.success) return { error: "Selección no válida" };
+  try {
+    return { plan: await calcularPlan(await supabaseServidor(), fecha, ids.data, vs.data) };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "No se ha podido calcular la ruta" };
+  }
+}
+
+/** Crea las rutas del plan aceptado: una por vehículo, con sus paradas en orden y la hora prevista. */
+export async function aceptarPlan(plan: PlanPropuesto, conductores: Record<string, string>): Promise<{ error?: string }> {
+  await exigirAdmin();
+  const sb = await supabaseServidor();
+  for (const r of plan.rutas) {
+    if (!id.safeParse(conductores[r.vehiculoId]).success) return { error: `Elige quién conduce ${r.vehiculo}.` };
+  }
+  const creadas: string[] = [];
+  for (const r of plan.rutas) {
+    const { data: ruta, error } = await sb
+      .from("rutas")
+      .insert({ fecha: plan.fecha, vehiculo_id: r.vehiculoId, conductor_id: conductores[r.vehiculoId], notas: `Ruta calculada: ${r.km} km, ${Math.floor(r.duracionMin / 60)} h ${r.duracionMin % 60} min. Salida ${r.salida}.` })
+      .select("id")
+      .single();
+    if (error) return { error: error.message };
+    creadas.push(ruta.id);
+    let orden = 0;
+    const filas = r.paradas.flatMap((p) => p.albaranIds.map((albaran_id) => ({ ruta_id: ruta.id, orden: ++orden, destino_id: p.destinoId, albaran_id, llegada_prevista: p.llegada })));
+    const { error: e2 } = await sb.from("paradas").insert(filas);
+    if (e2) {
+      // Sin rutas a medias: si algo falla (p. ej. otro usuario ya planificó un albarán), se deshace
+      await sb.from("rutas").delete().in("id", creadas);
+      return { error: /paradas_albaran_vivo/.test(e2.message) ? "Algún albarán ya se ha planificado mientras tanto. Vuelve a calcular." : e2.message };
+    }
+  }
+  redirect(`/logistica?fecha=${plan.fecha}`);
+}

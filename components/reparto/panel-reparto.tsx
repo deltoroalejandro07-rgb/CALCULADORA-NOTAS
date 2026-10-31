@@ -352,7 +352,7 @@ export function PanelReparto() {
                     <span className={cn("block truncate font-medium", estado !== "pendiente" && "text-suave")}>{p.cliente.nombre}</span>
                     <span className="block truncate text-xs text-suave">
                       {estado === "pendiente"
-                        ? [p.cliente.horario_entrega, direccionParada(p.cliente)].filter(Boolean).join(" · ") || "Sin dirección"
+                        ? [p.llegada_prevista && `≈ ${p.llegada_prevista}`, p.cliente.horario_entrega, direccionParada(p.cliente)].filter(Boolean).join(" · ") || "Sin dirección"
                         : `${estado === "entregada" ? "Entregada" : "No entregada"} ${local ? fechaHora(local.datos.realizada_at) : p.realizada_at ? fechaHora(p.realizada_at) : ""}`}
                     </span>
                   </span>
@@ -408,6 +408,13 @@ function FichaParada({
         <div className="min-w-0 flex-1">
           <p className="text-lg font-bold leading-tight">{c.nombre}</p>
           <p className="text-sm text-suave">{direccionParada(c) || "Sin dirección"}</p>
+          {(parada.llegada_prevista || parada.albaran) && (
+            <p className="text-xs text-suave">
+              {parada.llegada_prevista && <span className="font-semibold text-marca">Llegada prevista {parada.llegada_prevista}</span>}
+              {parada.llegada_prevista && parada.albaran && " · "}
+              {parada.albaran && `Albarán ${parada.albaran}`}
+            </p>
+          )}
         </div>
       </div>
       {(c.horario_entrega || c.notas_acceso || parada.notas_oficina) && (

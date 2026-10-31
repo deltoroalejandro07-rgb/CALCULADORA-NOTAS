@@ -8,6 +8,8 @@ Qué cuentas necesita el CRM, qué está ya hecho y cómo terminar lo que falta.
 | **Vercel** | Publicar la app | Gratis (plan Hobby) | ✅ Publicada en `crm-comercial-mu.vercel.app` |
 | **Clave secreta de Supabase en Vercel** | Dar de alta usuarios desde el CRM | — | ✅ Hecho |
 | **Actualizar la base de datos** | Cambios de esquema nuevos | — | ⏳ Logística (Paso 2) |
+| **OpenRouteService** | Tiempos reales por carretera con perfil de camión al calcular rutas (sin clave se usa una estimación) | Gratis | Opcional |
+| **Anthropic (IA)** | Leer albaranes en PDF que NO son de Holded (los de Holded se leen sin IA) | Pago por uso | Opcional |
 | **Brevo** (correo) | Solo si quieres entrar con código por email o, en fase 2, campañas por email | Gratis hasta 300 emails/día | Opcional |
 | **Meta – WhatsApp Business** | Fase 2: envío automático y respuestas en la app | Pago por conversación | Fase 2 |
 
@@ -38,9 +40,20 @@ Cada vez que el esquema cambia hay un fichero nuevo en `supabase/migrations/`. H
 
 Migraciones pendientes de aplicar en producción:
 
-- `supabase/migrations/20261030000004_logistica.sql` (logística: vehículos, rutas de reparto y entregas con firma). Solo añade tablas nuevas; no cambia nada de lo existente.
+- `supabase/migrations/20261031000005_reparto_zonas.sql` (ruta automática: zonas y días, destinos y albaranes de Holded). Solo añade; amplía las paradas de la logística para que puedan ser de albaranes.
 
 > Si algún día montas un proyecto de Supabase nuevo, basta con pegar `supabase/instalar.sql`, que ya incluye todas las migraciones.
+
+## Claves opcionales de la ruta automática
+
+Se añaden igual que la clave secreta (Vercel → Settings → Environments → Production → Add Environment Variable, tipo *Secret*) y después **Redeploy**:
+
+| Variable | Dónde se consigue | Para qué |
+|---|---|---|
+| `OPENROUTESERVICE_API_KEY` | openrouteservice.org → Sign up → Dashboard → *Tokens* (plan gratuito) | Tiempos y kilómetros reales por carretera para camión, y situar direcciones en el mapa. Sin ella, la ruta se calcula con una estimación. |
+| `ANTHROPIC_API_KEY` | console.anthropic.com → *API Keys* (pago por uso; pon un límite de gasto en *Limits*) | Solo para PDF que no siguen la plantilla de Holded. |
+
+En Holded conviene rellenar en cada pedido/albarán los campos **Horario** (p. ej. «antes de las 10», «de 8 a 11») y **Ruta** (el nombre de la zona tal como está en *Logística → Zonas y días*): la app los lee solos.
 
 ## Paso 3 (opcional) · Correo propio con Brevo
 

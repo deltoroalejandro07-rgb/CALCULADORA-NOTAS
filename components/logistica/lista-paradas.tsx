@@ -19,8 +19,11 @@ export interface ParadaOficina {
   motivo_fallo: string | null;
   envases_recogidos: number;
   cobrado: number | null;
-  cliente: { id: string; nombre: string; direccion: string; sinUbicacion: boolean; horario_entrega: string | null; notas_acceso: string | null };
-  pedido: { fecha: string; importe: number; lineas: string[] } | null;
+  /** «cliente» del CRM o «destino» de un albarán de Holded (sin ficha en el CRM). */
+  cliente: { tipo: "cliente" | "destino"; id: string; nombre: string; direccion: string; sinUbicacion: boolean; horario_entrega: string | null; notas_acceso: string | null };
+  llegada_prevista: string | null;
+  albaran: string | null;
+  pedido: { fecha: string | null; importe: number | null; lineas: string[] } | null;
 }
 
 const campo = "mt-1 min-h-11 w-full rounded-xl border border-borde bg-superficie px-3 text-sm outline-none focus:border-marca";
@@ -29,6 +32,15 @@ function EditarParada({ p, alCerrar }: { p: ParadaOficina; alCerrar: () => void 
   const [estado, accion, pendiente] = useActionState<EstadoForm, FormData>(guardarEntregaCliente, {});
   return (
     <div className="mt-3 space-y-3 rounded-xl bg-fondo p-3">
+      {p.cliente.tipo === "destino" ? (
+        <p className="text-sm text-suave">
+          El horario y el acceso de este cliente se cambian en{" "}
+          <Link href="/logistica/albaranes" className="text-marca underline">
+            Albaranes
+          </Link>
+          .
+        </p>
+      ) : (
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -53,6 +65,7 @@ function EditarParada({ p, alCerrar }: { p: ParadaOficina; alCerrar: () => void 
           Guardar datos del cliente
         </Boton>
       </form>
+      )}
       <form action={guardarNotaParada} className="space-y-2">
         <input type="hidden" name="id" value={p.id} />
         <label className="block text-sm">
@@ -111,9 +124,10 @@ export function ListaParadas({ rutaId, paradas, editable, reordenable }: { rutaI
                 {(p.cliente.horario_entrega || p.cliente.notas_acceso) && (
                   <p className="text-xs text-suave">{[p.cliente.horario_entrega && `🕘 ${p.cliente.horario_entrega}`, p.cliente.notas_acceso].filter(Boolean).join(" · ")}</p>
                 )}
+                {p.llegada_prevista && p.estado === "pendiente" && <p className="text-xs font-medium text-marca">Llegada prevista {p.llegada_prevista}</p>}
                 {p.pedido ? (
                   <p className="mt-1 text-sm">
-                    Pedido {euros(p.pedido.importe)}: <span className="text-suave">{p.pedido.lineas.join(", ") || "sin líneas"}</span>
+                    {p.albaran ? `Albarán ${p.albaran}` : p.pedido.importe != null ? `Pedido ${euros(p.pedido.importe)}` : "Entrega"}: <span className="text-suave">{p.pedido.lineas.join(", ") || "sin líneas"}</span>
                   </p>
                 ) : (
                   <p className="mt-1 text-sm text-suave">Parada sin pedido (recogida, visita…)</p>

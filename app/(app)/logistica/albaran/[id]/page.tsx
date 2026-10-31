@@ -30,7 +30,7 @@ async function Contenido({ id }: { id: string }) {
   const { data: p } = await sb
     .from("paradas")
     .select(
-      "id, estado, entrega_id, realizada_at, registrada_at, firmante, firma_path, fotos, lineas, envases_entregados, envases_recogidos, cobrado, forma_cobro, motivo_fallo, observaciones, lat, lng, precision_m, ruta_id, clientes(id, nombre_negocio, direccion, localidad, codigo_postal, telefono), pedidos(fecha), conductor:perfiles!paradas_registrada_por_fkey(nombre), rutas(fecha, vehiculos(nombre, matricula))",
+      "id, estado, entrega_id, realizada_at, registrada_at, firmante, firma_path, fotos, lineas, envases_entregados, envases_recogidos, cobrado, forma_cobro, motivo_fallo, observaciones, lat, lng, precision_m, ruta_id, clientes(id, nombre_negocio, direccion, localidad, codigo_postal, telefono), destinos(nombre, direccion, localidad, codigo_postal), albaranes(numero), pedidos(fecha), conductor:perfiles!paradas_registrada_por_fkey(nombre), rutas(fecha, vehiculos(nombre, matricula))",
     )
     .eq("id", id)
     .maybeSingle();
@@ -39,7 +39,10 @@ async function Contenido({ id }: { id: string }) {
   const firmados = await sb.storage.from("entregas").createSignedUrls([p.firma_path, ...p.fotos].filter((x): x is string => !!x), 3600);
   const url = (path: string | null) => firmados.data?.find((f) => f.path === path)?.signedUrl ?? null;
   const lineas = (p.lineas ?? []) as unknown as LineaEntrega[];
-  const volver = usuario.rol === "admin" ? `/logistica/rutas/${p.ruta_id}` : `/clientes/${p.clientes?.id}`;
+  const volver = usuario.rol === "admin" || !p.clientes ? `/logistica/rutas/${p.ruta_id}` : `/clientes/${p.clientes.id}`;
+  const cliente = p.clientes
+    ? { nombre: p.clientes.nombre_negocio, direccion: p.clientes.direccion, codigo_postal: p.clientes.codigo_postal, localidad: p.clientes.localidad }
+    : { nombre: p.destinos?.nombre ?? "—", direccion: p.destinos?.direccion ?? null, codigo_postal: p.destinos?.codigo_postal ?? null, localidad: p.destinos?.localidad ?? null };
 
   return (
     <>
@@ -68,8 +71,8 @@ async function Contenido({ id }: { id: string }) {
 
         <section>
           <p className="text-xs font-semibold uppercase tracking-wide text-suave">Cliente</p>
-          <p className="font-semibold">{p.clientes?.nombre_negocio}</p>
-          <p className="text-suave">{[p.clientes?.direccion, p.clientes?.codigo_postal, p.clientes?.localidad].filter(Boolean).join(", ")}</p>
+          <p className="font-semibold">{cliente.nombre}</p>
+          <p className="text-suave">{[cliente.direccion, cliente.codigo_postal, cliente.localidad].filter(Boolean).join(", ")}</p>
         </section>
 
         <section className={p.estado === "fallida" ? "rounded-xl bg-red-50 p-3 dark:bg-red-950/40" : ""}>
@@ -79,6 +82,7 @@ async function Contenido({ id }: { id: string }) {
           {p.estado === "fallida" && <p>Motivo: {p.motivo_fallo}</p>}
           {p.conductor?.nombre && <p className="text-suave">Repartidor: {p.conductor.nombre}</p>}
           {p.pedidos?.fecha && <p className="text-suave">Pedido del {fecha(p.pedidos.fecha)}</p>}
+          {p.albaranes?.numero && <p className="text-suave">Albarán de Holded {p.albaranes.numero}</p>}
         </section>
 
         {lineas.length > 0 && (

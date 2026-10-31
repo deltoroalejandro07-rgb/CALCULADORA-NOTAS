@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Package, Truck, Warehouse } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, MapPinned, Package, Sparkles, Truck, Warehouse } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -41,7 +41,7 @@ async function Contenido({ dia }: { dia: string | null }) {
   const hoy = fechaDentroDe(0);
   const fecha = dia ?? hoy;
   const sb = await supabaseServidor();
-  const [{ data: rutas }, { data: porRepartir }, { data: vehiculos }, { data: perfiles }, { data: almacen }] = await Promise.all([
+  const [{ data: rutas }, { data: porRepartir }, { data: vehiculos }, { data: perfiles }, { data: almacen }, { count: albaranesPendientes }] = await Promise.all([
     sb
       .from("rutas")
       .select("id, fecha, estado, notas, vehiculos(nombre, matricula), conductor:perfiles!rutas_conductor_id_fkey(nombre), paradas(estado)")
@@ -51,6 +51,7 @@ async function Contenido({ dia }: { dia: string | null }) {
     sb.from("vehiculos").select("id, nombre, matricula, conductor_habitual").eq("activo", true).order("nombre"),
     sb.from("perfiles").select("id, nombre").eq("activo", true).order("nombre"),
     sb.from("ajustes_logistica").select("almacen_lat").single(),
+    sb.from("albaranes").select("*", { count: "exact", head: true }).eq("estado", "pendiente"),
   ]);
 
   return (
@@ -85,6 +86,20 @@ async function Contenido({ dia }: { dia: string | null }) {
           </Link>
         </Tarjeta>
       )}
+
+      <Link
+        href={`/logistica/planificar?fecha=${fecha}`}
+        className="flex min-h-16 items-center gap-3 rounded-2xl bg-marca px-4 py-3 text-marca-texto shadow-sm active:scale-[0.99]"
+      >
+        <Sparkles className="h-7 w-7 shrink-0" aria-hidden />
+        <span className="flex-1">
+          <span className="block text-lg font-bold">Calcular ruta automática</span>
+          <span className="block text-sm opacity-90">
+            {albaranesPendientes ? `${albaranesPendientes} ${albaranesPendientes === 1 ? "albarán" : "albaranes"} por repartir` : "Sube los albaranes y la app hace la ruta"}
+          </span>
+        </span>
+        <ChevronRight className="h-6 w-6" aria-hidden />
+      </Link>
 
       <section className="space-y-2">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-suave">Rutas del día</h2>
@@ -121,8 +136,22 @@ async function Contenido({ dia }: { dia: string | null }) {
       <ul className="divide-y divide-borde overflow-hidden rounded-2xl border border-borde bg-superficie">
         <li className="flex min-h-14 items-center gap-3 px-4">
           <Package className="h-5 w-5 text-marca" aria-hidden />
-          <span className="flex-1">Pedidos por repartir</span>
+          <span className="flex-1">Pedidos del CRM por repartir</span>
           <span className="rounded-full bg-marca-suave px-2.5 py-0.5 text-sm font-semibold tabular-nums">{porRepartir?.length ?? 0}</span>
+        </li>
+        <li>
+          <Link href="/logistica/albaranes" className="flex min-h-14 items-center gap-3 px-4 active:bg-fondo">
+            <FileText className="h-5 w-5 text-marca" aria-hidden />
+            <span className="flex-1">Albaranes (subir PDF de Holded)</span>
+            <span className="rounded-full bg-marca-suave px-2.5 py-0.5 text-sm font-semibold tabular-nums">{albaranesPendientes ?? 0}</span>
+          </Link>
+        </li>
+        <li>
+          <Link href="/logistica/zonas" className="flex min-h-14 items-center gap-3 px-4 active:bg-fondo">
+            <MapPinned className="h-5 w-5 text-marca" aria-hidden />
+            <span className="flex-1">Zonas y días de reparto</span>
+            <ChevronRight className="h-5 w-5 text-suave" aria-hidden />
+          </Link>
         </li>
         <li>
           <Link href="/logistica/vehiculos" className="flex min-h-14 items-center gap-3 px-4 active:bg-fondo">

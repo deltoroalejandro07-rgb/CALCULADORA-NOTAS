@@ -7,8 +7,9 @@ import { Cabecera, Cargando, Tarjeta } from "@/components/app/piezas";
 import { BorrarRuta } from "@/components/logistica/acciones-ruta";
 import { AnadirParadas } from "@/components/logistica/anadir-paradas";
 import { ListaParadas, type ParadaOficina } from "@/components/logistica/lista-paradas";
-import { MapaDinamico } from "@/components/mapa/mapa-dinamico";
+import { MapaRutaDinamico } from "@/components/mapa/mapa-ruta-dinamico";
 import { exigirAdmin } from "@/lib/auth";
+import { textoFranja } from "@/lib/dominio/horario";
 import { TEXTO_ESTADO_RUTA } from "@/lib/dominio/reparto";
 import { fecha, fechaHora } from "@/lib/formato";
 import { supabaseServidor } from "@/lib/supabase/servidor";
@@ -34,16 +35,17 @@ async function Contenido({ id }: { id: string }) {
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   await exigirAdmin();
   const sb = await supabaseServidor();
-  const [{ data: ruta }, { data: porRepartir }, { data: clientes }] = await Promise.all([
+  const [{ data: ruta }, { data: porRepartir }, { data: clientes }, { data: aj }] = await Promise.all([
     sb
       .from("rutas")
       .select(
-        "id, fecha, estado, notas, iniciada_at, terminada_at, vehiculos(nombre, matricula), conductor:perfiles!rutas_conductor_id_fkey(nombre), paradas(id, orden, estado, notas_oficina, realizada_at, firmante, motivo_fallo, envases_recogidos, cobrado, pedido_id, clientes(id, nombre_negocio, direccion, localidad, lat, lng, estado, clientes_entrega(horario_entrega, notas_acceso)), pedidos(fecha, importe_total, pedido_lineas(descripcion, cantidad)))",
+        "id, fecha, estado, notas, iniciada_at, terminada_at, vehiculos(nombre, matricula), conductor:perfiles!rutas_conductor_id_fkey(nombre), paradas(id, orden, estado, notas_oficina, realizada_at, firmante, motivo_fallo, envases_recogidos, cobrado, pedido_id, llegada_prevista, destinos(id, nombre, direccion, localidad, lat, lng, horario_texto, ventana_desde, ventana_hasta, notas_acceso), albaranes(numero, lineas), clientes(id, nombre_negocio, direccion, localidad, lat, lng, estado, clientes_entrega(horario_entrega, notas_acceso)), pedidos(fecha, importe_total, pedido_lineas(descripcion, cantidad)))",
       )
       .eq("id", id)
       .maybeSingle(),
     sb.from("pedidos_por_repartir").select("id, fecha, importe_total, clientes(nombre_negocio, zona)").order("fecha"),
     sb.from("clientes").select("id, nombre_negocio, zona").order("nombre_negocio"),
+    sb.from("ajustes_logistica").select("almacen_lat, almacen_lng").single(),
   ]);
   if (!ruta) notFound();
 
@@ -59,25 +61,42 @@ async function Contenido({ id }: { id: string }) {
       motivo_fallo: p.motivo_fallo,
       envases_recogidos: p.envases_recogidos,
       cobrado: p.cobrado == null ? null : Number(p.cobrado),
-      cliente: {
-        id: p.clientes!.id,
-        nombre: p.clientes!.nombre_negocio,
-        direccion: [p.clientes!.direccion, p.clientes!.localidad].filter(Boolean).join(", "),
-        sinUbicacion: p.clientes!.lat == null || p.clientes!.lng == null,
-        horario_entrega: p.clientes!.clientes_entrega?.horario_entrega ?? null,
-        notas_acceso: p.clientes!.clientes_entrega?.notas_acceso ?? null,
-      },
+      cliente: p.clientes
+        ? {
+            tipo: "cliente" as const,
+            id: p.clientes.id,
+            nombre: p.clientes.nombre_negocio,
+            direccion: [p.clientes.direccion, p.clientes.localidad].filter(Boolean).join(", "),
+            sinUbicacion: p.clientes.lat == null || p.clientes.lng == null,
+            horario_entrega: p.clientes.clientes_entrega?.horario_entrega ?? null,
+            notas_acceso: p.clientes.clientes_entrega?.notas_acceso ?? null,
+          }
+        : {
+            tipo: "destino" as const,
+            id: p.destinos!.id,
+            nombre: p.destinos!.nombre,
+            direccion: [p.destinos!.direccion, p.destinos!.localidad].filter(Boolean).join(", "),
+            sinUbicacion: p.destinos!.lat == null || p.destinos!.lng == null,
+            horario_entrega: p.destinos!.horario_texto ?? textoFranja(p.destinos!.ventana_desde, p.destinos!.ventana_hasta),
+            notas_acceso: p.destinos!.notas_acceso,
+          },
+      llegada_prevista: p.llegada_prevista?.slice(0, 5) ?? null,
+      albaran: p.albaranes?.numero ?? null,
       pedido: p.pedidos
         ? { fecha: p.pedidos.fecha, importe: Number(p.pedidos.importe_total), lineas: p.pedidos.pedido_lineas.map((l) => `${Number(l.cantidad)} × ${l.descripcion}`) }
-        : null,
+        : p.albaranes
+          ? { fecha: null, importe: null, lineas: ((p.albaranes.lineas as { descripcion: string; cantidad: number }[]) ?? []).map((l) => `${Number(l.cantidad)} × ${l.descripcion}`) }
+          : null,
     }));
   const hechas = paradas.filter((p) => p.estado !== "pendiente").length;
   const editable = ruta.estado !== "terminada";
   const reordenable = hechas === 0;
   const puntos = [...ruta.paradas]
     .sort((a, b) => a.orden - b.orden)
-    .filter((p) => p.clientes?.lat != null && p.clientes?.lng != null)
-    .map((p) => ({ id: p.clientes!.id, nombre: p.clientes!.nombre_negocio, lat: p.clientes!.lat!, lng: p.clientes!.lng!, estado: p.clientes!.estado }));
+    .map((p) => p.clientes ?? (p.destinos ? { nombre_negocio: p.destinos.nombre, lat: p.destinos.lat, lng: p.destinos.lng } : null))
+    .filter((c): c is NonNullable<typeof c> => c?.lat != null && c?.lng != null)
+    .map((c) => ({ nombre: c.nombre_negocio, lat: c.lat!, lng: c.lng! }));
+  const almacen = aj?.almacen_lat != null && aj?.almacen_lng != null ? { lat: aj.almacen_lat, lng: aj.almacen_lng } : null;
 
   return (
     <>
@@ -98,7 +117,7 @@ async function Contenido({ id }: { id: string }) {
           </Link>
         </Tarjeta>
 
-        {puntos.length > 0 && <MapaDinamico puntos={puntos} ruta alto="40vh" />}
+        {puntos.length > 0 && <MapaRutaDinamico almacen={almacen} puntos={puntos} />}
 
         <ListaParadas rutaId={ruta.id} paradas={paradas} editable={editable} reordenable={reordenable} />
 

@@ -25,17 +25,43 @@ export type Database = {
           Tables: {
             "ajustes_logistica": {
                   Row: {
-                    "actualizado_at": string,"almacen_direccion": string | null,"almacen_lat": number | null,"almacen_lng": number | null,"id": boolean
+                    "actualizado_at": string,"almacen_direccion": string | null,"almacen_lat": number | null,"almacen_lng": number | null,"hora_salida": string,"id": boolean,"minutos_descarga": number,"volver_almacen": boolean
                   }
                   ComputedFields: never
                   Insert: {
-                    "actualizado_at"?: string,"almacen_direccion"?: string | null,"almacen_lat"?: number | null,"almacen_lng"?: number | null,"id"?: boolean
+                    "actualizado_at"?: string,"almacen_direccion"?: string | null,"almacen_lat"?: number | null,"almacen_lng"?: number | null,"hora_salida"?: string,"id"?: boolean,"minutos_descarga"?: number,"volver_almacen"?: boolean
                   }
                   Update: {
-                    "actualizado_at"?: string,"almacen_direccion"?: string | null,"almacen_lat"?: number | null,"almacen_lng"?: number | null,"id"?: boolean
+                    "actualizado_at"?: string,"almacen_direccion"?: string | null,"almacen_lat"?: number | null,"almacen_lng"?: number | null,"hora_salida"?: string,"id"?: boolean,"minutos_descarga"?: number,"volver_almacen"?: boolean
                   }
                   Relationships: [
                     
+                  ]
+                },"albaranes": {
+                  Row: {
+                    "archivo_path": string | null,"bultos": number | null,"creado_at": string,"creado_por": string | null,"destino_id": string,"estado": string,"fecha": string | null,"id": string,"lineas": NonNullable<Json>,"notas": string | null,"numero": string | null,"origen": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "archivo_path"?: string | null,"bultos"?: number | null,"creado_at"?: string,"creado_por"?: string | null,"destino_id": string,"estado"?: string,"fecha"?: string | null,"id"?: string,"lineas"?: NonNullable<Json>,"notas"?: string | null,"numero"?: string | null,"origen"?: string
+                  }
+                  Update: {
+                    "archivo_path"?: string | null,"bultos"?: number | null,"creado_at"?: string,"creado_por"?: string | null,"destino_id"?: string,"estado"?: string,"fecha"?: string | null,"id"?: string,"lineas"?: NonNullable<Json>,"notas"?: string | null,"numero"?: string | null,"origen"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "albaranes_creado_por_fkey"
+      columns: ["creado_por"]
+isOneToOne: false
+      referencedRelation: "perfiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "albaranes_destino_id_fkey"
+      columns: ["destino_id"]
+isOneToOne: false
+      referencedRelation: "destinos"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"campanas": {
                   Row: {
@@ -173,6 +199,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"destinos": {
+                  Row: {
+                    "actualizado_at": string,"clave": string,"codigo_postal": string | null,"creado_at": string,"direccion": string | null,"horario_texto": string | null,"id": string,"lat": number | null,"lng": number | null,"localidad": string | null,"minutos_descarga": number | null,"nombre": string,"notas_acceso": string | null,"telefono": string | null,"ubicacion_origen": string | null,"ventana_desde": string | null,"ventana_hasta": string | null,"zona_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "actualizado_at"?: string,"clave": string,"codigo_postal"?: string | null,"creado_at"?: string,"direccion"?: string | null,"horario_texto"?: string | null,"id"?: string,"lat"?: number | null,"lng"?: number | null,"localidad"?: string | null,"minutos_descarga"?: number | null,"nombre": string,"notas_acceso"?: string | null,"telefono"?: string | null,"ubicacion_origen"?: string | null,"ventana_desde"?: string | null,"ventana_hasta"?: string | null,"zona_id"?: string | null
+                  }
+                  Update: {
+                    "actualizado_at"?: string,"clave"?: string,"codigo_postal"?: string | null,"creado_at"?: string,"direccion"?: string | null,"horario_texto"?: string | null,"id"?: string,"lat"?: number | null,"lng"?: number | null,"localidad"?: string | null,"minutos_descarga"?: number | null,"nombre"?: string,"notas_acceso"?: string | null,"telefono"?: string | null,"ubicacion_origen"?: string | null,"ventana_desde"?: string | null,"ventana_hasta"?: string | null,"zona_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "destinos_zona_id_fkey"
+      columns: ["zona_id"]
+isOneToOne: false
+      referencedRelation: "zonas_reparto"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"eventos_reparto": {
                   Row: {
                     "creado_at": string,"detalle": Json | null,"id": number,"parada_id": string | null,"ruta_id": string | null,"tipo": string,"usuario_id": string | null
@@ -285,21 +331,33 @@ isOneToOne: false
                   ]
                 },"paradas": {
                   Row: {
-                    "cliente_id": string,"cobrado": number | null,"creado_at": string,"entrega_id": string | null,"envases_entregados": number,"envases_recogidos": number,"estado": Database["public"]['Enums']["estado_parada"],"firma_path": string | null,"firmante": string | null,"forma_cobro": string | null,"fotos": (string)[],"id": string,"lat": number | null,"lineas": NonNullable<Json>,"lng": number | null,"motivo_fallo": string | null,"notas_oficina": string | null,"observaciones": string | null,"orden": number,"pedido_id": string | null,"precision_m": number | null,"realizada_at": string | null,"registrada_at": string | null,"registrada_por": string | null,"ruta_id": string
+                    "albaran_id": string | null,"cliente_id": string | null,"cobrado": number | null,"creado_at": string,"destino_id": string | null,"entrega_id": string | null,"envases_entregados": number,"envases_recogidos": number,"estado": Database["public"]['Enums']["estado_parada"],"firma_path": string | null,"firmante": string | null,"forma_cobro": string | null,"fotos": (string)[],"id": string,"lat": number | null,"lineas": NonNullable<Json>,"llegada_prevista": string | null,"lng": number | null,"motivo_fallo": string | null,"notas_oficina": string | null,"observaciones": string | null,"orden": number,"pedido_id": string | null,"precision_m": number | null,"realizada_at": string | null,"registrada_at": string | null,"registrada_por": string | null,"ruta_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "cliente_id": string,"cobrado"?: number | null,"creado_at"?: string,"entrega_id"?: string | null,"envases_entregados"?: number,"envases_recogidos"?: number,"estado"?: Database["public"]['Enums']["estado_parada"],"firma_path"?: string | null,"firmante"?: string | null,"forma_cobro"?: string | null,"fotos"?: (string)[],"id"?: string,"lat"?: number | null,"lineas"?: NonNullable<Json>,"lng"?: number | null,"motivo_fallo"?: string | null,"notas_oficina"?: string | null,"observaciones"?: string | null,"orden": number,"pedido_id"?: string | null,"precision_m"?: number | null,"realizada_at"?: string | null,"registrada_at"?: string | null,"registrada_por"?: string | null,"ruta_id": string
+                    "albaran_id"?: string | null,"cliente_id"?: string | null,"cobrado"?: number | null,"creado_at"?: string,"destino_id"?: string | null,"entrega_id"?: string | null,"envases_entregados"?: number,"envases_recogidos"?: number,"estado"?: Database["public"]['Enums']["estado_parada"],"firma_path"?: string | null,"firmante"?: string | null,"forma_cobro"?: string | null,"fotos"?: (string)[],"id"?: string,"lat"?: number | null,"lineas"?: NonNullable<Json>,"llegada_prevista"?: string | null,"lng"?: number | null,"motivo_fallo"?: string | null,"notas_oficina"?: string | null,"observaciones"?: string | null,"orden": number,"pedido_id"?: string | null,"precision_m"?: number | null,"realizada_at"?: string | null,"registrada_at"?: string | null,"registrada_por"?: string | null,"ruta_id": string
                   }
                   Update: {
-                    "cliente_id"?: string,"cobrado"?: number | null,"creado_at"?: string,"entrega_id"?: string | null,"envases_entregados"?: number,"envases_recogidos"?: number,"estado"?: Database["public"]['Enums']["estado_parada"],"firma_path"?: string | null,"firmante"?: string | null,"forma_cobro"?: string | null,"fotos"?: (string)[],"id"?: string,"lat"?: number | null,"lineas"?: NonNullable<Json>,"lng"?: number | null,"motivo_fallo"?: string | null,"notas_oficina"?: string | null,"observaciones"?: string | null,"orden"?: number,"pedido_id"?: string | null,"precision_m"?: number | null,"realizada_at"?: string | null,"registrada_at"?: string | null,"registrada_por"?: string | null,"ruta_id"?: string
+                    "albaran_id"?: string | null,"cliente_id"?: string | null,"cobrado"?: number | null,"creado_at"?: string,"destino_id"?: string | null,"entrega_id"?: string | null,"envases_entregados"?: number,"envases_recogidos"?: number,"estado"?: Database["public"]['Enums']["estado_parada"],"firma_path"?: string | null,"firmante"?: string | null,"forma_cobro"?: string | null,"fotos"?: (string)[],"id"?: string,"lat"?: number | null,"lineas"?: NonNullable<Json>,"llegada_prevista"?: string | null,"lng"?: number | null,"motivo_fallo"?: string | null,"notas_oficina"?: string | null,"observaciones"?: string | null,"orden"?: number,"pedido_id"?: string | null,"precision_m"?: number | null,"realizada_at"?: string | null,"registrada_at"?: string | null,"registrada_por"?: string | null,"ruta_id"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "paradas_albaran_id_fkey"
+      columns: ["albaran_id"]
+isOneToOne: false
+      referencedRelation: "albaranes"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "paradas_cliente_id_fkey"
       columns: ["cliente_id"]
 isOneToOne: false
       referencedRelation: "clientes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "paradas_destino_id_fkey"
+      columns: ["destino_id"]
+isOneToOne: false
+      referencedRelation: "destinos"
       referencedColumns: ["id"]
     },{
       foreignKeyName: "paradas_pedido_id_fkey"
@@ -554,6 +612,26 @@ isOneToOne: false
       columns: ["comercial_id"]
 isOneToOne: false
       referencedRelation: "perfiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"zonas_reparto": {
+                  Row: {
+                    "activa": boolean,"color": string | null,"creado_at": string,"dias": (number)[],"id": string,"nombre": string,"vehiculo_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "activa"?: boolean,"color"?: string | null,"creado_at"?: string,"dias"?: (number)[],"id"?: string,"nombre": string,"vehiculo_id"?: string | null
+                  }
+                  Update: {
+                    "activa"?: boolean,"color"?: string | null,"creado_at"?: string,"dias"?: (number)[],"id"?: string,"nombre"?: string,"vehiculo_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "zonas_reparto_vehiculo_id_fkey"
+      columns: ["vehiculo_id"]
+isOneToOne: false
+      referencedRelation: "vehiculos"
       referencedColumns: ["id"]
     }
                   ]
