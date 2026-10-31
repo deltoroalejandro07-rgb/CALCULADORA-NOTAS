@@ -19,6 +19,22 @@ const enlace = await page.getByRole("link", { name: "Abrir en WhatsApp" }).getAt
 assert.ok(enlace.startsWith("https://wa.me/") && decodeURIComponent(enlace).endsWith("Gracias"), enlace);
 await page.screenshot({ path: `${SALIDA}/74-seguimiento.png`, fullPage: true });
 
+paso("Visita por voz sin IA: lo dictado va a la nota");
+await page.goto(`${APP}/visita/nueva?cliente=${id}`);
+await page.getByRole("button", { name: "Dictar la visita y que se rellene sola" }).click();
+await page.getByLabel("Lo que has dictado").fill("He estado con Manuel, quiere oferta de cerveza de barril, vuelvo el jueves");
+await page.getByRole("button", { name: "Rellenar la visita" }).click();
+await page.getByText(/La IA aún no está activada.*Lo dictado se ha puesto en la nota/).waitFor();
+assert.match(await page.getByLabel("Nota", { exact: true }).inputValue(), /quiere oferta de cerveza de barril/);
+await page.screenshot({ path: `${SALIDA}/78-visita-voz.png`, fullPage: true });
+
+paso("Foto de tarjeta sin IA: avisa y deja dar de alta a mano");
+await page.goto(`${APP}/clientes/nuevo`);
+await page.getByRole("button", { name: /Rellenar con una foto/ }).waitFor();
+await page.getByLabel("Foto de la tarjeta o la fachada").setInputFiles("public/icon-192.png");
+await page.getByText(/La IA aún no está activada/).waitFor();
+await page.screenshot({ path: `${SALIDA}/79-foto-cliente.png` });
+
 paso("La comercial no entra en «Pregúntale a tu CRM»");
 await page.goto(`${APP}/asistente`);
 await page.waitForURL("**/hoy");

@@ -38,6 +38,7 @@ import {
   SUGERENCIA_PROXIMA,
 } from "@/lib/dominio/visita";
 import { fecha } from "@/lib/formato";
+import { VisitaPorVoz } from "@/components/ia/visita-voz";
 import { useDictado, useEnLinea, useUbicacion } from "@/lib/navegador";
 import { baseLocal, type ClienteLocal, type ClienteNuevo, type VisitaNueva } from "@/lib/offline/db";
 import { encolarVisita } from "@/lib/offline/sincronizar";
@@ -223,6 +224,18 @@ export function FormularioVisita() {
           </p>
         )}
       </Seccion>
+
+      <VisitaPorVoz
+        cliente={cliente?.nombre_negocio ?? nuevo?.nombre_negocio ?? null}
+        onTexto={(t) => setNota((n) => (n ? `${n} ${t}` : t))}
+        onDatos={(d) => {
+          if (d.resultado) elegirResultado(d.resultado);
+          if (d.tipo) setTipo(d.tipo);
+          if (d.interes) setInteres(d.interes);
+          if (d.nota) setNota(d.nota);
+          if (d.proxima_accion || d.proxima_accion_fecha) setProxima((p) => ({ texto: d.proxima_accion ?? p.texto, fecha: d.proxima_accion_fecha ?? p.fecha, tocada: true }));
+        }}
+      />
 
       <Seccion titulo="Resultado">
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-3" role="radiogroup" aria-label="Resultado de la visita">

@@ -1,8 +1,9 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
+import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
-import { ESTADOS_CLIENTE } from "@/lib/dominio/tipos";
+import { ESTADOS_CLIENTE, RESULTADOS_VISITA, TIPOS_NEGOCIO, TIPOS_VISITA } from "@/lib/dominio/tipos";
 import { fechaDentroDe } from "@/lib/dominio/visita";
 import { buscarClientes, consultarAlbaranes, consultarReparto, consultarVisitas, riesgoYPrevision } from "./datos";
 import type { supabaseServidor } from "@/lib/supabase/servidor";
@@ -141,4 +142,80 @@ export async function preguntarCRM(sb: Sb, historial: TurnoChat[]): Promise<stri
     messages: historial.slice(-10).map((t) => ({ role: t.rol === "usuario" ? ("user" as const) : ("assistant" as const), content: t.texto })),
   });
   return textoDe(final);
+}
+
+// ---------- Foto de tarjeta o fachada → ficha de cliente ----------
+
+export const EsquemaFotoCliente = z.object({
+  nombre_negocio: z.string().nullable(),
+  tipo: z.enum(TIPOS_NEGOCIO).nullable(),
+  contacto_nombre: z.string().nullable(),
+  contacto_cargo: z.string().nullable(),
+  telefono: z.string().nullable(),
+  email: z.string().nullable(),
+  direccion: z.string().nullable().describe("Calle y número"),
+  localidad: z.string().nullable(),
+  codigo_postal: z.string().nullable(),
+  horario_visita: z.string().nullable().describe("Horario de apertura si aparece, p. ej. «L-V 8:00-16:00»"),
+  notas: z.string().nullable().describe("Otros datos útiles (web, redes, especialidad), en una frase"),
+});
+export type DatosFotoCliente = z.infer<typeof EsquemaFotoCliente>;
+
+export async function leerFotoClienteIA(base64: string, tipo: "image/jpeg" | "image/png" | "image/webp"): Promise<DatosFotoCliente> {
+  const client = new Anthropic();
+  const r = await client.beta.messages.create({
+    model: MODELO,
+    max_tokens: 4000,
+    output_config: { effort: "low", format: zodOutputFormat(EsquemaFotoCliente) },
+    ...respaldo(),
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "image", source: { type: "base64", media_type: tipo, data: base64 } },
+          {
+            type: "text",
+            text:
+              "Es la foto de una tarjeta de visita, un cartel o la fachada de un negocio de hostelería en España. Extrae los datos para dar de alta al cliente. " +
+              "El tipo es bar, restaurante, cafeteria, hotel, pub, catering u otro. Escribe los nombres con mayúsculas normales (no todo en mayúsculas). " +
+              "No inventes nada: deja a null lo que no se vea.",
+          },
+        ],
+      },
+    ],
+  });
+  const t = textoDe(r);
+  const d = EsquemaFotoCliente.safeParse(JSON.parse(t));
+  if (!d.success) throw new Error("La IA ha devuelto datos incompletos.");
+  return d.data;
+}
+
+// ---------- Visita por voz → campos de la visita ----------
+
+export const EsquemaVisitaVoz = z.object({
+  resultado: z.enum(RESULTADOS_VISITA).nullable().describe("no_estaba: no estaba el responsable; sin_interes; pide_info; interesado; pide_oferta; hace_pedido"),
+  tipo: z.enum(TIPOS_VISITA).nullable().describe("puerta_fria: primera visita; propaganda: dejar folletos; seguimiento; degustacion; toma_pedido; incidencia"),
+  interes: z.string().nullable().describe("Productos que le interesan, separados por comas"),
+  nota: z.string().describe("Resumen claro de lo hablado, en 1-3 frases, en tercera persona"),
+  proxima_accion: z.string().nullable().describe("Lo siguiente que hay que hacer, corto: «Llevar muestras de vermut»"),
+  proxima_accion_fecha: z.string().nullable().describe("AAAA-MM-DD"),
+});
+export type DatosVisitaVoz = z.infer<typeof EsquemaVisitaVoz>;
+
+export async function interpretarVisitaIA(texto: string, ctx: { hoy: string; cliente?: string }): Promise<DatosVisitaVoz> {
+  const client = new Anthropic();
+  const r = await client.beta.messages.create({
+    model: MODELO,
+    max_tokens: 4000,
+    output_config: { effort: "low", format: zodOutputFormat(EsquemaVisitaVoz) },
+    ...respaldo(),
+    system:
+      "Conviertes lo que dicta un comercial de una distribuidora de bebidas a hostelería al salir de una visita en los campos de la visita. " +
+      `Hoy es ${ctx.hoy}. Convierte fechas relativas («el jueves», «la semana que viene», «en 15 días») a AAAA-MM-DD; si no dice cuándo, deja la fecha a null. ` +
+      "No inventes: deja a null lo que no se diga. Corrige errores evidentes del dictado.",
+    messages: [{ role: "user", content: `${ctx.cliente ? `Cliente: ${ctx.cliente}\n` : ""}Dictado: «${texto}»` }],
+  });
+  const d = EsquemaVisitaVoz.safeParse(JSON.parse(textoDe(r)));
+  if (!d.success) throw new Error("La IA ha devuelto datos incompletos.");
+  return d.data;
 }

@@ -92,6 +92,26 @@ describe.skipIf(!disponible)("peticiones a la IA (servidor falso)", () => {
     expect(JSON.stringify(recibidas.at(-1)!.cuerpo.messages)).toContain("Bar Manolo");
   });
 
+  it("lee una foto de tarjeta con salida estructurada", async () => {
+    const { leerFotoClienteIA } = await import("@/lib/ia/ia");
+    const datos = { nombre_negocio: "Bar Paco", tipo: "bar", contacto_nombre: "Paco", contacto_cargo: null, telefono: "600111222", email: null, direccion: "Calle Mayor 1", localidad: "Valencia", codigo_postal: "46001", horario_visita: null, notas: null };
+    respuestas = [mensaje([{ type: "text", text: JSON.stringify(datos) }], "end_turn")];
+    expect(await leerFotoClienteIA("aGVsbG8=", "image/jpeg")).toEqual(datos);
+    const cuerpo = recibidas.at(-1)!.cuerpo as { messages: { content: { type: string }[] }[]; output_config: { format: { type: string } } };
+    expect(cuerpo.messages[0].content[0].type).toBe("image");
+    expect(cuerpo.output_config.format.type).toBe("json_schema");
+  });
+
+  it("convierte un dictado en los campos de la visita, con la fecha de hoy como referencia", async () => {
+    const { interpretarVisitaIA } = await import("@/lib/ia/ia");
+    const datos = { resultado: "pide_oferta", tipo: "seguimiento", interes: "cerveza de barril", nota: "Habló con Paco.", proxima_accion: "Llevar muestras", proxima_accion_fecha: "2026-11-05" };
+    respuestas = [mensaje([{ type: "text", text: JSON.stringify(datos) }], "end_turn")];
+    expect(await interpretarVisitaIA("He estado con Paco…", { hoy: "2026-11-02", cliente: "Bar Paco" })).toEqual(datos);
+    expect(String(recibidas.at(-1)!.cuerpo.system)).toContain("Hoy es 2026-11-02");
+    respuestas = [mensaje([{ type: "text", text: JSON.stringify({ ...datos, resultado: "inventado" }) }], "end_turn")];
+    await expect(interpretarVisitaIA("x", { hoy: "2026-11-02" })).rejects.toThrow("incompletos");
+  });
+
   it("si la IA rechaza la petición, da un error entendible", async () => {
     const { redactarResumenIA } = await import("@/lib/ia/ia");
     respuestas = [mensaje([], "refusal")];

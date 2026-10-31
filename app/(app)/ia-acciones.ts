@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { exigirAdmin, usuarioActual } from "@/lib/auth";
 import { consultarReparto, consultarVisitas, riesgoYPrevision, sumarDias } from "@/lib/ia/datos";
-import { iaDisponible, preguntarCRM, redactarResumenIA, redactarSeguimientoIA, type TurnoChat } from "@/lib/ia/ia";
+import { iaDisponible, interpretarVisitaIA, leerFotoClienteIA, preguntarCRM, redactarResumenIA, redactarSeguimientoIA, type DatosFotoCliente, type DatosVisitaVoz, type TurnoChat } from "@/lib/ia/ia";
 import { TEXTO_RESULTADO } from "@/lib/dominio/tipos";
 import { fechaDentroDe } from "@/lib/dominio/visita";
 import { supabaseServidor } from "@/lib/supabase/servidor";
@@ -98,6 +98,35 @@ export async function preguntar(historial: TurnoChat[]): Promise<{ texto?: strin
   if (!h.success || h.data.at(-1)?.rol !== "usuario") return { error: "Pregunta no válida." };
   try {
     return { texto: await preguntarCRM(await supabaseServidor(), h.data) };
+  } catch (e) {
+    return { error: mensajeError(e) };
+  }
+}
+
+// ---------- Foto → cliente ----------
+
+export async function leerFotoCliente(dataUrl: string): Promise<{ datos?: DatosFotoCliente; error?: string }> {
+  await usuarioActual();
+  if (!iaDisponible()) return { error: SIN_CLAVE };
+  const m = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl);
+  if (!m) return { error: "La foto no es válida." };
+  if (m[2].length > 6_000_000) return { error: "La foto es demasiado grande." };
+  try {
+    return { datos: await leerFotoClienteIA(m[2], m[1] as "image/jpeg") };
+  } catch (e) {
+    return { error: mensajeError(e) };
+  }
+}
+
+// ---------- Visita por voz ----------
+
+export async function interpretarVisita(texto: string, cliente: string | null): Promise<{ datos?: DatosVisitaVoz; error?: string }> {
+  await usuarioActual();
+  if (!iaDisponible()) return { error: SIN_CLAVE };
+  const t = texto.trim();
+  if (t.length < 5) return { error: "Dicta un poco más sobre la visita." };
+  try {
+    return { datos: await interpretarVisitaIA(t.slice(0, 3000), { hoy: fechaDentroDe(0), cliente: cliente ?? undefined }) };
   } catch (e) {
     return { error: mensajeError(e) };
   }

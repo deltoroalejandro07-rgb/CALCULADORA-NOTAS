@@ -1,9 +1,11 @@
 "use client";
 
 import { LocateFixed, Trash2 } from "lucide-react";
-import { startTransition, useActionState, useState } from "react";
+import { startTransition, useActionState, useRef, useState } from "react";
 import { borrarCliente, guardarCliente, type EstadoFormulario } from "@/app/(app)/clientes/acciones";
+import { FotoCliente } from "@/components/ia/foto-cliente";
 import { Boton } from "@/components/ui/boton";
+import type { DatosFotoCliente } from "@/lib/ia/ia";
 import type { DatosCliente } from "@/lib/dominio/cliente";
 import { ESTADOS_CLIENTE, TEXTO_ESTADO, TEXTO_TIPO_NEGOCIO, TIPOS_NEGOCIO, type EstadoCliente } from "@/lib/dominio/tipos";
 
@@ -48,6 +50,18 @@ export function FormularioCliente({
   const [coords, setCoords] = useState({ lat: inicial.lat, lng: inicial.lng });
   const [gps, setGps] = useState<string | null>(null);
   const e = estado.campos ?? {};
+  const formulario = useRef<HTMLFormElement>(null);
+
+  /** Rellena los campos con lo leído de la foto (sin borrar lo que ya hubiera si no se leyó nada). */
+  function rellenarDesdeFoto(d: DatosFotoCliente) {
+    const f = formulario.current;
+    if (!f) return;
+    for (const [k, v] of Object.entries(d)) {
+      if (!v) continue;
+      const el = f.elements.namedItem(k);
+      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) el.value = String(v);
+    }
+  }
 
   function usarUbicacion() {
     setGps("Buscando…");
@@ -64,6 +78,7 @@ export function FormularioCliente({
   return (
     <>
       <form
+        ref={formulario}
         // Envío manual: con `action={...}` React vacía el formulario tras un error de validación y se pierde lo escrito
         onSubmit={(ev) => {
           ev.preventDefault();
@@ -73,6 +88,7 @@ export function FormularioCliente({
         className="space-y-4 px-4 pb-8"
       >
         {inicial.id && <input type="hidden" name="id" value={inicial.id} />}
+        {!inicial.id && <FotoCliente onDatos={rellenarDesdeFoto} />}
         <input type="hidden" name="lat" value={coords.lat ?? ""} />
         <input type="hidden" name="lng" value={coords.lng ?? ""} />
 
