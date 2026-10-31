@@ -19,7 +19,15 @@ export const avisosConfigurados = () => !!(process.env.NEXT_PUBLIC_VAPID_PUBLIC_
 export async function enviarAvisos(usuarioIds: string[], aviso: Aviso): Promise<number> {
   const admin = supabaseAdmin();
   if (!avisosConfigurados() || !admin || !usuarioIds.length) return 0;
-  webpush.setVapidDetails(process.env.NEXT_PUBLIC_SITE_URL ?? "https://crm-comercial-mu.vercel.app", process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!, process.env.VAPID_PRIVATE_KEY!);
+  // El «asunto» debe ser una URL https o un mailto: (si no, web-push no envía nada)
+  const sitio = (process.env.NEXT_PUBLIC_SITE_URL ?? "").trim();
+  const asunto = /^(https:\/\/|mailto:)/.test(sitio) ? sitio : sitio && !sitio.includes("://") ? `https://${sitio.replace(/\/+$/, "")}` : "https://crm-comercial-mu.vercel.app";
+  try {
+    webpush.setVapidDetails(asunto, process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!.trim(), process.env.VAPID_PRIVATE_KEY!.trim());
+  } catch (e) {
+    console.error("Claves de avisos no válidas:", e);
+    throw new Error("Las claves de los avisos no son válidas: vuelve a crearlas en Ajustes → Avisos y pégalas en Vercel.");
+  }
   const { data: subs } = await admin.from("push_suscripciones").select("id, endpoint, p256dh, auth").in("usuario_id", [...new Set(usuarioIds)]);
   let enviados = 0;
   const caducadas: string[] = [];

@@ -32,7 +32,12 @@ export async function borrarSuscripcion(endpoint: string) {
 export async function avisoDePrueba(): Promise<{ ok?: string; error?: string }> {
   const u = await usuarioActual();
   if (!avisosConfigurados()) return { error: "Los avisos aún no están configurados en el servidor." };
-  const n = await enviarAvisos([u.id], { titulo: "✓ Avisos activados", cuerpo: "Así te llegarán los recordatorios de dliverygo.", url: "/hoy" });
+  let n = 0;
+  try {
+    n = await enviarAvisos([u.id], { titulo: "✓ Avisos activados", cuerpo: "Así te llegarán los recordatorios de dliverygo.", url: "/hoy" });
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "No se ha podido enviar el aviso." };
+  }
   return n ? { ok: n === 1 ? "Aviso enviado a tu móvil." : `Aviso enviado a tus ${n} dispositivos.` } : { error: "No se ha podido enviar. Desactiva y vuelve a activar los avisos." };
 }
 
