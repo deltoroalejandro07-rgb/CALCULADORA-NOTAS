@@ -117,6 +117,59 @@ export async function anularAlbaran(form: FormData) {
   refresh();
 }
 
+type Sb = Awaited<ReturnType<typeof supabaseServidor>>;
+
+/** Borra los PDF que ya no use ningún albarán (un PDF puede traer varios). */
+async function borrarPdfsHuerfanos(sb: Sb, paths: (string | null)[]) {
+  const unicos = [...new Set(paths.filter((x): x is string => !!x))];
+  if (!unicos.length) return;
+  const { data: siguen } = await sb.from("albaranes").select("archivo_path").in("archivo_path", unicos);
+  const usados = new Set((siguen ?? []).map((a) => a.archivo_path));
+  const sobran = unicos.filter((x) => !usados.has(x));
+  if (sobran.length) await sb.storage.from("albaranes").remove(sobran);
+}
+
+/** Borra de verdad un albarán por repartir o ya en una ruta (sin entregar): sale de la ruta y se puede volver a subir. */
+export async function borrarAlbaran(form: FormData) {
+  await exigirAdmin();
+  const aid = id.parse(form.get("id"));
+  const sb = await supabaseServidor();
+  const { data: a } = await sb.from("albaranes").select("id, estado, archivo_path").eq("id", aid).maybeSingle();
+  if (!a || !["pendiente", "planificado", "anulado"].includes(a.estado)) return;
+  const { error: e1 } = await sb.from("paradas").delete().eq("albaran_id", aid).eq("estado", "pendiente");
+  if (e1) throw new Error(e1.message);
+  const { error: e2 } = await sb.from("albaranes").delete().eq("id", aid);
+  if (e2) throw new Error(e2.message);
+  await borrarPdfsHuerfanos(sb, [a.archivo_path]);
+  refresh();
+}
+
+/**
+ * Empezar de cero (tras las pruebas): borra todos los albaranes, sus PDF, sus paradas (también las ya
+ * entregadas) y las rutas que se queden vacías. No toca zonas, vehículos, almacén ni nada del CRM.
+ */
+export async function vaciarAlbaranes(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+  await exigirAdmin();
+  const conDirecciones = form.get("direcciones") === "on";
+  const sb = await supabaseServidor();
+  const { data, error } = await sb.rpc("vaciar_albaranes", { p_destinos: conDirecciones });
+  if (error) return { error: `No se ha podido borrar todo: ${error.message}` };
+  const r = data as { albaranes: number; rutas: number; archivos: string[]; pdfs: string[] };
+  if (r.archivos.length) await sb.storage.from("entregas").remove(r.archivos);
+  if (r.pdfs.length) await sb.storage.from("albaranes").remove(r.pdfs);
+  // También los PDF subidos dos veces, que ya no usa ningún albarán
+  for (let vuelta = 0; vuelta < 20; vuelta++) {
+    const { data: sueltos } = await sb.storage.from("albaranes").list("", { limit: 100 });
+    const nombres = (sueltos ?? []).filter((f) => f.id).map((f) => f.name);
+    if (!nombres.length) break;
+    await sb.storage.from("albaranes").remove(nombres);
+  }
+  refresh();
+  return {
+    ok: `Hecho: ${r.albaranes === 1 ? "1 albarán borrado" : `${r.albaranes} albaranes borrados`}${r.rutas ? ` y ${r.rutas === 1 ? "1 ruta" : `${r.rutas} rutas`}` : ""}${conDirecciones ? ", también las direcciones guardadas" : ""}. Todo listo para empezar.`,
+  };
+}
+
 /** Corrige un destino: zona, horario, dirección (se vuelve a situar en el mapa), acceso y descarga. */
 export async function editarDestino(_: EstadoForm, form: FormData): Promise<EstadoForm> {
   await exigirAdmin();

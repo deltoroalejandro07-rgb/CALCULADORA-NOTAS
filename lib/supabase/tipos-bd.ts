@@ -673,7 +673,10 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "buscar_posibles_duplicados":
+            "borrar_ruta_completa":
+{ Args: { "p_ruta": string }; Returns: (string)[]
+                           },
+"buscar_posibles_duplicados":
 { Args: { "p_nombre": string,"p_telefono"?: string }; Returns: {
               "comercial": string,"es_mio": boolean,"id": string,"nombre_negocio": string,"zona": string
             }[]
@@ -688,6 +691,9 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: string
                            },
 "mi_reparto":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"mis_dias_reparto":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "puede_registrar_parada":
@@ -708,6 +714,9 @@ isOneToOne: false
 "registrar_entrega":
 { Args: { "p_datos": Json,"p_entrega": string,"p_estado": Database["public"]['Enums']["estado_parada"],"p_parada": string }; Returns: string
                            },
+"reparto_del_dia":
+{ Args: { "p_fecha": string }; Returns: Json
+                           },
 "show_limit":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
@@ -716,6 +725,9 @@ isOneToOne: false
                            },
 "siguiente_estado":
 { Args: { "actual": Database["public"]['Enums']["estado_cliente"],"r": Database["public"]['Enums']["resultado_visita"] }; Returns: Database["public"]['Enums']["estado_cliente"]
+                           },
+"vaciar_albaranes":
+{ Args: { "p_destinos"?: boolean }; Returns: Json
                            }
           }
           Enums: {

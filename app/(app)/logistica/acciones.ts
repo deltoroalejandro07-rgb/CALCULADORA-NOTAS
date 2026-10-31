@@ -136,6 +136,21 @@ export async function borrarRuta(form: FormData) {
   redirect("/logistica");
 }
 
+/**
+ * Borra una ruta aunque ya tenga entregas (p. ej. una ruta de prueba), desde Mi reparto → Días.
+ * Sus albaranes vuelven a «por repartir» (de ahí se pueden borrar si eran de prueba).
+ */
+export async function borrarRutaCompleta(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+  await exigirAdmin();
+  const rid = id.parse(form.get("id"));
+  const sb = await supabaseServidor();
+  const { data: archivos, error } = await sb.rpc("borrar_ruta_completa", { p_ruta: rid });
+  if (error) return { error: `No se ha podido borrar: ${error.message}` };
+  if (archivos?.length) await sb.storage.from("entregas").remove(archivos);
+  refresh();
+  return { ok: "Ruta borrada." };
+}
+
 async function paradasDe(rutaId: string) {
   const sb = await supabaseServidor();
   const { data } = await sb.from("paradas").select("id, orden, estado").eq("ruta_id", rutaId).order("orden");

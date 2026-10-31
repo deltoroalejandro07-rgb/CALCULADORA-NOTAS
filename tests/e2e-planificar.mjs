@@ -156,6 +156,45 @@ await movil.page.getByText(/✓ .*: entregado/).waitFor();
 for (let i = 0; i < 40 && sql("select count(*) from albaranes where estado = 'entregado'") !== "1"; i++) await movil.page.waitForTimeout(300);
 assert.equal(sql("select count(*) from albaranes where estado = 'entregado'"), "1", "el albarán pasa a entregado");
 
+paso("El conductor ve sus rutas por días");
+await movil.page.goto(`${APP}/reparto`);
+await movil.page.getByRole("link", { name: /Ver rutas por días/ }).click();
+await movil.page.waitForURL("**/reparto/dias");
+await movil.page.getByText(/^Hoy, /).waitFor();
+await movil.page.getByText(/Entregado \d{2}:\d{2}/).first().waitFor();
+await movil.page.getByText("1/4 entregadas").waitFor();
+assert.equal(await movil.page.getByRole("button", { name: "Borrar esta ruta" }).count(), 0, "el conductor no puede borrar");
+await movil.page.screenshot({ path: `${SALIDA}/68-dias.png`, fullPage: true });
+const ayer = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+await movil.page.getByRole("button", { name: "Día anterior" }).click();
+await movil.page.getByText("No hubo reparto este día.").waitFor();
+assert.ok(movil.page.url().includes("fecha="), ayer);
+
+paso("La oficina borra la ruta de prueba (con una entrega hecha) desde Rutas por días");
+page.once("dialog", (d) => d.accept());
+await page.goto(`${APP}/reparto/dias?fecha=${hoy}`);
+await page.getByRole("button", { name: "Borrar esta ruta" }).click();
+await page.getByText("No hubo reparto este día.").waitFor();
+assert.equal(sql("select count(*) from rutas"), "0");
+assert.equal(sql("select count(*) from albaranes where estado = 'pendiente'"), sql("select count(*) from albaranes"), "todos vuelven a por repartir");
+
+paso("Borrar un albarán suelto y luego todo para empezar de cero");
+await page.goto(`${APP}/logistica/albaranes`);
+const antes = Number(sql("select count(*) from albaranes"));
+page.once("dialog", (d) => d.accept());
+await page.getByRole("button", { name: "Borrar albarán de KIOSKO DE PRUEBA" }).click();
+for (let i = 0; i < 30 && Number(sql("select count(*) from albaranes")) !== antes - 1; i++) await page.waitForTimeout(300);
+assert.equal(Number(sql("select count(*) from albaranes")), antes - 1);
+await page.getByRole("button", { name: /Borrar todo y empezar de cero/ }).click();
+page.once("dialog", (d) => d.accept());
+await page.getByRole("button", { name: "Borrar todo", exact: true }).click();
+await page.getByText(/albaranes borrados.*Todo listo para empezar/).waitFor();
+await page.screenshot({ path: `${SALIDA}/69-vaciado.png`, fullPage: true });
+assert.equal(sql("select count(*) from albaranes"), "0");
+assert.ok(Number(sql("select count(*) from destinos")) > 0, "las direcciones se quedan si no se marca");
+assert.equal(sql("select count(*) from storage.objects where bucket_id = 'albaranes'"), "0", "PDF borrados");
+assert.equal(sql("select count(*) from zonas_reparto"), "1", "las zonas se quedan");
+
 assert.deepEqual([...errores, ...movil.errores], [], "sin errores en la consola");
 await navegador.close();
 await movil.navegador.close();

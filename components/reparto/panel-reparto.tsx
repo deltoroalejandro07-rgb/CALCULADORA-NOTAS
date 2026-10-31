@@ -1,7 +1,8 @@
 "use client";
 
 import { useLiveQuery } from "dexie-react-hooks";
-import { AlertTriangle, Check, ChevronLeft, ChevronRight, ClipboardList, CloudOff, CloudUpload, Loader2, Navigation, Phone, RefreshCw, Truck, X } from "lucide-react";
+import { AlertTriangle, CalendarDays, Check, ChevronLeft, ChevronRight, ClipboardList, CloudOff, CloudUpload, Loader2, Navigation, Phone, RefreshCw, Truck, X } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Boton } from "@/components/ui/boton";
 import { cn } from "@/lib/cn";
@@ -258,6 +259,11 @@ export function PanelReparto() {
             </Boton>
           )}
         </div>
+        {enLinea && (
+          <Link href="/reparto/dias" className="mx-4 flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-borde bg-superficie text-sm font-medium active:bg-fondo">
+            <CalendarDays className="h-4 w-4" aria-hidden /> Ver rutas por días (días pasados)
+          </Link>
+        )}
       </div>
     );
   }
@@ -375,6 +381,12 @@ export function PanelReparto() {
           )}
         </div>
       </section>
+
+      {enLinea && (
+        <Link href="/reparto/dias" className="mx-4 flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-borde bg-superficie text-sm font-medium active:bg-fondo">
+          <CalendarDays className="h-4 w-4" aria-hidden /> Ver rutas por días (días pasados)
+        </Link>
+      )}
 
       {siguiente ? (
         <section className="px-4">

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Cabecera, Cargando } from "@/components/app/piezas";
-import { AltaManual, ListaAlbaranes, SubirAlbaranes, type AlbaranPendiente } from "@/components/logistica/albaranes";
+import { AltaManual, ListaAlbaranes, SubirAlbaranes, VaciarAlbaranes, type AlbaranPendiente } from "@/components/logistica/albaranes";
 import { exigirAdmin } from "@/lib/auth";
 import { supabaseServidor } from "@/lib/supabase/servidor";
 
@@ -48,6 +48,7 @@ async function Contenido() {
       <SubirAlbaranes />
       <AltaManual destinos={destinos ?? []} zonas={zonas ?? []} />
       <ListaAlbaranes albaranes={lista} zonas={zonas ?? []} />
+      <VaciarAlbaranes />
     </div>
   );
 }

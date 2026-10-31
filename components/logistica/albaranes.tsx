@@ -4,7 +4,7 @@ import { AlertTriangle, CheckCircle2, ChevronDown, ExternalLink, FileUp, MapPinn
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { startTransition, useActionState, useMemo, useRef, useState } from "react";
-import { altaManual, anularAlbaran, asignarZona, editarDestino, reubicarPendientes, type EstadoForm } from "@/app/(app)/logistica/acciones-planificar";
+import { altaManual, asignarZona, borrarAlbaran, editarDestino, reubicarPendientes, vaciarAlbaranes, type EstadoForm } from "@/app/(app)/logistica/acciones-planificar";
 import type { RespuestaImportar } from "@/app/api/logistica/albaranes/route";
 import { Tarjeta } from "@/components/app/piezas";
 import { Boton } from "@/components/ui/boton";
@@ -432,24 +432,25 @@ export function ListaAlbaranes({ albaranes, zonas }: { albaranes: AlbaranPendien
               </div>
             )}
           </div>
-          {a.estado === "pendiente" && (
-            <div className="flex shrink-0 gap-1">
+          <div className="flex shrink-0 gap-1">
+            {a.estado === "pendiente" && (
               <button type="button" onClick={() => setEditando(editando === a.id ? null : a.id)} aria-label={`Editar ${a.destino.nombre}`} className="rounded-full p-2 text-suave active:bg-fondo">
                 <Pencil className="h-5 w-5" />
               </button>
-              <form
-                action={anularAlbaran}
-                onSubmit={(e) => {
-                  if (!confirm("¿Quitar este albarán de los pendientes?")) e.preventDefault();
-                }}
-              >
-                <input type="hidden" name="id" value={a.id} />
-                <button type="submit" aria-label="Quitar albarán" className="rounded-full p-2 text-red-600 active:bg-fondo">
-                  <Trash2 className="h-5 w-5" />
-                </button>
-              </form>
-            </div>
-          )}
+            )}
+            <form
+              action={borrarAlbaran}
+              onSubmit={(e) => {
+                const txt = `¿Borrar el albarán${a.numero ? ` ${a.numero}` : ""} de ${a.destino.nombre}?${a.estado === "planificado" ? " También sale de su ruta." : ""}`;
+                if (!confirm(txt)) e.preventDefault();
+              }}
+            >
+              <input type="hidden" name="id" value={a.id} />
+              <button type="submit" aria-label={`Borrar albarán de ${a.destino.nombre}`} className="rounded-full p-2 text-red-600 active:bg-fondo">
+                <Trash2 className="h-5 w-5" />
+              </button>
+            </form>
+          </div>
         </div>
         {editando === a.id && <EditarDestino d={a.destino} zonas={zonas} alCerrar={() => setEditando(null)} />}
       </li>
@@ -511,6 +512,50 @@ export function ListaAlbaranes({ albaranes, zonas }: { albaranes: AlbaranPendien
         const fechas = pendientes.map((a) => a.fecha).filter(Boolean) as string[];
         return fechas.length ? <p className="text-xs text-suave">Albaranes del {formatoFecha(fechas.sort()[0])} al {formatoFecha(fechas.sort().at(-1)!)}.</p> : null;
       })()}
+    </section>
+  );
+}
+
+// ---------- Empezar de cero ----------
+
+export function VaciarAlbaranes() {
+  const [estado, accion, pendiente] = useActionState<EstadoForm, FormData>(vaciarAlbaranes, {});
+  const [abierto, setAbierto] = useState(false);
+  return (
+    <section className="rounded-2xl border border-red-200 p-4 dark:border-red-900">
+      <button type="button" onClick={() => setAbierto((v) => !v)} className="flex w-full items-center justify-between text-sm font-semibold text-red-700 dark:text-red-300">
+        <span className="flex items-center gap-1.5">
+          <Trash2 className="h-4 w-4" aria-hidden /> Borrar todo y empezar de cero
+        </span>
+        <ChevronDown className={cn("h-4 w-4 transition", abierto && "rotate-180")} aria-hidden />
+      </button>
+      {estado.ok && <p className="mt-2 text-sm text-emerald-700 dark:text-emerald-300">✓ {estado.ok}</p>}
+      {abierto && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!confirm("¿Seguro? Se borran TODOS los albaranes, sus PDF y sus rutas (también las entregas hechas). No se puede deshacer.")) return;
+            const datos = new FormData(e.currentTarget);
+            startTransition(() => accion(datos));
+          }}
+          className="mt-3 space-y-3 text-sm"
+        >
+          <p className="text-suave">
+            Para dejarlo limpio después de las pruebas. Se borran <strong>todos los albaranes</strong> (por repartir, en ruta y entregados), sus PDF y las rutas de reparto. <strong>Se quedan</strong> tus zonas, vehículos, almacén, usuarios y todo el CRM.
+          </p>
+          <label className="flex items-start gap-2">
+            <input type="checkbox" name="direcciones" className="mt-0.5 h-5 w-5 accent-red-600" />
+            <span>
+              Borrar también las direcciones de clientes guardadas (zona, horario y direcciones corregidas).
+              <span className="block text-xs text-suave">Si lo dejas sin marcar, al subir el PDF de ese cliente otra vez ya sale con su zona y su dirección corregida.</span>
+            </span>
+          </label>
+          {estado.error && <p className="text-red-600">{estado.error}</p>}
+          <Boton type="submit" variante="secundario" cargando={pendiente} className="w-full text-red-600">
+            <Trash2 className="h-5 w-5" aria-hidden /> Borrar todo
+          </Boton>
+        </form>
+      )}
     </section>
   );
 }
