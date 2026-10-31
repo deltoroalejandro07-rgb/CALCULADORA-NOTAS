@@ -237,6 +237,7 @@ interface Destino {
   localidad: string | null;
   codigo_postal: string | null;
   lat: number | null;
+  lng: number | null;
   zona_id: string | null;
   ventana_desde: string | null;
   ventana_hasta: string | null;
@@ -403,7 +404,22 @@ export function ListaAlbaranes({ albaranes, zonas }: { albaranes: AlbaranPendien
             </p>
             <p className="flex items-center gap-1 text-xs text-suave">
               {a.destino.lat == null && <MapPinOff className="h-3.5 w-3.5 shrink-0 text-red-600" aria-label="Sin ubicación" />}
-              {[a.destino.direccion, a.destino.localidad].filter(Boolean).join(", ") || "Sin dirección"}
+              {a.destino.direccion || a.destino.localidad ? (
+                <a
+                  href={
+                    a.destino.lat != null
+                      ? `https://www.google.com/maps/search/?api=1&query=${a.destino.lat},${a.destino.lng}`
+                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([a.destino.direccion, a.destino.codigo_postal, a.destino.localidad].filter(Boolean).join(", "))}`
+                  }
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline decoration-dotted underline-offset-2"
+                >
+                  {[a.destino.direccion, a.destino.localidad].filter(Boolean).join(", ")}
+                </a>
+              ) : (
+                "Sin dirección"
+              )}
             </p>
             <p className="text-xs">
               {franja ? <span className="font-medium text-marca">🕘 {franja}</span> : a.destino.horario_texto ? <span className="text-amber-700 dark:text-amber-300">🕘 «{a.destino.horario_texto}» sin interpretar</span> : <span className="text-suave">Sin horario</span>}

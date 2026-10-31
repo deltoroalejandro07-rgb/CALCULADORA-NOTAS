@@ -1,11 +1,10 @@
 "use client";
 
-import { ChevronRight, List, Map as MapaIcono, Search, SlidersHorizontal } from "lucide-react";
+import { ChevronRight, Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Demo, EtiquetaEstado, IconoTemperatura } from "@/components/app/piezas";
-import { MapaDinamico } from "@/components/mapa/mapa-dinamico";
 import { Chip } from "@/components/ui/chip";
 import { cn } from "@/lib/cn";
 import { calcularTemperatura, TEXTO_TEMPERATURA, type Temperatura } from "@/lib/dominio/temperatura";
@@ -73,7 +72,6 @@ export function ListaClientes({ clientes, esAdmin }: { clientes: ClienteLista[];
   const [tipo, setTipo] = useState<TipoNegocio | "">("");
   const [zona, setZona] = useState("");
   const [verFiltros, setVerFiltros] = useState(false);
-  const [vista, setVista] = useState<"lista" | "mapa">("lista");
 
   const zonas = useMemo(() => [...new Set(clientes.map((c) => c.zona).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, "es")), [clientes]);
   const conTemp = useMemo(() => clientes.map((c) => ({ c, t: calcularTemperatura(c) })), [clientes]);
@@ -193,40 +191,10 @@ export function ListaClientes({ clientes, esAdmin }: { clientes: ClienteLista[];
           <p className="text-sm text-suave">
             {filtrados.length} de {clientes.length}
           </p>
-          <div className="flex rounded-xl border border-borde p-0.5" role="tablist" aria-label="Vista">
-            {(
-              [
-                ["lista", "Lista", List],
-                ["mapa", "Mapa", MapaIcono],
-              ] as const
-            ).map(([v, texto, Icono]) => (
-              <button
-                key={v}
-                role="tab"
-                aria-selected={vista === v}
-                onClick={() => setVista(v)}
-                className={cn("flex min-h-9 items-center gap-1 rounded-lg px-3 text-sm", vista === v ? "bg-marca text-marca-texto" : "text-suave")}
-              >
-                <Icono className="h-4 w-4" aria-hidden /> {texto}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
 
-      {vista === "mapa" ? (
-        <div className="mt-2 px-4">
-          <MapaDinamico
-            puntos={filtrados
-              .filter(({ c }) => c.lat != null && c.lng != null)
-              .map(({ c }) => ({ id: c.id, nombre: c.nombre_negocio, lat: c.lat!, lng: c.lng!, estado: c.estado, detalle: c.zona ?? undefined }))}
-          />
-          <p className="mt-1 text-xs text-suave">
-            {filtrados.filter(({ c }) => c.lat == null).length} sin ubicación no aparecen en el mapa. Gris: prospecto · Ámbar: interesado · Verde: cliente · Rojo: perdido.
-          </p>
-        </div>
-      ) : (
-        <ul className="mt-2 divide-y divide-borde border-y border-borde bg-superficie">
+      <ul className="mt-2 divide-y divide-borde border-y border-borde bg-superficie">
           {filtrados.map(({ c, t }) => {
             const vencido = c.proxima_accion_fecha && c.proxima_accion_fecha < fechaDentroDe(0);
             return (
@@ -258,8 +226,7 @@ export function ListaClientes({ clientes, esAdmin }: { clientes: ClienteLista[];
             );
           })}
           {filtrados.length === 0 && <li className="px-4 py-8 text-center text-sm text-suave">No hay clientes con estos filtros.</li>}
-        </ul>
-      )}
+      </ul>
 
     </>
   );

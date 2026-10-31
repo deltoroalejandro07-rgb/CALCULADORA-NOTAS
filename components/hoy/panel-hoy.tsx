@@ -4,7 +4,6 @@ import { AlarmClock, CalendarDays, ChevronRight, Flame, Navigation, Plus, Snowfl
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Demo } from "@/components/app/piezas";
-import { MapaDinamico } from "@/components/mapa/mapa-dinamico";
 import { cn } from "@/lib/cn";
 import { enlaceRutaGoogle, longitudRuta, MAX_PARADAS_ENLACE, ordenarRuta } from "@/lib/dominio/ruta";
 import { TEXTO_RESULTADO, TEXTO_TIPO_NEGOCIO, type EstadoCliente, type ResultadoVisita, type TipoNegocio } from "@/lib/dominio/tipos";
@@ -121,21 +120,29 @@ export function PanelHoy({ clientes }: { clientes: ClienteHoy[] }) {
               · {ruta.length} parada{ruta.length === 1 ? "" : "s"} · {textoDistancia(longitudRuta(ruta, pos))}
             </span>
           </h2>
-          <MapaDinamico puntos={ruta.map((c) => ({ id: c.id, nombre: c.nombre_negocio, lat: c.lat, lng: c.lng, estado: c.estado, detalle: c.proxima_accion ?? undefined }))} ruta yo={pos} alto="45vh" />
-          <ol className="space-y-1 text-sm">
+          <ol className="divide-y divide-borde overflow-hidden rounded-2xl border border-borde bg-superficie text-sm">
             {ruta.map((c, i) => (
-              <li key={c.id} className="flex gap-2">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-marca text-xs font-bold text-marca-texto">{i + 1}</span>
-                <Link href={`/clientes/${c.id}`} className="truncate">
-                  {c.nombre_negocio}
-                  <span className="text-suave"> · {c.horario_visita ?? c.zona ?? ""}</span>
+              <li key={c.id} className="flex items-center gap-3 px-3 py-2">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-marca text-xs font-bold text-marca-texto">{i + 1}</span>
+                <Link href={`/clientes/${c.id}`} className="min-w-0 flex-1">
+                  <span className="block truncate font-medium">{c.nombre_negocio}</span>
+                  <span className="block truncate text-xs text-suave">{[c.horario_visita, c.direccion ?? c.zona].filter(Boolean).join(" · ")}</span>
                 </Link>
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`Abrir ${c.nombre_negocio} en Google Maps`}
+                  className="flex shrink-0 items-center gap-1 rounded-lg bg-marca-suave px-2.5 py-2 text-xs font-semibold text-marca"
+                >
+                  <Navigation className="h-4 w-4" aria-hidden /> Ir
+                </a>
               </li>
             ))}
           </ol>
           {enlace && (
             <a href={enlace} target="_blank" rel="noreferrer" className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-marca font-semibold text-marca-texto">
-              <Navigation className="h-5 w-5" aria-hidden /> Navegar con Google Maps
+              <Navigation className="h-5 w-5" aria-hidden /> Toda la ruta en Google Maps
               {ruta.length > MAX_PARADAS_ENLACE && <span className="text-xs font-normal">(primeras {MAX_PARADAS_ENLACE})</span>}
             </a>
           )}

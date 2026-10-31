@@ -21,9 +21,12 @@ paso("Hoy (Ana): listas y ruta del día");
 await entrar(page, "ana@demo.local");
 await page.getByText("Seguimientos vencidos").waitFor();
 await page.getByRole("heading", { name: /Ruta del día/ }).waitFor();
-await page.getByRole("link", { name: /Navegar con Google Maps/ }).waitFor();
-const nav = await page.getByRole("link", { name: /Navegar con Google Maps/ }).getAttribute("href");
+await page.getByRole("link", { name: /Toda la ruta en Google Maps/ }).waitFor();
+const nav = await page.getByRole("link", { name: /Toda la ruta en Google Maps/ }).getAttribute("href");
 assert.match(nav, /^https:\/\/www\.google\.com\/maps\/dir\/\?api=1&destination=/);
+// Sin mapa propio: cada visita abre Google Maps
+assert.equal(await page.locator(".leaflet-container").count(), 0);
+assert.match(await page.getByRole("link", { name: /^Abrir .* en Google Maps$/ }).first().getAttribute("href"), /^https:\/\/www\.google\.com\/maps\/dir\/\?api=1&destination=-?\d/);
 await page.screenshot({ path: `${SALIDA}/30-hoy.png`, fullPage: true });
 await page.getByRole("link", { name: /^\d+\s*Seguimientos vencidos$/ }).click();
 await page.waitForURL("**/clientes?filtro=vencidos");

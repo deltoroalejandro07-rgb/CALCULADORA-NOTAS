@@ -4,15 +4,15 @@ App web instalable (PWA, móvil primero) para una distribuidora al canal hostele
 
 **Producción:** https://crm-comercial-mu.vercel.app · **Cuentas y claves pendientes:** [`docs/GUIA-CUENTAS.md`](docs/GUIA-CUENTAS.md) · **Textos de privacidad:** [`docs/TEXTO-RGPD.md`](docs/TEXTO-RGPD.md)
 
-**Stack:** Next.js 16 (App Router, Cache Components) · TypeScript · Tailwind 4 · Supabase (Postgres, Auth, RLS, Storage) · Dexie (IndexedDB) · Leaflet + OpenStreetMap · Vitest · Playwright · Vercel.
+**Stack:** Next.js 16 (App Router, Cache Components) · TypeScript · Tailwind 4 · Supabase (Postgres, Auth, RLS, Storage) · Dexie (IndexedDB) · Vitest · Playwright · Vercel.
 
 ## Qué hace (fase 1)
 
 | Pantalla | Para qué |
 |---|---|
-| **Hoy** | Seguimientos vencidos y de hoy, oportunidades calientes, clientes sin visitar +30 días y ruta del día en el mapa (ordenada desde tu posición, con enlace a Google Maps). |
+| **Hoy** | Seguimientos vencidos y de hoy, oportunidades calientes, clientes sin visitar +30 días y ruta del día ordenada desde tu posición (cada parada y la ruta completa se abren en Google Maps). |
 | **Nueva visita (+)** | Cliente cercano por GPS o alta rápida con aviso de duplicados, resultado, qué productos le interesan (texto libre), nota o dictado, fotos, material, próxima acción y consentimiento. **Funciona sin cobertura** y se sube sola al volver la red. |
-| **Clientes** | Búsqueda, filtros (estado, temperatura, tipo, zona, vencidos…), mapa, alta. **Ficha**: llamar, WhatsApp, email, cómo llegar, próxima acción, lo que le interesa, consentimiento por canal, historial (visitas con fotos, mensajes), exportar datos (RGPD). |
+| **Clientes** | Búsqueda, filtros (estado, temperatura, tipo, zona, vencidos…), alta. **Ficha**: llamar, WhatsApp, email, cómo llegar, próxima acción, lo que le interesa, consentimiento por canal, historial (visitas con fotos, mensajes), exportar datos (RGPD). |
 | **Mensajes** | Historial de envíos, plantillas con variables, envío individual y **campañas por segmento** (abre WhatsApp/email con el texto personalizado y lo registra). Solo a clientes con consentimiento; aviso de baja automático. |
 | **Más** | Mi reparto, tema claro/oscuro, cambiar contraseña, cerrar sesión. Para el administrador: panel de dirección, usuarios, importar/exportar y logística. |
 | **Logística** (admin) | Vehículos y almacén; rutas por día con los pedidos por repartir, orden por cercanía, hoja de carga; entregas con firma y **albarán** imprimible. |
@@ -64,7 +64,7 @@ El service worker (uso sin cobertura) solo se activa en producción: `npm run bu
 |---|---|
 | `node tests/e2e-capturas.mjs <dir>` | Login, navegación, permisos, tema oscuro |
 | `node tests/e2e-visita.mjs <dir>` | Visita con y sin cobertura, arranque sin red, subida automática |
-| `node tests/e2e-clientes.mjs <dir>` | Lista, filtros, mapa, ficha, edición, consentimiento, RGPD |
+| `node tests/e2e-clientes.mjs <dir>` | Lista, filtros, ficha, edición, consentimiento, RGPD |
 | `node tests/e2e-enlace.mjs` | Acceso con el enlace del email |
 | `node tests/e2e-fase1.mjs <dir>` | Hoy, usuarios, plantillas, campañas, dirección, importar/exportar |
 | `node tests/e2e-planificar.mjs <dir>` | Ruta automática: zonas, subir PDF de Holded, no duplicar, alta manual, calcular, aceptar y entregar |

@@ -119,7 +119,13 @@ export function ListaParadas({ rutaId, paradas, editable, reordenable }: { rutaI
                 <p className="font-semibold">{p.cliente.nombre}</p>
                 <p className="flex items-center gap-1 text-sm text-suave">
                   {p.cliente.sinUbicacion && <MapPinOff className="h-4 w-4 shrink-0 text-amber-600" aria-label="Sin ubicación en el mapa" />}
-                  {p.cliente.direccion || "Sin dirección"}
+                  {p.cliente.direccion ? (
+                    <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.cliente.direccion)}`} target="_blank" rel="noreferrer" className="underline decoration-dotted underline-offset-2">
+                      {p.cliente.direccion}
+                    </a>
+                  ) : (
+                    "Sin dirección"
+                  )}
                 </p>
                 {(p.cliente.horario_entrega || p.cliente.notas_acceso) && (
                   <p className="text-xs text-suave">{[p.cliente.horario_entrega && `🕘 ${p.cliente.horario_entrega}`, p.cliente.notas_acceso].filter(Boolean).join(" · ")}</p>

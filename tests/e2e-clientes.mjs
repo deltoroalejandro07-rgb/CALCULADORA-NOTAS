@@ -36,14 +36,10 @@ assert.equal(
   sql("select count(*) from clientes c join perfiles p on p.id = c.comercial_id where p.email = 'ana@demo.local' and c.estado <> 'perdido' and c.proxima_accion_fecha < (now() at time zone 'Europe/Madrid')::date"),
 );
 
-paso("Vista de mapa");
+paso("Sin mapa propio: la lista de clientes y Google Maps desde la ficha");
 await page.goto(`${APP}/clientes`);
-await page.getByRole("tab", { name: "Mapa" }).click();
-await page.locator(".leaflet-container").waitFor();
-await page.locator("path.leaflet-interactive").first().waitFor();
-await page.waitForTimeout(1500); // teselas
-await page.screenshot({ path: `${SALIDA}/22-clientes-mapa.png` });
-await page.getByRole("tab", { name: "Lista" }).click();
+assert.equal(await page.getByRole("tab", { name: "Mapa" }).count(), 0);
+assert.equal(await page.locator(".leaflet-container").count(), 0);
 
 paso("Ficha con historial");
 const nombre = sql("select c.nombre_negocio from clientes c join perfiles p on p.id = c.comercial_id join visitas v on v.cliente_id = c.id where p.email = 'ana@demo.local' and c.telefono is not null group by c.nombre_negocio order by count(*) desc, c.nombre_negocio limit 1");
