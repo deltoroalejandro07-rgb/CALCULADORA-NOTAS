@@ -10,6 +10,9 @@ import { cargarFicha } from "@/lib/datos/ficha";
 
 export const metadata: Metadata = { title: "Ficha de cliente" };
 
+// La IA puede tardar unos segundos en redactar el mensaje de seguimiento
+export const maxDuration = 60;
+
 export default function PaginaFicha({ params }: PageProps<"/clientes/[id]">) {
   return (
     <>

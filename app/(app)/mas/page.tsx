@@ -1,4 +1,4 @@
-import { BarChart3, CalendarClock, ChevronRight, FileSpreadsheet, Route, Truck, UserCog } from "lucide-react";
+import { BarChart3, CalendarClock, ChevronRight, Sparkles, FileSpreadsheet, Route, Truck, UserCog } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -24,6 +24,7 @@ async function Contenido() {
     ...(esAdmin
       ? [
           { texto: "Panel de dirección", icono: BarChart3, href: "/direccion" },
+          { texto: "Pregúntale a tu CRM (IA)", icono: Sparkles, href: "/asistente" },
           { texto: "Usuarios", icono: UserCog, href: "/ajustes/usuarios" },
           { texto: "Importar / exportar clientes", icono: FileSpreadsheet, href: "/ajustes/importar" },
           { texto: "Logística: rutas y vehículos", icono: Route, href: "/logistica" },

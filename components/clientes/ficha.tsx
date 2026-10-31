@@ -22,6 +22,7 @@ import { calcularTemperatura } from "@/lib/dominio/temperatura";
 import { TEXTO_TIPO_NEGOCIO } from "@/lib/dominio/tipos";
 import { fechaDentroDe } from "@/lib/dominio/visita";
 import { euros, fecha } from "@/lib/formato";
+import { MensajeSeguimiento } from "@/components/ia/mensaje-seguimiento";
 import { Comunicaciones } from "./comunicaciones";
 import { Historial } from "./historial";
 
@@ -96,6 +97,8 @@ export function FichaCliente({ ficha, esAdmin }: { ficha: Ficha; esAdmin: boolea
           <Pencil className="h-4 w-4" aria-hidden /> Editar
         </Link>
       </div>
+
+      <MensajeSeguimiento clienteId={c.id} telefono={c.telefono} />
 
       {(c.proxima_accion || c.proxima_accion_fecha) && (
         <Tarjeta className={cn(vencida && "border-red-400 bg-red-50 dark:bg-red-950/40")}>

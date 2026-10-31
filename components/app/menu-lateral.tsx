@@ -58,6 +58,7 @@ const GRUPOS: Grupo[] = [
     soloAdmin: true,
     enlaces: [
       { href: "/direccion", texto: "Panel de dirección", icono: BarChart3 },
+      { href: "/asistente", texto: "Pregúntale a tu CRM", icono: Sparkles },
       { href: "/ajustes/usuarios", texto: "Usuarios", icono: UserCog },
       { href: "/ajustes/importar", texto: "Importar / exportar", icono: FileSpreadsheet },
     ],

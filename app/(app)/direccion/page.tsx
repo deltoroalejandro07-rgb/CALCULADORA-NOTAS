@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { Cabecera, Cargando } from "@/components/app/piezas";
 import { BarrasHorizontales, Cifra, Columnas, ColumnasApiladas, Tarjeta } from "@/components/direccion/graficos";
 import { exigirAdmin } from "@/lib/auth";
+import { ResumenIA } from "@/components/ia/resumen";
 import { cargarDireccion } from "@/lib/datos/direccion";
 import { clientesEnRiesgo } from "@/lib/dominio/sugerencias";
 import { TEXTO_ESTADO } from "@/lib/dominio/tipos";
@@ -13,6 +14,9 @@ import { supabaseServidor } from "@/lib/supabase/servidor";
 
 
 export const metadata: Metadata = { title: "Panel de dirección" };
+
+// El resumen con IA puede tardar unos segundos
+export const maxDuration = 60;
 
 const MES = new Intl.DateTimeFormat("es-ES", { month: "short", timeZone: "UTC" });
 const nombreMes = (m: string) => MES.format(new Date(m + "-15T12:00:00Z")).replace(".", "");
@@ -49,6 +53,8 @@ async function Contenido() {
         <Cifra valor={String(nuevosEsteMes)} etiqueta="Clientes nuevos este mes" detalle={`${clientesTotal} en total`} />
         <Cifra valor={String(interesados)} etiqueta="Clientes interesados" detalle="ahora mismo" />
       </div>
+
+      <ResumenIA />
 
       <Suspense fallback={null}>
         <ClientesEnRiesgo />
