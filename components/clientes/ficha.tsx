@@ -79,6 +79,9 @@ export function FichaCliente({ ficha, esAdmin }: { ficha: Ficha; esAdmin: boolea
         {c.estado === "perdido" && c.motivo_perdida && <p className="mt-1 text-sm text-red-700 dark:text-red-300">Motivo: {c.motivo_perdida}</p>}
       </header>
 
+      <div className="space-y-4 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-6 lg:space-y-0">
+        <div className="space-y-4">
+
       <div className="grid grid-cols-4 gap-2">
         <BotonContacto href={c.telefono ? enlaceLlamada(c.telefono) : null} icono={Phone} texto="Llamar" nota="Sin teléfono" />
         <BotonContacto href={c.telefono ? enlaceWhatsApp(c.telefono) : null} icono={MessageCircle} texto="WhatsApp" nota="Sin teléfono" />
@@ -120,6 +123,9 @@ export function FichaCliente({ ficha, esAdmin }: { ficha: Ficha; esAdmin: boolea
         </section>
       )}
 
+      <Historial ficha={ficha} />
+        </div>
+        <aside className="space-y-4 lg:sticky lg:top-6">
       <Comunicaciones clienteId={c.id} whatsapp={c.consiente_whatsapp} email={c.consiente_email} fecha={c.consentimiento_at} />
 
       <section>
@@ -164,7 +170,8 @@ export function FichaCliente({ ficha, esAdmin }: { ficha: Ficha; esAdmin: boolea
         </Tarjeta>
       </section>
 
-      <Historial ficha={ficha} />
+        </aside>
+      </div>
 
       <p className="text-center text-xs text-suave">
         Alta: {fecha(c.creado_at)} · Última visita: {fecha(c.ultima_visita_at)} · Último pedido: {fecha(c.ultimo_pedido_at)}

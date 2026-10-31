@@ -214,7 +214,7 @@ export function FormularioVisita() {
   const campo = "w-full rounded-lg border border-borde bg-superficie px-4 py-3 text-base outline-none focus:border-marca focus:ring-2 focus:ring-marca/30";
 
   return (
-    <div className="space-y-6 px-4 pb-28">
+    <div className="space-y-6 px-4 pb-28 lg:mx-auto lg:max-w-2xl">
       <Seccion titulo="Cliente">
         <SelectorCliente seleccionado={cliente} onSeleccionar={(c) => { setCliente(c); setNuevo(null); }} nuevo={nuevo} onNuevo={setNuevo} pos={pos} />
         {estadoGps === "sin-permiso" && (
@@ -225,7 +225,7 @@ export function FormularioVisita() {
       </Seccion>
 
       <Seccion titulo="Resultado">
-        <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Resultado de la visita">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-3" role="radiogroup" aria-label="Resultado de la visita">
           {RESULTADOS.map(({ valor, icono: Icono, clase }) => (
             <button
               key={valor}
@@ -376,7 +376,7 @@ export function FormularioVisita() {
       )}
 
       <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 lg:bottom-0 lg:left-64 border-t border-borde bg-fondo/95 px-4 py-3 backdrop-blur">
-        <div className="mx-auto max-w-lg">
+        <div className="mx-auto max-w-lg lg:max-w-2xl">
           {aviso && <p className="mb-2 text-center text-sm font-medium text-red-600 dark:text-red-400" role="alert">{aviso}</p>}
           <Boton className="w-full text-lg" onClick={guardar} cargando={guardando}>
             Guardar visita

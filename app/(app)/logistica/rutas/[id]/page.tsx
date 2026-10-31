@@ -97,7 +97,8 @@ async function Contenido({ id }: { id: string }) {
         titulo={ruta.vehiculos?.nombre ?? "Ruta sin vehículo"}
         subtitulo={`${fecha(ruta.fecha)} · ${ruta.conductor?.nombre ?? "Sin conductor"} · ${TEXTO_ESTADO_RUTA[ruta.estado]}`}
       />
-      <div className="space-y-4 px-4 pb-8">
+      <div className="space-y-4 px-4 pb-8 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-6 lg:space-y-0">
+        <aside className="space-y-4 lg:order-2 lg:sticky lg:top-6">
         <Tarjeta className="text-sm">
           <p>
             <span className="font-semibold">{hechas}</span> de <span className="font-semibold">{paradas.length}</span> paradas hechas
@@ -112,10 +113,10 @@ async function Contenido({ id }: { id: string }) {
             <ClipboardList className="h-5 w-5" aria-hidden /> Hoja de carga en pantalla
           </Link>
         </Tarjeta>
-
-        
+          {hechas === 0 && <BorrarRuta id={ruta.id} />}
+        </aside>
+        <div className="space-y-4 lg:order-1">
         <ListaParadas rutaId={ruta.id} paradas={paradas} editable={editable} reordenable={reordenable} />
-
         {editable && (
           <AnadirParadas
             rutaId={ruta.id}
@@ -124,7 +125,7 @@ async function Contenido({ id }: { id: string }) {
           />
         )}
 
-        {hechas === 0 && <BorrarRuta id={ruta.id} />}
+        </div>
       </div>
     </>
   );

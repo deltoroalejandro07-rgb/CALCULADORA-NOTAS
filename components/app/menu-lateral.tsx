@@ -20,13 +20,15 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
+import { TEXTO_ROL } from "@/lib/dominio/tipos";
 
 type Enlace = { href: string; texto: string; icono: typeof Users; soloAdmin?: boolean };
-type Grupo = { titulo: string; soloAdmin?: boolean; enlaces: Enlace[] };
+type Grupo = { titulo: string; soloAdmin?: boolean; sinRepartidor?: boolean; enlaces: Enlace[] };
 
 const GRUPOS: Grupo[] = [
   {
     titulo: "Ventas",
+    sinRepartidor: true,
     enlaces: [
       { href: "/hoy", texto: "Hoy", icono: CalendarCheck },
       { href: "/clientes", texto: "Clientes", icono: Users },
@@ -72,7 +74,7 @@ function enlaceActivo(ruta: string | null) {
 
 export interface UsuarioMenu {
   nombre: string;
-  rol: "admin" | "comercial";
+  rol: "admin" | "comercial" | "repartidor";
 }
 
 export function MenuLateral({ usuario }: { usuario: UsuarioMenu | null }) {
@@ -91,7 +93,7 @@ export function Menu({ ruta, usuario }: { ruta: string | null; usuario: UsuarioM
           <img src="/logo.svg" alt="dliverygo" width={318} height={103} className="h-7 w-auto" />
         </Link>
       </div>
-      <div className="px-3 pb-2">
+      <div className={cn("px-3 pb-2", usuario?.rol === "repartidor" && "hidden")}>
         <Link
           href="/visita/nueva"
           className="flex h-10 items-center justify-center gap-2 rounded-lg bg-marca text-sm font-semibold text-marca-texto shadow-sm transition hover:opacity-90"
@@ -100,7 +102,7 @@ export function Menu({ ruta, usuario }: { ruta: string | null; usuario: UsuarioM
         </Link>
       </div>
       <nav className="flex-1 overflow-y-auto px-3 py-2" aria-label="Menú principal">
-        {GRUPOS.filter((g) => !g.soloAdmin || esAdmin).map((g) => (
+        {GRUPOS.filter((g) => (!g.soloAdmin || esAdmin) && !(g.sinRepartidor && usuario?.rol === "repartidor")).map((g) => (
           <div key={g.titulo} className="mb-4">
             <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-suave/80">{g.titulo}</p>
             <ul className="space-y-0.5">
@@ -137,7 +139,7 @@ export function Menu({ ruta, usuario }: { ruta: string | null; usuario: UsuarioM
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-medium">{usuario?.nombre ?? "Mi cuenta"}</span>
-            <span className="block text-xs text-suave">{usuario ? (esAdmin ? "Administrador" : "Comercial") : " "}</span>
+            <span className="block text-xs text-suave">{usuario ? TEXTO_ROL[usuario.rol] : " "}</span>
           </span>
           <Settings className="h-4 w-4 text-suave" aria-hidden />
         </Link>

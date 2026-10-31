@@ -18,7 +18,7 @@ export default function LayoutApp({ children }: LayoutProps<"/">) {
         <div className="pb-barra mx-auto min-h-dvh max-w-lg lg:max-w-5xl lg:px-4 lg:pb-12">{children}</div>
       </div>
       <Suspense fallback={<Barra ruta={null} />}>
-        <BarraInferior />
+        <BarraConUsuario />
       </Suspense>
     </>
   );
@@ -27,4 +27,9 @@ export default function LayoutApp({ children }: LayoutProps<"/">) {
 async function MenuConUsuario() {
   const u = await usuarioActual();
   return <MenuLateral usuario={{ nombre: u.nombre, rol: u.rol }} />;
+}
+
+async function BarraConUsuario() {
+  const u = await usuarioActual();
+  return <BarraInferior repartidor={u.rol === "repartidor"} />;
 }

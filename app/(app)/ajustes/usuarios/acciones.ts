@@ -14,7 +14,7 @@ export interface Resultado {
 const esquemaAlta = z.object({
   nombre: z.string().trim().min(2, "Pon el nombre"),
   email: z.string().trim().toLowerCase().email("Email no válido"),
-  rol: z.enum(["comercial", "admin"]),
+  rol: z.enum(["comercial", "admin", "repartidor"]),
   contrasena: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
 });
 
@@ -45,7 +45,7 @@ export async function crearUsuario(_: Resultado, form: FormData): Promise<Result
 const esquemaCambio = z.object({
   id: z.guid(),
   accion: z.enum(["rol", "activar", "desactivar", "traspasar", "contrasena"]),
-  rol: z.enum(["comercial", "admin"]).optional(),
+  rol: z.enum(["comercial", "admin", "repartidor"]).optional(),
   destino: z.guid().optional(),
   contrasena: z.string().optional(),
 });

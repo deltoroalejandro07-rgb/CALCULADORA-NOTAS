@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Cabecera, Cargando, Tarjeta } from "@/components/app/piezas";
 import { usuarioActual } from "@/lib/auth";
+import { TEXTO_ROL } from "@/lib/dominio/tipos";
 import { CambiarContrasena, CerrarSesion, SelectorTema } from "./controles";
 
 export const metadata: Metadata = { title: "Más" };
@@ -21,13 +22,13 @@ async function Contenido() {
   const esAdmin = usuario.rol === "admin";
 
   const grupos = [
-    {
+    ...(usuario.rol === "repartidor" ? [] : [{
       titulo: "Ventas",
       items: [
         { texto: "Agenda: reuniones y notas", icono: CalendarClock, href: "/agenda" },
         { texto: "Mensajes y campañas", icono: MessageCircle, href: "/mensajes" },
       ],
-    },
+    }]),
     {
       titulo: "Reparto",
       items: [
@@ -66,7 +67,7 @@ async function Contenido() {
         <Tarjeta>
           <p className="font-semibold">{usuario.nombre}</p>
           <p className="text-sm text-suave">
-            {usuario.email} · {esAdmin ? "Administrador" : "Comercial"}
+            {usuario.email} · {TEXTO_ROL[usuario.rol]}
           </p>
           <div className="mt-3">
             <CambiarContrasena />

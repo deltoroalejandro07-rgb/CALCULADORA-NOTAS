@@ -16,7 +16,7 @@ export async function AgendaDeHoy() {
     .limit(20);
   const lista = (data ?? []).filter((e) => !(e.tipo === "tarea" && e.hecha));
   return (
-    <section className="space-y-2 px-4">
+    <section className="space-y-2">
       <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-suave">
           <CalendarClock className="h-4 w-4 text-marca" aria-hidden /> Agenda de hoy

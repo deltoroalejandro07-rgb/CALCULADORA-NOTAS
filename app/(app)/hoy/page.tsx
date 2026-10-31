@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Cabecera, Cargando } from "@/components/app/piezas";
@@ -18,6 +19,7 @@ export default function PaginaHoy() {
 
 async function Contenido() {
   const usuario = await usuarioActual();
+  if (usuario.rol === "repartidor") redirect("/reparto");
   const supabase = await supabaseServidor();
   // RLS: el comercial recibe los suyos; el admin, los de todo el equipo
   const { data, error } = await supabase

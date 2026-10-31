@@ -20,12 +20,13 @@ const { navegador, ctx, page, errores } = await abrirNavegador();
 paso("Hoy (Ana): listas y ruta del día");
 await entrar(page, "ana@demo.local");
 await page.getByText("Seguimientos vencidos").waitFor();
-await page.getByRole("heading", { name: /Ruta del día/ }).waitFor();
+await page.getByRole("heading", { name: /Ruta de visitas/ }).waitFor();
 await page.getByRole("link", { name: /Toda la ruta en Google Maps/ }).waitFor();
 const nav = await page.getByRole("link", { name: /Toda la ruta en Google Maps/ }).getAttribute("href");
 assert.match(nav, /^https:\/\/www\.google\.com\/maps\/dir\/\?api=1&destination=/);
 // Sin mapa propio: cada visita abre Google Maps
 assert.equal(await page.locator(".leaflet-container").count(), 0);
+await page.getByText("Ver las paradas en orden").click();
 assert.match(await page.getByRole("link", { name: /^Abrir .* en Google Maps$/ }).first().getAttribute("href"), /^https:\/\/www\.google\.com\/maps\/dir\/\?api=1&destination=-?\d/);
 await page.screenshot({ path: `${SALIDA}/30-hoy.png`, fullPage: true });
 await page.getByRole("link", { name: /^Seguimientos vencidos\s*\d+$/ }).click();

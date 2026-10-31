@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarCheck, CalendarClock, Menu, Plus, Users } from "lucide-react";
+import { CalendarCheck, CalendarClock, CalendarDays, Menu, Plus, Truck, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
@@ -13,17 +13,24 @@ const ENLACES = [
   { href: "/mas", texto: "Más", icono: Menu },
 ];
 
-export function BarraInferior() {
-  return <Barra ruta={usePathname()} />;
+const ENLACES_REPARTIDOR = [
+  { href: "/reparto", texto: "Mi reparto", icono: Truck },
+  { href: "/reparto/dias", texto: "Historial", icono: CalendarDays },
+  { href: "/mas", texto: "Más", icono: Menu },
+];
+
+export function BarraInferior({ repartidor }: { repartidor?: boolean }) {
+  return <Barra ruta={usePathname()} repartidor={repartidor} />;
 }
 
 /** Sin ruta (mientras carga una página con parámetros) no marca ninguna pestaña. */
-export function Barra({ ruta }: { ruta: string | null }) {
+export function Barra({ ruta, repartidor }: { ruta: string | null; repartidor?: boolean }) {
+  const enlaces: { href: string; texto: string; icono: typeof Menu; central?: boolean }[] = repartidor ? ENLACES_REPARTIDOR : ENLACES;
   return (
     <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-borde bg-superficie/95 backdrop-blur lg:hidden">
-      <ul className="mx-auto grid max-w-lg grid-cols-5">
-        {ENLACES.map(({ href, texto, icono: Icono, central }) => {
-          const activo = !!ruta && (ruta === href || ruta.startsWith(href + "/"));
+      <ul className={cn("mx-auto grid max-w-lg", repartidor ? "grid-cols-3" : "grid-cols-5")}>
+        {enlaces.map(({ href, texto, icono: Icono, central }) => {
+          const activo = !!ruta && (ruta === href || (ruta.startsWith(href + "/") && !enlaces.some((e) => e.href !== href && e.href.startsWith(href) && ruta.startsWith(e.href))));
           return (
             <li key={href} className="flex justify-center">
               {central ? (

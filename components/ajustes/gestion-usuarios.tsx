@@ -11,7 +11,7 @@ interface Usuario {
   id: string;
   nombre: string;
   email: string;
-  rol: "admin" | "comercial";
+  rol: "admin" | "comercial" | "repartidor";
   activo: boolean;
   clientes: number;
 }
@@ -102,6 +102,7 @@ export function GestionUsuarios({ yo, usuarios, claveConfigurada, urlApp }: { yo
             Rol
             <select name="rol" defaultValue="comercial" className={campo}>
               <option value="comercial">Comercial (ve solo sus clientes)</option>
+              <option value="repartidor">Repartidor (solo Mi reparto)</option>
               <option value="admin">Administrador (ve todo)</option>
             </select>
           </label>
@@ -142,6 +143,7 @@ export function GestionUsuarios({ yo, usuarios, claveConfigurada, urlApp }: { yo
                   className="min-h-10 rounded-lg border border-borde bg-superficie px-2 text-sm"
                 >
                   <option value="comercial">Comercial</option>
+                  <option value="repartidor">Repartidor</option>
                   <option value="admin">Admin</option>
                 </select>
               </div>

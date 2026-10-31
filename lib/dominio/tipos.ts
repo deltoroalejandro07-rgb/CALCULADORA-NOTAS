@@ -1,6 +1,7 @@
 // Valores de los enums de Postgres (supabase/migrations/*_esquema.sql) con su texto en pantalla.
 
-export const ROLES = ["admin", "comercial"] as const;
+export const ROLES = ["admin", "comercial", "repartidor"] as const;
+export const TEXTO_ROL: Record<(typeof ROLES)[number], string> = { admin: "Administrador", comercial: "Comercial", repartidor: "Repartidor" };
 export type Rol = (typeof ROLES)[number];
 
 export const TIPOS_NEGOCIO = ["bar", "restaurante", "cafeteria", "hotel", "pub", "catering", "otro"] as const;
