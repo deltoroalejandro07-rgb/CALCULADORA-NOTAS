@@ -37,9 +37,9 @@ const { page, errores, navegador } = await abrirNavegador();
 paso("La oficina crea la zona «Valencia Centro» para todos los días");
 await entrar(page, "admin@demo.local");
 await page.goto(`${APP}/logistica`);
-await page.getByRole("link", { name: /Calcular ruta automática/ }).waitFor();
+await page.getByRole("heading", { name: "Sube los albaranes del día" }).waitFor();
 await page.screenshot({ path: `${SALIDA}/60-logistica.png`, fullPage: true });
-await page.getByRole("link", { name: "Zonas y días de reparto" }).click();
+await page.getByRole("link", { name: "Crea tus zonas y los días que repartes en cada una" }).click();
 await page.getByLabel("Nombre de la zona").fill("Valencia Centro");
 for (const d of ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]) await page.getByLabel(d, { exact: true }).check({ force: true });
 await page.getByRole("button", { name: "Guardar zona" }).click();
@@ -97,7 +97,7 @@ await page.screenshot({ path: `${SALIDA}/63-albaranes-pendientes.png`, fullPage:
 
 paso("Planificar hoy: la zona del día ya viene marcada → calcular la mejor ruta");
 await page.goto(`${APP}/logistica/planificar?fecha=${hoy}`);
-await page.getByText("Entregas (4)").waitFor();
+await page.getByText("Entregas que entran en la ruta (4)").waitFor();
 // Hoja de carga del día: la suma de los 4 albaranes, antes de calcular nada
 await page.getByText("Hoja de carga del día (4 albaranes)").waitFor();
 const filaCerveza = page.locator("tr", { hasText: "CERVEZA BARRIL 30L" }).first();

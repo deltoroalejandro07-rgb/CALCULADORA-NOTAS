@@ -128,9 +128,11 @@ export function Planificador({ fecha, dia, zonas, albaranes, vehiculos, conducto
       )}
 
       {!plan && (
-        <>
+        <div className="space-y-4 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-5 lg:space-y-0">
+          <div className="space-y-4">
           <Tarjeta>
-            <p className="font-semibold">Zonas</p>
+            <p className="font-semibold">¿Qué zonas repartes este día?</p>
+            <p className="text-xs text-suave">Vienen marcadas las que tocan según tus días de reparto.</p>
             {zonas.length ? (
               <div className="mt-2 flex flex-wrap gap-2">
                 {zonas.map((z) => (
@@ -158,7 +160,7 @@ export function Planificador({ fecha, dia, zonas, albaranes, vehiculos, conducto
           </Tarjeta>
 
           <Tarjeta>
-            <p className="font-semibold">Entregas ({seleccionados.length})</p>
+            <p className="font-semibold">Entregas que entran en la ruta ({seleccionados.length})</p>
             {seleccionados.length ? (
               <ul className="mt-2 divide-y divide-borde text-sm">
                 {seleccionados.map((a) => (
@@ -210,9 +212,11 @@ export function Planificador({ fecha, dia, zonas, albaranes, vehiculos, conducto
           </Tarjeta>
 
           {seleccionados.length > 0 && <HojaCarga albaranes={seleccionados} titulo={`Hoja de carga del día (${seleccionados.length} albaranes)`} />}
+          </div>
 
+          <div className="space-y-4 lg:sticky lg:top-6">
           <Tarjeta>
-            <p className="font-semibold">Vehículos</p>
+            <p className="font-semibold">¿Con qué vehículos?</p>
             <div className="mt-2 space-y-1">
               {vehiculos.map((v) => (
                 <label key={v.id} className="flex min-h-11 items-center gap-3 text-sm">
@@ -237,7 +241,11 @@ export function Planificador({ fecha, dia, zonas, albaranes, vehiculos, conducto
           <Boton type="button" className="min-h-14 w-full text-lg" cargando={calculando} disabled={!seleccionados.length || !vehiculosSel.length || !almacen} onClick={calcular}>
             <Sparkles className="h-6 w-6" aria-hidden /> {calculando ? "Calculando la mejor ruta…" : "Calcular la mejor ruta"}
           </Boton>
-        </>
+          <p className="text-center text-xs text-suave">
+            {seleccionados.length} {seleccionados.length === 1 ? "entrega" : "entregas"} · {vehiculosSel.length} {vehiculosSel.length === 1 ? "vehículo" : "vehículos"}
+          </p>
+          </div>
+        </div>
       )}
 
       {plan && (
@@ -268,6 +276,7 @@ export function Planificador({ fecha, dia, zonas, albaranes, vehiculos, conducto
             </p>
           ))}
 
+          <div className="space-y-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-5 lg:space-y-0">
           {plan.rutas.map((r, k) => (
             <section key={r.vehiculoId} className="space-y-2">
               <div className="flex items-center justify-between">
@@ -313,6 +322,7 @@ export function Planificador({ fecha, dia, zonas, albaranes, vehiculos, conducto
               </ol>
             </section>
           ))}
+          </div>
 
           {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-700 dark:bg-red-950/50 dark:text-red-300">{error}</p>}
           <Boton type="button" className="min-h-14 w-full text-lg" cargando={aceptando} onClick={aceptar}>

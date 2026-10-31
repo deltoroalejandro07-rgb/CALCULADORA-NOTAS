@@ -14,7 +14,7 @@ export default function PaginaVehiculos() {
   return (
     <>
       <Link href="/logistica" className="inline-flex min-h-11 items-center gap-1 px-3 pt-3 text-sm text-suave">
-        <ChevronLeft className="h-5 w-5" aria-hidden /> Logística
+        <ChevronLeft className="h-5 w-5" aria-hidden /> Reparto
       </Link>
       <Cabecera titulo="Vehículos y almacén" />
       <Suspense fallback={<Cargando />}>

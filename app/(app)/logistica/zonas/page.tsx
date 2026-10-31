@@ -13,7 +13,7 @@ export default function PaginaZonas() {
   return (
     <>
       <Link href="/logistica" className="inline-flex min-h-11 items-center gap-1 px-3 pt-3 text-sm text-suave">
-        <ChevronLeft className="h-5 w-5" aria-hidden /> Logística
+        <ChevronLeft className="h-5 w-5" aria-hidden /> Reparto
       </Link>
       <Cabecera titulo="Zonas y días" subtitulo="Qué zona se reparte cada día de la semana" />
       <Suspense fallback={<Cargando />}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarCheck, Menu, MessageCircle, Plus, Users } from "lucide-react";
+import { CalendarCheck, CalendarClock, Menu, Plus, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
@@ -9,7 +9,7 @@ const ENLACES = [
   { href: "/hoy", texto: "Hoy", icono: CalendarCheck },
   { href: "/clientes", texto: "Clientes", icono: Users },
   { href: "/visita/nueva", texto: "Visita", icono: Plus, central: true },
-  { href: "/mensajes", texto: "Mensajes", icono: MessageCircle },
+  { href: "/agenda", texto: "Agenda", icono: CalendarClock },
   { href: "/mas", texto: "Más", icono: Menu },
 ];
 

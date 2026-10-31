@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Cabecera, Cargando } from "@/components/app/piezas";
+import { PasosReparto } from "@/components/logistica/pasos";
 import { Planificador } from "@/components/logistica/planificador";
 import { exigirAdmin } from "@/lib/auth";
 import { diaSemana } from "@/lib/dominio/destinos";
@@ -18,13 +19,19 @@ export default function PaginaPlanificar({ searchParams }: PageProps<"/logistica
   return (
     <>
       <Link href="/logistica" className="inline-flex min-h-11 items-center gap-1 px-3 pt-3 text-sm text-suave">
-        <ChevronLeft className="h-5 w-5" aria-hidden /> Logística
+        <ChevronLeft className="h-5 w-5" aria-hidden /> Reparto
       </Link>
-      <Cabecera titulo="Planificar reparto" subtitulo="La ruta más rápida y con menos kilómetros" />
+      <Cabecera titulo="Calcular ruta" subtitulo="Paso 2: la ruta más rápida y con menos kilómetros" />
       <Suspense fallback={<Cargando />}>
-        {searchParams.then((sp) => (
-          <Contenido fecha={typeof sp.fecha === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sp.fecha) ? sp.fecha : fechaDentroDe(1)} />
-        ))}
+        {searchParams.then((sp) => {
+          const fecha = typeof sp.fecha === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sp.fecha) ? sp.fecha : fechaDentroDe(0);
+          return (
+            <>
+              <PasosReparto actual={2} fecha={fecha} hechos={[1]} />
+              <Contenido fecha={fecha} />
+            </>
+          );
+        })}
       </Suspense>
     </>
   );

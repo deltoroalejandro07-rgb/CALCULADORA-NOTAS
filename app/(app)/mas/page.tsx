@@ -1,4 +1,4 @@
-import { BarChart3, CalendarClock, ChevronRight, Sparkles, FileSpreadsheet, Route, Truck, UserCog } from "lucide-react";
+import { BarChart3, CalendarClock, CalendarDays, ChevronRight, FileSpreadsheet, MapPinned, MessageCircle, Route, Sparkles, Truck, UserCog, Warehouse } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -20,19 +20,44 @@ async function Contenido() {
   const usuario = await usuarioActual();
   const esAdmin = usuario.rol === "admin";
 
-  const secciones = [
+  const grupos = [
+    {
+      titulo: "Ventas",
+      items: [
+        { texto: "Agenda: reuniones y notas", icono: CalendarClock, href: "/agenda" },
+        { texto: "Mensajes y campañas", icono: MessageCircle, href: "/mensajes" },
+      ],
+    },
+    {
+      titulo: "Reparto",
+      items: [
+        ...(esAdmin ? [{ texto: "Preparar reparto", icono: Route, href: "/logistica" }] : []),
+        { texto: "Mi reparto", icono: Truck, href: "/reparto" },
+        { texto: "Historial de rutas", icono: CalendarDays, href: "/reparto/dias" },
+      ],
+    },
     ...(esAdmin
       ? [
-          { texto: "Panel de dirección", icono: BarChart3, href: "/direccion" },
-          { texto: "Pregúntale a tu CRM (IA)", icono: Sparkles, href: "/asistente" },
-          { texto: "Usuarios", icono: UserCog, href: "/ajustes/usuarios" },
-          { texto: "Importar / exportar clientes", icono: FileSpreadsheet, href: "/ajustes/importar" },
-          { texto: "Logística: rutas y vehículos", icono: Route, href: "/logistica" },
+          {
+            titulo: "Dirección",
+            items: [
+              { texto: "Informes", icono: BarChart3, href: "/direccion" },
+              { texto: "Pregúntale a tu CRM (IA)", icono: Sparkles, href: "/asistente" },
+            ],
+          },
+          {
+            titulo: "Ajustes",
+            items: [
+              { texto: "Zonas de reparto", icono: MapPinned, href: "/logistica/zonas" },
+              { texto: "Vehículos y almacén", icono: Warehouse, href: "/logistica/vehiculos" },
+              { texto: "Usuarios", icono: UserCog, href: "/ajustes/usuarios" },
+              { texto: "Importar / exportar clientes", icono: FileSpreadsheet, href: "/ajustes/importar" },
+            ],
+          },
         ]
       : []),
-    { texto: "Agenda: reuniones y notas", icono: CalendarClock, href: "/agenda" },
-    { texto: "Mi reparto", icono: Truck, href: "/reparto" },
   ];
+
 
   return (
     <>
@@ -48,17 +73,22 @@ async function Contenido() {
           </div>
         </Tarjeta>
 
-        <ul className="divide-y divide-borde overflow-hidden rounded-xl border border-borde bg-superficie">
-          {secciones.map(({ texto, icono: Icono, href }) => (
-            <li key={texto}>
-              <Link href={href} className="flex min-h-14 items-center gap-3 px-4 active:bg-fondo">
-                <Icono className="h-5 w-5 text-marca" aria-hidden />
-                <span className="flex-1">{texto}</span>
-                <ChevronRight className="h-5 w-5 text-suave" aria-hidden />
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {grupos.map((g) => (
+          <section key={g.titulo}>
+            <h2 className="mb-1.5 px-1 text-[13px] font-semibold text-suave">{g.titulo}</h2>
+            <ul className="divide-y divide-borde overflow-hidden rounded-xl border border-borde bg-superficie">
+              {g.items.map(({ texto, icono: Icono, href }) => (
+                <li key={href}>
+                  <Link href={href} className="flex min-h-13 items-center gap-3 px-4 py-3 active:bg-fondo">
+                    <Icono className="h-5 w-5 text-marca" aria-hidden />
+                    <span className="flex-1">{texto}</span>
+                    <ChevronRight className="h-5 w-5 text-suave" aria-hidden />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
 
         <Tarjeta>
           <p className="mb-2 text-sm font-medium">Apariencia</p>

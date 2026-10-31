@@ -6,7 +6,6 @@ import {
   CalendarCheck,
   CalendarDays,
   FileSpreadsheet,
-  FileText,
   MapPinned,
   MessageCircle,
   Plus,
@@ -22,7 +21,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 
-type Enlace = { href: string; texto: string; icono: typeof Users };
+type Enlace = { href: string; texto: string; icono: typeof Users; soloAdmin?: boolean };
 type Grupo = { titulo: string; soloAdmin?: boolean; enlaces: Enlace[] };
 
 const GRUPOS: Grupo[] = [
@@ -36,29 +35,27 @@ const GRUPOS: Grupo[] = [
     ],
   },
   {
-    titulo: "Logística",
-    soloAdmin: true,
-    enlaces: [
-      { href: "/logistica", texto: "Rutas del día", icono: Route },
-      { href: "/logistica/albaranes", texto: "Albaranes", icono: FileText },
-      { href: "/logistica/planificar", texto: "Calcular ruta", icono: Sparkles },
-      { href: "/logistica/zonas", texto: "Zonas", icono: MapPinned },
-      { href: "/logistica/vehiculos", texto: "Vehículos y almacén", icono: Warehouse },
-    ],
-  },
-  {
     titulo: "Reparto",
     enlaces: [
+      { href: "/logistica", texto: "Preparar reparto", icono: Route, soloAdmin: true },
       { href: "/reparto", texto: "Mi reparto", icono: Truck },
-      { href: "/reparto/dias", texto: "Rutas por días", icono: CalendarDays },
+      { href: "/reparto/dias", texto: "Historial de rutas", icono: CalendarDays },
     ],
   },
   {
-    titulo: "Gestión",
+    titulo: "Dirección",
     soloAdmin: true,
     enlaces: [
-      { href: "/direccion", texto: "Panel de dirección", icono: BarChart3 },
+      { href: "/direccion", texto: "Informes", icono: BarChart3 },
       { href: "/asistente", texto: "Pregúntale a tu CRM", icono: Sparkles },
+    ],
+  },
+  {
+    titulo: "Ajustes",
+    soloAdmin: true,
+    enlaces: [
+      { href: "/logistica/zonas", texto: "Zonas de reparto", icono: MapPinned },
+      { href: "/logistica/vehiculos", texto: "Vehículos y almacén", icono: Warehouse },
       { href: "/ajustes/usuarios", texto: "Usuarios", icono: UserCog },
       { href: "/ajustes/importar", texto: "Importar / exportar", icono: FileSpreadsheet },
     ],
@@ -107,7 +104,7 @@ export function Menu({ ruta, usuario }: { ruta: string | null; usuario: UsuarioM
           <div key={g.titulo} className="mb-4">
             <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-suave/80">{g.titulo}</p>
             <ul className="space-y-0.5">
-              {g.enlaces.map(({ href, texto, icono: Icono }) => {
+              {g.enlaces.filter((e) => !e.soloAdmin || esAdmin).map(({ href, texto, icono: Icono }) => {
                 const es = activo === href;
                 return (
                   <li key={href}>

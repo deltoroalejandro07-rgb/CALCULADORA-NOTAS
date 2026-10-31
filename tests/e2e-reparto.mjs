@@ -30,15 +30,15 @@ for (const carpeta of (await almacen.list()).data ?? []) {
 const oficina = await abrirNavegador({ serviceWorkers: "allow" });
 const { page } = oficina;
 
-paso("La oficina entra y abre Logística desde «Más»");
+paso("La oficina entra y abre «Preparar reparto» desde «Más»");
 await entrar(page, "admin@demo.local");
 await page.goto(`${APP}/mas`);
-await page.getByRole("link", { name: /Logística: rutas y vehículos/ }).click();
-await page.getByText("Antes de la primera ruta").waitFor();
+await page.getByRole("link", { name: "Preparar reparto" }).click();
+await page.getByText("Antes de empezar (solo la primera vez)").waitFor();
 await page.screenshot({ path: `${SALIDA}/40-logistica-vacia.png` });
 
 paso("Almacén con la ubicación del móvil y alta de una furgoneta");
-await page.getByRole("link", { name: "Ir a vehículos y almacén" }).click();
+await page.getByRole("link", { name: "Marca dónde está tu almacén (punto de salida)" }).click();
 await page.getByLabel("Dirección").fill("Polígono Las Mercedes, Madrid");
 await page.getByRole("button", { name: /usar mi ubicación/ }).click();
 await page.getByText(/Ubicación tomada/).waitFor();
@@ -56,6 +56,7 @@ await page.screenshot({ path: `${SALIDA}/41-vehiculos.png`, fullPage: true });
 
 paso("Nueva ruta para hoy con 3 albaranes por repartir, ordenada por cercanía");
 await page.goto(`${APP}/logistica`);
+await page.getByText("Más opciones").click();
 await page.getByRole("button", { name: "Nueva ruta" }).click();
 assert.equal(await page.locator("select[name=conductor_id]").inputValue(), sql("select id from perfiles where email = 'luis@demo.local'"), "pone el conductor habitual");
 await page.getByRole("button", { name: "Crear y añadir paradas" }).click();
