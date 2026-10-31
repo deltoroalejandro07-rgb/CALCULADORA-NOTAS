@@ -1,12 +1,13 @@
 "use client";
 
 import { useLiveQuery } from "dexie-react-hooks";
-import { AlertTriangle, CalendarDays, Check, ChevronLeft, ChevronRight, ClipboardList, CloudOff, CloudUpload, Loader2, Navigation, Phone, RefreshCw, Truck, X } from "lucide-react";
+import { AlertTriangle, CalendarDays, Check, MessageCircle, ChevronLeft, ChevronRight, ClipboardList, CloudOff, CloudUpload, Loader2, Navigation, Phone, RefreshCw, Truck, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Boton } from "@/components/ui/boton";
 import { cn } from "@/lib/cn";
-import { enlaceComoLlegar, enlaceLlamada } from "@/lib/dominio/contacto";
+import { enlaceComoLlegar, enlaceLlamada, enlaceWhatsApp } from "@/lib/dominio/contacto";
+import { mensajeLlegada } from "@/lib/dominio/prevision";
 import { direccionParada, lineasIniciales, ordenCarga, progreso, siguienteParada, totalCarga, type EstadoParada, type ParadaReparto, type RutaReparto } from "@/lib/dominio/reparto";
 import { enlaceRutaGoogle } from "@/lib/dominio/ruta";
 import { fechaDentroDe } from "@/lib/dominio/visita";
@@ -510,6 +511,16 @@ function FichaParada({
           </a>
         )}
       </div>
+      {estado === "pendiente" && c.telefono && (
+        <a
+          href={enlaceWhatsApp(c.telefono, mensajeLlegada("dliverygo", parada.llegada_prevista ?? null))}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-emerald-200 text-sm font-medium text-emerald-700 active:bg-fondo dark:border-emerald-900 dark:text-emerald-300"
+        >
+          <MessageCircle className="h-4 w-4" aria-hidden /> Avisar al cliente por WhatsApp
+        </a>
+      )}
       {estado === "pendiente" ? (
         <>
           <Boton type="button" onClick={onRapido} className="mt-3 min-h-14 w-full text-lg">

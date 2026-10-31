@@ -1,10 +1,11 @@
 "use client";
 
-import { AlarmClock, CalendarDays, ChevronRight, Flame, Navigation, Plus, Snowflake } from "lucide-react";
+import { AlarmClock, CalendarDays, ChevronRight, Flame, Navigation, Phone, Plus, Snowflake, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Demo } from "@/components/app/piezas";
 import { cn } from "@/lib/cn";
+import { sugerirVisitas } from "@/lib/dominio/sugerencias";
 import { enlaceRutaGoogle, longitudRuta, MAX_PARADAS_ENLACE, ordenarRuta } from "@/lib/dominio/ruta";
 import { TEXTO_RESULTADO, TEXTO_TIPO_NEGOCIO, type EstadoCliente, type ResultadoVisita, type TipoNegocio } from "@/lib/dominio/tipos";
 import { fechaDentroDe, textoDistancia } from "@/lib/dominio/visita";
@@ -69,7 +70,7 @@ function Seccion({ titulo, icono: Icono, clase, filtro, total, children }: { tit
   );
 }
 
-export function PanelHoy({ clientes }: { clientes: ClienteHoy[] }) {
+export function PanelHoy({ clientes, extra }: { clientes: ClienteHoy[]; /** Bloques que van tras las cifras (agenda, sugerencias…). */ extra?: React.ReactNode }) {
   const { pos } = useUbicacion();
   const [ahora] = useState(() => Date.now());
   const hoy = fechaDentroDe(0, new Date(ahora));
@@ -92,6 +93,7 @@ export function PanelHoy({ clientes }: { clientes: ClienteHoy[] }) {
     return ordenarRuta(paradas, pos);
   }, [g, pos]);
   const enlace = enlaceRutaGoogle(ruta);
+  const sugeridas = useMemo(() => sugerirVisitas(clientes, hoy, pos), [clientes, hoy, pos]);
 
   const tarjetas = [
     { texto: "Seguimientos vencidos", n: g.vencidos.length, icono: AlarmClock, clase: "text-red-600 dark:text-red-400", filtro: "vencidos" },
@@ -117,6 +119,46 @@ export function PanelHoy({ clientes }: { clientes: ClienteHoy[] }) {
           </Link>
         ))}
       </section>
+
+      {sugeridas.length > 0 && (
+        <section className="space-y-2 px-4">
+          <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-suave">
+            <Sparkles className="h-4 w-4 text-marca" aria-hidden /> ¿A quién visito hoy?
+          </h2>
+          <ol className="grid gap-2 lg:grid-cols-2">
+            {sugeridas.map(({ cliente: c, motivos }, i) => (
+              <li key={c.id} className="flex items-start gap-3 rounded-xl border border-borde bg-superficie p-3 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-marca-suave text-xs font-bold text-marca">{i + 1}</span>
+                <div className="min-w-0 flex-1">
+                  <Link href={`/clientes/${c.id}`} className="flex items-center gap-2 font-medium hover:text-marca">
+                    <span className="truncate">{c.nombre_negocio}</span>
+                    {c.is_seed && <Demo />}
+                  </Link>
+                  <p className="text-sm text-texto/80">{motivos[0]}</p>
+                  {motivos.length > 1 && <p className="text-xs text-suave">{motivos.slice(1).join(" · ")}</p>}
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <Link href={`/visita/nueva?cliente=${c.id}`} className="inline-flex items-center gap-1 rounded-md bg-marca px-2.5 py-1.5 text-xs font-semibold text-marca-texto">
+                      <Plus className="h-3.5 w-3.5" aria-hidden /> Visita
+                    </Link>
+                    {c.lat != null && c.lng != null && (
+                      <a href={`https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-md border border-borde px-2.5 py-1.5 text-xs font-medium">
+                        <Navigation className="h-3.5 w-3.5" aria-hidden /> Ir
+                      </a>
+                    )}
+                    {c.telefono && (
+                      <a href={`tel:${c.telefono}`} className="inline-flex items-center gap-1 rounded-md border border-borde px-2.5 py-1.5 text-xs font-medium">
+                        <Phone className="h-3.5 w-3.5" aria-hidden /> Llamar
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      {extra}
 
       {ruta.length > 0 && (
         <section className="space-y-2 px-4">

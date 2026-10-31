@@ -1,4 +1,4 @@
-import { ChevronLeft } from "lucide-react";
+import { AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -6,7 +6,10 @@ import { Cabecera, Cargando } from "@/components/app/piezas";
 import { BarrasHorizontales, Cifra, Columnas, ColumnasApiladas, Tarjeta } from "@/components/direccion/graficos";
 import { exigirAdmin } from "@/lib/auth";
 import { cargarDireccion } from "@/lib/datos/direccion";
+import { clientesEnRiesgo } from "@/lib/dominio/sugerencias";
 import { TEXTO_ESTADO } from "@/lib/dominio/tipos";
+import { fechaDentroDe } from "@/lib/dominio/visita";
+import { supabaseServidor } from "@/lib/supabase/servidor";
 
 
 export const metadata: Metadata = { title: "Panel de dirección" };
@@ -46,6 +49,10 @@ async function Contenido() {
         <Cifra valor={String(nuevosEsteMes)} etiqueta="Clientes nuevos este mes" detalle={`${clientesTotal} en total`} />
         <Cifra valor={String(interesados)} etiqueta="Clientes interesados" detalle="ahora mismo" />
       </div>
+
+      <Suspense fallback={null}>
+        <ClientesEnRiesgo />
+      </Suspense>
 
       <Tarjeta titulo="Visitas por comercial y semana" subtitulo="Semana que empieza el lunes indicado">
         <ColumnasApiladas series={d.comerciales.map((c) => c.nombre)} filas={d.visitasSemana.map((s) => ({ etiqueta: ddmm(s.semana), valores: s.valores }))} />
@@ -103,5 +110,38 @@ async function Contenido() {
         <BarrasHorizontales datos={d.zonas} />
       </Tarjeta>
     </div>
+  );
+}
+
+async function ClientesEnRiesgo() {
+  const sb = await supabaseServidor();
+  const { data } = await sb
+    .from("clientes")
+    .select("id, nombre_negocio, estado, lat, lng, ultimo_resultado, ultimo_resultado_at, ultima_visita_at, proxima_accion, proxima_accion_fecha, horario_visita, comercial:perfiles!clientes_comercial_id_fkey(nombre)")
+    .in("estado", ["cliente", "interesado"]);
+  const riesgos = clientesEnRiesgo(data ?? [], fechaDentroDe(0));
+  return (
+    <Tarjeta titulo="Clientes en riesgo" subtitulo={riesgos.length ? "Se están enfriando: conviene actuar antes de perderlos" : "Ningún cliente se está enfriando ahora mismo"}>
+      {riesgos.length > 0 && (
+        <ul className="-mx-1 divide-y divide-borde">
+          {riesgos.slice(0, 12).map(({ cliente: c, gravedad, motivo }) => (
+            <li key={c.id}>
+              <Link href={`/clientes/${c.id}`} className="flex items-center gap-3 rounded-md px-1 py-2.5 hover:bg-fondo/70">
+                <AlertTriangle className={gravedad === "alta" ? "h-4 w-4 shrink-0 text-acento" : "h-4 w-4 shrink-0 text-amber-500"} aria-label={gravedad === "alta" ? "Riesgo alto" : "Riesgo medio"} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium">{c.nombre_negocio}</span>
+                  <span className="block truncate text-xs text-suave">
+                    {motivo}
+                    {c.comercial?.nombre ? ` · ${c.comercial.nombre}` : ""}
+                  </span>
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-suave" aria-hidden />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+      {riesgos.length > 12 && <p className="mt-2 text-xs text-suave">Y {riesgos.length - 12} más.</p>}
+    </Tarjeta>
   );
 }

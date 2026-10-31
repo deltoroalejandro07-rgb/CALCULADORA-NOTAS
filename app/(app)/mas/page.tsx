@@ -1,4 +1,4 @@
-import { BarChart3, ChevronRight, FileSpreadsheet, Route, Truck, UserCog } from "lucide-react";
+import { BarChart3, CalendarClock, ChevronRight, FileSpreadsheet, Route, Truck, UserCog } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -29,6 +29,7 @@ async function Contenido() {
           { texto: "Logística: rutas y vehículos", icono: Route, href: "/logistica" },
         ]
       : []),
+    { texto: "Agenda: reuniones y notas", icono: CalendarClock, href: "/agenda" },
     { texto: "Mi reparto", icono: Truck, href: "/reparto" },
   ];
 

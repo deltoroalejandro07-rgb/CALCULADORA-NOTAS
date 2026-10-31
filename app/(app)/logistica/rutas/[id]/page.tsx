@@ -38,7 +38,7 @@ async function Contenido({ id }: { id: string }) {
     sb
       .from("rutas")
       .select(
-        "id, fecha, estado, notas, iniciada_at, terminada_at, vehiculos(nombre, matricula), conductor:perfiles!rutas_conductor_id_fkey(nombre), paradas(id, orden, estado, notas_oficina, realizada_at, firmante, motivo_fallo, envases_recogidos, cobrado, pedido_id, llegada_prevista, destinos(id, nombre, direccion, localidad, lat, lng, horario_texto, ventana_desde, ventana_hasta, notas_acceso), albaranes(numero, lineas), clientes(id, nombre_negocio, direccion, localidad, lat, lng, estado, clientes_entrega(horario_entrega, notas_acceso)), pedidos(fecha, importe_total, pedido_lineas(descripcion, cantidad)))",
+        "id, fecha, estado, notas, iniciada_at, terminada_at, vehiculos(nombre, matricula), conductor:perfiles!rutas_conductor_id_fkey(nombre), paradas(id, orden, estado, notas_oficina, realizada_at, firmante, motivo_fallo, envases_recogidos, cobrado, pedido_id, llegada_prevista, destinos(id, nombre, direccion, localidad, telefono, lat, lng, horario_texto, ventana_desde, ventana_hasta, notas_acceso), albaranes(numero, lineas), clientes(id, nombre_negocio, direccion, localidad, telefono, lat, lng, estado, clientes_entrega(horario_entrega, notas_acceso)), pedidos(fecha, importe_total, pedido_lineas(descripcion, cantidad)))",
       )
       .eq("id", id)
       .maybeSingle(),
@@ -68,6 +68,7 @@ async function Contenido({ id }: { id: string }) {
             sinUbicacion: p.clientes.lat == null || p.clientes.lng == null,
             horario_entrega: p.clientes.clientes_entrega?.horario_entrega ?? null,
             notas_acceso: p.clientes.clientes_entrega?.notas_acceso ?? null,
+            telefono: p.clientes.telefono,
           }
         : {
             tipo: "destino" as const,
@@ -77,6 +78,7 @@ async function Contenido({ id }: { id: string }) {
             sinUbicacion: p.destinos!.lat == null || p.destinos!.lng == null,
             horario_entrega: p.destinos!.horario_texto ?? textoFranja(p.destinos!.ventana_desde, p.destinos!.ventana_hasta),
             notas_acceso: p.destinos!.notas_acceso,
+            telefono: p.destinos!.telefono,
           },
       llegada_prevista: p.llegada_prevista?.slice(0, 5) ?? null,
       albaran: p.albaranes?.numero ?? null,

@@ -1,10 +1,12 @@
-import { ChevronLeft, ChevronRight, FileDown, FileText, MapPinned, Sparkles, Truck, Warehouse } from "lucide-react";
+import { CalendarClock, ChevronLeft, ChevronRight, MessageCircle, Phone, FileDown, FileText, MapPinned, Sparkles, Truck, Warehouse } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Cabecera, Cargando, Tarjeta } from "@/components/app/piezas";
 import { NuevaRuta } from "@/components/logistica/nueva-ruta";
 import { exigirAdmin } from "@/lib/auth";
+import { enlaceLlamada, enlaceWhatsApp } from "@/lib/dominio/contacto";
+import { preverPedidos } from "@/lib/dominio/prevision";
 import { TEXTO_ESTADO_RUTA, type EstadoRuta } from "@/lib/dominio/reparto";
 import { fechaDentroDe } from "@/lib/dominio/visita";
 import { fecha as formatoFecha } from "@/lib/formato";
@@ -100,6 +102,10 @@ async function Contenido({ dia }: { dia: string | null }) {
         <ChevronRight className="h-6 w-6" aria-hidden />
       </Link>
 
+      <Suspense fallback={null}>
+        <PrevisionPedidos />
+      </Suspense>
+
       <section className="space-y-2">
         <h2 className="text-[13px] font-semibold text-suave">Rutas del día</h2>
         {rutas?.length ? (
@@ -159,5 +165,54 @@ async function Contenido({ dia }: { dia: string | null }) {
         </li>
       </ul>
     </div>
+  );
+}
+
+/** Clientes de Holded a los que, por su ritmo de pedidos, ya les toca pedir. */
+async function PrevisionPedidos() {
+  const hoy = fechaDentroDe(0);
+  const sb = await supabaseServidor();
+  const desde = sumarDias(hoy, -180);
+  const [{ data: albs }, { data: destinos }] = await Promise.all([
+    sb.from("albaranes").select("destino_id, fecha, creado_at").neq("estado", "anulado").gte("creado_at", desde),
+    sb.from("destinos").select("id, nombre, telefono, localidad"),
+  ]);
+  const prev = preverPedidos((albs ?? []).map((a) => ({ destinoId: a.destino_id, fecha: a.fecha ?? a.creado_at.slice(0, 10) })), hoy);
+  if (!prev.length) return null;
+  const porId = new Map((destinos ?? []).map((d) => [d.id, d]));
+  return (
+    <section className="space-y-2">
+      <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-suave">
+        <CalendarClock className="h-4 w-4 text-marca" aria-hidden /> Previsión de pedidos
+      </h2>
+      <ul className="divide-y divide-borde overflow-hidden rounded-xl border border-borde bg-superficie text-sm shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+        {prev.slice(0, 10).map((p) => {
+          const d = porId.get(p.destinoId);
+          if (!d) return null;
+          return (
+            <li key={p.destinoId} className="flex items-center gap-3 px-3 py-2.5">
+              <span className={p.estado === "toca" ? "h-2 w-2 shrink-0 rounded-full bg-acento" : "h-2 w-2 shrink-0 rounded-full bg-amber-400"} aria-hidden />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium">{d.nombre}</span>
+                <span className="block truncate text-xs text-suave">
+                  {p.estado === "toca" ? `Le toca pedir: suele pedir cada ${p.cadaDias} días y hace ${p.diasDesdeUltimo}` : `Pedirá pronto: cada ${p.cadaDias} días, último hace ${p.diasDesdeUltimo}`}
+                </span>
+              </span>
+              {d.telefono && (
+                <>
+                  <a href={enlaceWhatsApp(d.telefono, "Hola, somos dliverygo. ¿Te preparamos tu pedido? Si nos lo pasas hoy, te lo llevamos en el próximo reparto.")} target="_blank" rel="noreferrer" aria-label={`WhatsApp a ${d.nombre}`} className="rounded-md p-2 text-emerald-700 hover:bg-fondo dark:text-emerald-300">
+                    <MessageCircle className="h-4 w-4" />
+                  </a>
+                  <a href={enlaceLlamada(d.telefono)} aria-label={`Llamar a ${d.nombre}`} className="rounded-md p-2 text-suave hover:bg-fondo">
+                    <Phone className="h-4 w-4" />
+                  </a>
+                </>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      <p className="text-xs text-suave">Calculado con los albaranes de los últimos 6 meses (mínimo 3 pedidos por cliente).</p>
+    </section>
   );
 }

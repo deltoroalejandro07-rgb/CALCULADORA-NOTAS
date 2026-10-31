@@ -23,7 +23,33 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "ajustes_logistica": {
+            "agenda": {
+                  Row: {
+                    "actualizado_at": string,"cliente_id": string | null,"creado_at": string,"fecha": string | null,"hecha": boolean,"hora_fin": string | null,"hora_inicio": string | null,"id": string,"lugar": string | null,"notas": string | null,"tipo": string,"titulo": string,"usuario_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "actualizado_at"?: string,"cliente_id"?: string | null,"creado_at"?: string,"fecha"?: string | null,"hecha"?: boolean,"hora_fin"?: string | null,"hora_inicio"?: string | null,"id"?: string,"lugar"?: string | null,"notas"?: string | null,"tipo"?: string,"titulo": string,"usuario_id"?: string
+                  }
+                  Update: {
+                    "actualizado_at"?: string,"cliente_id"?: string | null,"creado_at"?: string,"fecha"?: string | null,"hecha"?: boolean,"hora_fin"?: string | null,"hora_inicio"?: string | null,"id"?: string,"lugar"?: string | null,"notas"?: string | null,"tipo"?: string,"titulo"?: string,"usuario_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "agenda_cliente_id_fkey"
+      columns: ["cliente_id"]
+isOneToOne: false
+      referencedRelation: "clientes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "agenda_usuario_id_fkey"
+      columns: ["usuario_id"]
+isOneToOne: false
+      referencedRelation: "perfiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"ajustes_logistica": {
                   Row: {
                     "actualizado_at": string,"almacen_direccion": string | null,"almacen_lat": number | null,"almacen_lng": number | null,"hora_salida": string,"id": boolean,"minutos_descarga": number,"volver_almacen": boolean
                   }

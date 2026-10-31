@@ -1,11 +1,13 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Check, FileText, MapPinOff, Navigation, Pencil, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, FileText, MapPinOff, MessageCircle, Navigation, Pencil, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { startTransition, useActionState, useState } from "react";
 import { guardarEntregaCliente, guardarNotaParada, moverParadaAccion, ordenarPorCercania, quitarParada, type EstadoForm } from "@/app/(app)/logistica/acciones";
 import { Boton } from "@/components/ui/boton";
 import { cn } from "@/lib/cn";
+import { enlaceWhatsApp } from "@/lib/dominio/contacto";
+import { mensajeLlegada } from "@/lib/dominio/prevision";
 import type { EstadoParada } from "@/lib/dominio/reparto";
 import { euros, fechaHora } from "@/lib/formato";
 
@@ -20,7 +22,7 @@ export interface ParadaOficina {
   envases_recogidos: number;
   cobrado: number | null;
   /** «cliente» del CRM o «destino» de un albarán de Holded (sin ficha en el CRM). */
-  cliente: { tipo: "cliente" | "destino"; id: string; nombre: string; direccion: string; sinUbicacion: boolean; horario_entrega: string | null; notas_acceso: string | null };
+  cliente: { tipo: "cliente" | "destino"; id: string; nombre: string; direccion: string; sinUbicacion: boolean; horario_entrega: string | null; notas_acceso: string | null; telefono?: string | null };
   llegada_prevista: string | null;
   albaran: string | null;
   pedido: { fecha: string | null; importe: number | null; lineas: string[] } | null;
@@ -131,6 +133,16 @@ export function ListaParadas({ rutaId, paradas, editable, reordenable }: { rutaI
                   <p className="text-xs text-suave">{[p.cliente.horario_entrega && `🕘 ${p.cliente.horario_entrega}`, p.cliente.notas_acceso].filter(Boolean).join(" · ")}</p>
                 )}
                 {p.llegada_prevista && p.estado === "pendiente" && <p className="text-xs font-medium text-marca">Llegada prevista {p.llegada_prevista}</p>}
+                {p.estado === "pendiente" && p.cliente.telefono && (
+                  <a
+                    href={enlaceWhatsApp(p.cliente.telefono, mensajeLlegada("dliverygo", p.llegada_prevista))}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 inline-flex items-center gap-1 rounded-md border border-borde px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-fondo dark:text-emerald-300"
+                  >
+                    <MessageCircle className="h-3.5 w-3.5" aria-hidden /> Avisar por WhatsApp
+                  </a>
+                )}
                 {p.pedido ? (
                   <p className="mt-1 text-sm">
                     {p.albaran ? `Albarán ${p.albaran}` : p.pedido.importe != null ? `Pedido ${euros(p.pedido.importe)}` : "Entrega"}: <span className="text-suave">{p.pedido.lineas.join(", ") || "sin líneas"}</span>

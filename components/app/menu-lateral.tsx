@@ -2,6 +2,7 @@
 
 import {
   BarChart3,
+  CalendarClock,
   CalendarCheck,
   CalendarDays,
   FileSpreadsheet,
@@ -30,6 +31,7 @@ const GRUPOS: Grupo[] = [
     enlaces: [
       { href: "/hoy", texto: "Hoy", icono: CalendarCheck },
       { href: "/clientes", texto: "Clientes", icono: Users },
+      { href: "/agenda", texto: "Agenda", icono: CalendarClock },
       { href: "/mensajes", texto: "Mensajes", icono: MessageCircle },
     ],
   },

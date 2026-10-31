@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Cabecera, Cargando } from "@/components/app/piezas";
+import { AgendaDeHoy } from "@/components/agenda/agenda-hoy";
 import { PanelHoy } from "@/components/hoy/panel-hoy";
 import { usuarioActual } from "@/lib/auth";
 import { supabaseServidor } from "@/lib/supabase/servidor";
@@ -35,7 +36,7 @@ async function Contenido() {
         titulo={`Hola, ${usuario.nombre.split(" ")[0]}`}
         subtitulo={`${fechaLarga.charAt(0).toUpperCase()}${fechaLarga.slice(1)}${usuario.rol === "admin" ? " · todo el equipo" : ""}`}
       />
-      <PanelHoy clientes={data} />
+      <PanelHoy clientes={data} extra={<AgendaDeHoy />} />
     </>
   );
 }
