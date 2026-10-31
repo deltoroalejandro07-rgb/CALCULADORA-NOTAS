@@ -35,7 +35,7 @@ async function Contenido({ fecha }: { fecha: string }) {
   const sb = await supabaseServidor();
   const [{ data: zonas }, { data: albaranes }, { data: vehiculos }, { data: perfiles }, { data: aj }] = await Promise.all([
     sb.from("zonas_reparto").select("id, nombre, dias, vehiculo_id").eq("activa", true).order("nombre"),
-    sb.from("albaranes").select("id, numero, destinos(id, nombre, localidad, zona_id, lat)").eq("estado", "pendiente").order("creado_at"),
+    sb.from("albaranes").select("id, numero, lineas, destinos(id, nombre, localidad, zona_id, lat)").eq("estado", "pendiente").order("creado_at"),
     sb.from("vehiculos").select("id, nombre, matricula, capacidad_bultos, conductor_habitual").eq("activo", true).order("nombre"),
     sb.from("perfiles").select("id, nombre").eq("activo", true).order("nombre"),
     sb.from("ajustes_logistica").select("almacen_lat, almacen_lng, hora_salida").single(),
@@ -45,7 +45,17 @@ async function Contenido({ fecha }: { fecha: string }) {
       fecha={fecha}
       dia={diaSemana(fecha)}
       zonas={zonas ?? []}
-      albaranes={(albaranes ?? []).filter((a) => a.destinos).map((a) => ({ id: a.id, numero: a.numero, nombre: a.destinos!.nombre, localidad: a.destinos!.localidad, zonaId: a.destinos!.zona_id, ubicado: a.destinos!.lat != null }))}
+      albaranes={(albaranes ?? [])
+        .filter((a) => a.destinos)
+        .map((a) => ({
+          id: a.id,
+          numero: a.numero,
+          nombre: a.destinos!.nombre,
+          localidad: a.destinos!.localidad,
+          zonaId: a.destinos!.zona_id,
+          ubicado: a.destinos!.lat != null,
+          lineas: ((a.lineas as { descripcion: string; cantidad: number }[] | null) ?? []).map((l) => ({ descripcion: l.descripcion, cantidad: Number(l.cantidad) })),
+        }))}
       vehiculos={vehiculos ?? []}
       conductores={perfiles ?? []}
       almacen={aj?.almacen_lat != null && aj?.almacen_lng != null ? { lat: aj.almacen_lat, lng: aj.almacen_lng } : null}

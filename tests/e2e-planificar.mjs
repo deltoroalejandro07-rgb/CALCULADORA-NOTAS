@@ -3,6 +3,8 @@
 // `npm run build && npm start`. Uso: CHROMIUM=/ruta node tests/e2e-planificar.mjs <carpeta-capturas>
 import { createClient } from "@supabase/supabase-js";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { writeFileSync } from "node:fs";
 import { abrirNavegador, APP, entrar, paso, sql } from "./e2e-util.mjs";
 
 const SALIDA = process.argv[2] ?? "capturas";
@@ -96,16 +98,20 @@ await page.screenshot({ path: `${SALIDA}/63-albaranes-pendientes.png`, fullPage:
 paso("Planificar hoy: la zona del día ya viene marcada → calcular la mejor ruta");
 await page.goto(`${APP}/logistica/planificar?fecha=${hoy}`);
 await page.getByText("Entregas (4)").waitFor();
+// Hoja de carga del día: la suma de los 4 albaranes, antes de calcular nada
+await page.getByText("Hoja de carga del día (4 albaranes)").waitFor();
+const filaCerveza = page.locator("tr", { hasText: "CERVEZA BARRIL 30L" }).first();
+assert.equal((await filaCerveza.locator("td").nth(1).textContent()).trim(), "2");
 await page.screenshot({ path: `${SALIDA}/64-planificar.png`, fullPage: true });
 await page.getByRole("button", { name: "Calcular la mejor ruta" }).click();
 await page.getByText("tiempo total").waitFor({ timeout: 60_000 });
-await page.waitForTimeout(1500); // mapa
 await page.screenshot({ path: `${SALIDA}/65-ruta-calculada.png`, fullPage: true });
 // Orden: la cafetería (8-11) y el bar (antes de las 10) antes que el kiosko (desde las 12)
 const nombres = await page.locator("ol li p.font-medium").allTextContents();
 console.log("  orden:", nombres.join(" → "));
 assert.ok(nombres.indexOf("KIOSKO DE PRUEBA") > nombres.indexOf("BAR LA PLAZA DE PRUEBA S.L."), "el kiosko (desde las 12) va después del bar (antes de las 10)");
 assert.equal(await page.getByText(/min tarde/).count(), 0, "se cumplen todos los horarios");
+assert.equal(await page.locator(".leaflet-container").count(), 0, "sin mapa");
 
 paso("Aceptar y enviar al conductor (Luis)");
 await page.getByLabel("Conductor").selectOption({ label: "Luis (demo)" });
@@ -116,6 +122,20 @@ assert.equal(sql(`select count(*) from paradas where ruta_id = '${rutaId}' and l
 assert.equal(sql("select count(*) from albaranes where estado = 'planificado'"), "4");
 const llegadaBar = sql(`select llegada_prevista from paradas p join destinos d on d.id = p.destino_id where ruta_id = '${rutaId}' and d.nombre = 'BAR LA PLAZA DE PRUEBA S.L.'`);
 assert.ok(llegadaBar < "10:00:00", `el bar llega antes de las 10 (${llegadaBar})`);
+paso("PDF de la ruta: hoja de carga sumada y orden de reparto con horas");
+await page.getByRole("link", { name: /Descargar PDF/ }).first().waitFor();
+const respuesta = await page.request.get(`${APP}/api/logistica/rutas/${rutaId}/pdf`);
+assert.equal(respuesta.status(), 200);
+assert.equal(respuesta.headers()["content-type"], "application/pdf");
+writeFileSync(`${SALIDA}/hoja-de-ruta.pdf`, await respuesta.body());
+const texto = execFileSync("pdftotext", ["-layout", `${SALIDA}/hoja-de-ruta.pdf`, "-"]).toString();
+assert.match(texto, /HOJA DE CARGA/);
+assert.match(texto, /CERVEZA BARRIL 30L\s+2\b/);
+assert.match(texto, /Caja agua\s+2\b/);
+assert.match(texto, /ORDEN DE REPARTO/);
+assert.match(texto, /Llegada \d{2}:\d{2}/);
+assert.ok(texto.indexOf("BAR LA PLAZA DE PRUEBA") < texto.indexOf("KIOSKO DE PRUEBA"), "en el PDF, el bar antes que el kiosko");
+console.log(texto.split("\n").slice(0, 16).join("\n"));
 await page.goto(`${APP}/logistica/rutas/${rutaId}`);
 await page.getByText(/Albarán SO900001/).waitFor();
 await page.screenshot({ path: `${SALIDA}/66-ruta-oficina.png`, fullPage: true });

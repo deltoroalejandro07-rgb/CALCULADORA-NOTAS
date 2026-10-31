@@ -1,4 +1,4 @@
-import { ChevronLeft, ClipboardList } from "lucide-react";
+import { ChevronLeft, ClipboardList, FileDown } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -7,7 +7,6 @@ import { Cabecera, Cargando, Tarjeta } from "@/components/app/piezas";
 import { BorrarRuta } from "@/components/logistica/acciones-ruta";
 import { AnadirParadas } from "@/components/logistica/anadir-paradas";
 import { ListaParadas, type ParadaOficina } from "@/components/logistica/lista-paradas";
-import { MapaRutaDinamico } from "@/components/mapa/mapa-ruta-dinamico";
 import { exigirAdmin } from "@/lib/auth";
 import { textoFranja } from "@/lib/dominio/horario";
 import { TEXTO_ESTADO_RUTA } from "@/lib/dominio/reparto";
@@ -35,7 +34,7 @@ async function Contenido({ id }: { id: string }) {
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   await exigirAdmin();
   const sb = await supabaseServidor();
-  const [{ data: ruta }, { data: porRepartir }, { data: clientes }, { data: aj }] = await Promise.all([
+  const [{ data: ruta }, { data: porRepartir }, { data: clientes }] = await Promise.all([
     sb
       .from("rutas")
       .select(
@@ -45,7 +44,6 @@ async function Contenido({ id }: { id: string }) {
       .maybeSingle(),
     sb.from("albaranes").select("id, numero, fecha, destinos(nombre, localidad, zonas_reparto(nombre))").eq("estado", "pendiente").order("creado_at"),
     sb.from("clientes").select("id, nombre_negocio, zona").order("nombre_negocio"),
-    sb.from("ajustes_logistica").select("almacen_lat, almacen_lng").single(),
   ]);
   if (!ruta) notFound();
 
@@ -91,13 +89,6 @@ async function Contenido({ id }: { id: string }) {
   const hechas = paradas.filter((p) => p.estado !== "pendiente").length;
   const editable = ruta.estado !== "terminada";
   const reordenable = hechas === 0;
-  const puntos = [...ruta.paradas]
-    .sort((a, b) => a.orden - b.orden)
-    .map((p) => p.clientes ?? (p.destinos ? { nombre_negocio: p.destinos.nombre, lat: p.destinos.lat, lng: p.destinos.lng } : null))
-    .filter((c): c is NonNullable<typeof c> => c?.lat != null && c?.lng != null)
-    .map((c) => ({ nombre: c.nombre_negocio, lat: c.lat!, lng: c.lng! }));
-  const almacen = aj?.almacen_lat != null && aj?.almacen_lng != null ? { lat: aj.almacen_lat, lng: aj.almacen_lng } : null;
-
   return (
     <>
       <Cabecera
@@ -112,13 +103,15 @@ async function Contenido({ id }: { id: string }) {
             {ruta.terminada_at && <span className="text-suave"> · terminó {fechaHora(ruta.terminada_at)}</span>}
           </p>
           {ruta.notas && <p className="mt-1 text-suave">Notas: {ruta.notas}</p>}
-          <Link href={`/logistica/rutas/${ruta.id}/carga`} className="mt-3 flex min-h-11 items-center justify-center gap-2 rounded-xl border border-borde font-semibold active:bg-fondo">
-            <ClipboardList className="h-5 w-5" aria-hidden /> Hoja de carga
+          <a href={`/api/logistica/rutas/${ruta.id}/pdf`} target="_blank" rel="noreferrer" className="mt-3 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-marca font-semibold text-marca-texto active:opacity-90">
+            <FileDown className="h-5 w-5" aria-hidden /> Descargar PDF de la ruta
+          </a>
+          <Link href={`/logistica/rutas/${ruta.id}/carga`} className="mt-2 flex min-h-11 items-center justify-center gap-2 rounded-xl border border-borde font-semibold active:bg-fondo">
+            <ClipboardList className="h-5 w-5" aria-hidden /> Hoja de carga en pantalla
           </Link>
         </Tarjeta>
 
-        {puntos.length > 0 && <MapaRutaDinamico almacen={almacen} puntos={puntos} />}
-
+        
         <ListaParadas rutaId={ruta.id} paradas={paradas} editable={editable} reordenable={reordenable} />
 
         {editable && (

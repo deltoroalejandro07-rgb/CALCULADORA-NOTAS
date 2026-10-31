@@ -16,7 +16,7 @@ export interface ParadaPropuesta {
   albaranIds: string[];
   numeros: string[];
   bultos: number;
-  llegada: string; // HH:MM
+  llegada: string; // HH:MM a la que se entrega
   ventana: string | null;
   espera: number;
   retraso: number;
@@ -123,7 +123,8 @@ export async function calcularPlan(sb: Cliente, fecha: string, albaranIds: strin
             albaranIds: g.albaranes.map((a) => a.id),
             numeros: g.albaranes.map((a) => a.numero ?? "—"),
             bultos: g.albaranes.reduce((s, a) => s + bultosDe(a), 0),
-            llegada: deMinutos(p.llegada),
+            // Hora de entrega: si su horario abre más tarde, la de apertura (no la de llegar y esperar)
+            llegada: deMinutos(p.inicio),
             ventana: textoFranja(g.destino.ventana_desde, g.destino.ventana_hasta),
             espera: Math.round(p.espera),
             retraso: Math.round(p.retraso),

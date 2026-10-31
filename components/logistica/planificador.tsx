@@ -1,7 +1,6 @@
 "use client";
 
-import { AlertTriangle, ChevronLeft, ChevronRight, Clock, Leaf, MapPinOff, Route, Sparkles, Truck } from "lucide-react";
-import dynamic from "next/dynamic";
+import { AlertTriangle, ChevronLeft, ChevronRight, ClipboardList, Clock, Leaf, MapPinOff, Route, Sparkles, Truck } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { aceptarPlan, calcularPlanAccion } from "@/app/(app)/logistica/acciones-planificar";
@@ -9,11 +8,10 @@ import { Tarjeta } from "@/components/app/piezas";
 import { Boton } from "@/components/ui/boton";
 import { cn } from "@/lib/cn";
 import { DIAS_SEMANA } from "@/lib/dominio/destinos";
+import { totalCarga } from "@/lib/dominio/reparto";
 import { fechaDentroDe } from "@/lib/dominio/visita";
 import { fecha as formatoFecha } from "@/lib/formato";
 import type { PlanPropuesto } from "@/lib/logistica/planificar";
-
-const MapaRuta = dynamic(() => import("@/components/mapa/mapa-ruta"), { ssr: false, loading: () => <div className="h-[40vh] animate-pulse rounded-2xl bg-borde/60" /> });
 
 const COLORES = ["#2f7d77", "#dc4f40", "#2a78d6", "#eda100"];
 const duracion = (min: number) => (min >= 60 ? `${Math.floor(min / 60)} h ${String(min % 60).padStart(2, "0")} min` : `${min} min`);
@@ -23,10 +21,36 @@ interface Props {
   fecha: string;
   dia: number;
   zonas: { id: string; nombre: string; dias: number[]; vehiculo_id: string | null }[];
-  albaranes: { id: string; numero: string | null; nombre: string; localidad: string | null; zonaId: string | null; ubicado: boolean }[];
+  albaranes: { id: string; numero: string | null; nombre: string; localidad: string | null; zonaId: string | null; ubicado: boolean; lineas: { descripcion: string; cantidad: number }[] }[];
   vehiculos: { id: string; nombre: string; matricula: string | null; capacidad_bultos: number | null; conductor_habitual: string | null }[];
   conductores: { id: string; nombre: string }[];
   almacen: { lat: number; lng: number } | null;
+}
+
+/** Suma de cada producto de los albaranes: lo que hay que cargar en el almacén. */
+function HojaCarga({ albaranes, titulo }: { albaranes: Props["albaranes"]; titulo: string }) {
+  const total = totalCarga(albaranes.map((a) => ({ lineas: a.lineas.map((l) => ({ producto_id: null, ...l })) })));
+  return (
+    <Tarjeta>
+      <p className="flex items-center gap-2 font-semibold">
+        <ClipboardList className="h-5 w-5 text-marca" aria-hidden /> {titulo}
+      </p>
+      {total.length ? (
+        <table className="mt-2 w-full text-sm">
+          <tbody className="divide-y divide-borde">
+            {total.map((l) => (
+              <tr key={l.clave}>
+                <td className="py-1.5 pr-2">{l.descripcion}</td>
+                <td className="py-1.5 text-right font-semibold tabular-nums">{l.cantidad.toLocaleString("es-ES")}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p className="mt-1 text-sm text-suave">Sin productos en los albaranes elegidos.</p>
+      )}
+    </Tarjeta>
+  );
 }
 
 export function Planificador({ fecha, dia, zonas, albaranes, vehiculos, conductores, almacen }: Props) {
@@ -185,6 +209,8 @@ export function Planificador({ fecha, dia, zonas, albaranes, vehiculos, conducto
             </Link>
           </Tarjeta>
 
+          {seleccionados.length > 0 && <HojaCarga albaranes={seleccionados} titulo={`Hoja de carga del día (${seleccionados.length} albaranes)`} />}
+
           <Tarjeta>
             <p className="font-semibold">Vehículos</p>
             <div className="mt-2 space-y-1">
@@ -253,7 +279,7 @@ export function Planificador({ fecha, dia, zonas, albaranes, vehiculos, conducto
                   {r.salida}–{r.vuelta} · {r.km.toLocaleString("es-ES")} km
                 </p>
               </div>
-              <MapaRuta almacen={almacen} color={COLORES[k % COLORES.length]} puntos={r.paradas.map((p) => ({ lat: p.lat, lng: p.lng, nombre: p.nombre, detalle: `Llegada ${p.llegada}${p.ventana ? ` · ${p.ventana}` : ""}`, aviso: p.retraso > 0 }))} />
+              <HojaCarga albaranes={albaranes.filter((a) => r.paradas.some((p) => p.albaranIds.includes(a.id)))} titulo={`Hoja de carga · ${r.vehiculo}`} />
               <label className="block text-sm font-medium">
                 Conductor
                 <select value={conductorDe[r.vehiculoId] ?? ""} onChange={(e) => setConductorDe((c) => ({ ...c, [r.vehiculoId]: e.target.value }))} className="mt-1 min-h-11 w-full rounded-xl border border-borde bg-superficie px-3">
@@ -277,7 +303,7 @@ export function Planificador({ fecha, dia, zonas, albaranes, vehiculos, conducto
                       <p className="text-xs">
                         <span className="font-semibold">Llegada {p.llegada}</span>
                         {p.ventana && <span className="text-suave"> · horario {p.ventana}</span>}
-                        {p.espera > 0 && <span className="text-suave"> · espera {p.espera} min</span>}
+                        {p.espera > 0 && <span className="text-suave"> · llegaría {p.espera} min antes de que abran</span>}
                         {p.retraso > 0 && <span className="font-semibold text-red-600"> · {p.retraso} min tarde</span>}
                         {p.numeros.length > 1 && <span className="text-suave"> · {p.numeros.length} albaranes</span>}
                       </p>
@@ -292,6 +318,7 @@ export function Planificador({ fecha, dia, zonas, albaranes, vehiculos, conducto
           <Boton type="button" className="min-h-14 w-full text-lg" cargando={aceptando} onClick={aceptar}>
             Aceptar y enviar al conductor
           </Boton>
+          <p className="text-center text-xs text-suave">Al aceptar podrás descargar el PDF con la hoja de carga y el orden de reparto.</p>
           <Boton type="button" variante="secundario" className="w-full" onClick={() => setPlan(null)}>
             Cambiar la selección
           </Boton>

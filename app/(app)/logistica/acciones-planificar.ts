@@ -227,7 +227,7 @@ export async function aceptarPlan(plan: PlanPropuesto, conductores: Record<strin
   for (const r of plan.rutas) {
     const { data: ruta, error } = await sb
       .from("rutas")
-      .insert({ fecha: plan.fecha, vehiculo_id: r.vehiculoId, conductor_id: conductores[r.vehiculoId], notas: `Ruta calculada: ${r.km} km, ${Math.floor(r.duracionMin / 60)} h ${r.duracionMin % 60} min. Salida ${r.salida}.` })
+      .insert({ fecha: plan.fecha, vehiculo_id: r.vehiculoId, conductor_id: conductores[r.vehiculoId], notas: `Ruta calculada: ${r.km.toLocaleString("es-ES")} km, ${Math.floor(r.duracionMin / 60)} h ${r.duracionMin % 60} min. Salida ${r.salida}.` })
       .select("id")
       .single();
     if (error) return { error: error.message };

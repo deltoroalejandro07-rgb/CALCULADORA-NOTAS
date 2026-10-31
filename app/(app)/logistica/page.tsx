@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, FileText, MapPinned, Sparkles, Truck, Warehouse } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileDown, FileText, MapPinned, Sparkles, Truck, Warehouse } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -107,8 +107,8 @@ async function Contenido({ dia }: { dia: string | null }) {
             {rutas.map((r) => {
               const hechas = r.paradas.filter((p) => p.estado !== "pendiente").length;
               return (
-                <li key={r.id}>
-                  <Link href={`/logistica/rutas/${r.id}`} className="flex items-center gap-3 rounded-2xl border border-borde bg-superficie p-4 active:bg-fondo">
+                <li key={r.id} className="overflow-hidden rounded-2xl border border-borde bg-superficie">
+                  <Link href={`/logistica/rutas/${r.id}`} className="flex items-center gap-3 p-4 active:bg-fondo">
                     <Truck className="h-6 w-6 shrink-0 text-marca" aria-hidden />
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold">
@@ -121,6 +121,9 @@ async function Contenido({ dia }: { dia: string | null }) {
                     </div>
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${COLOR_RUTA[r.estado]}`}>{TEXTO_ESTADO_RUTA[r.estado]}</span>
                   </Link>
+                  <a href={`/api/logistica/rutas/${r.id}/pdf`} target="_blank" rel="noreferrer" className="flex min-h-11 items-center justify-center gap-2 border-t border-borde text-sm font-semibold text-marca active:bg-fondo">
+                    <FileDown className="h-4 w-4" aria-hidden /> Descargar PDF (carga y orden de reparto)
+                  </a>
                 </li>
               );
             })}
