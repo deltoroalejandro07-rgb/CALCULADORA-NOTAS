@@ -31,25 +31,19 @@ describe("lineas de entrega", () => {
 });
 
 describe("validarEntrega", () => {
-  it("una entrega necesita firma", () => {
-    expect(validarEntrega({ estado: "entregada", hayFirma: true, fotos: 0 })).toBeNull();
-    expect(validarEntrega({ estado: "entregada", hayFirma: false, fotos: 0 })).toMatch(/firma/);
-  });
-
-  it("sin firma hace falta motivo y foto", () => {
-    expect(validarEntrega({ estado: "entregada", hayFirma: false, fotos: 0, sinFirmaMotivo: "Cerrado, dejado en almacén" })).toMatch(/foto/);
-    expect(validarEntrega({ estado: "entregada", hayFirma: false, fotos: 1, sinFirmaMotivo: "Cerrado, dejado en almacén" })).toBeNull();
+  it("una entrega no pide firma (va en el albarán de papel)", () => {
+    expect(validarEntrega({ estado: "entregada" })).toBeNull();
   });
 
   it("un fallo necesita motivo", () => {
-    expect(validarEntrega({ estado: "fallida", hayFirma: false, fotos: 0 })).toMatch(/motivo/);
-    expect(validarEntrega({ estado: "fallida", hayFirma: false, fotos: 0, motivo_fallo: "Cerrado" })).toBeNull();
+    expect(validarEntrega({ estado: "fallida" })).toMatch(/motivo/);
+    expect(validarEntrega({ estado: "fallida", motivo_fallo: "Cerrado" })).toBeNull();
   });
 
   it("un cobro necesita forma de pago", () => {
-    expect(validarEntrega({ estado: "entregada", hayFirma: true, fotos: 0, cobrado: 25 })).toMatch(/pagado/);
-    expect(validarEntrega({ estado: "entregada", hayFirma: true, fotos: 0, cobrado: 25, forma_cobro: "Efectivo" })).toBeNull();
-    expect(validarEntrega({ estado: "entregada", hayFirma: true, fotos: 0, cobrado: NaN })).toMatch(/importe/);
+    expect(validarEntrega({ estado: "entregada", cobrado: 25 })).toMatch(/pagado/);
+    expect(validarEntrega({ estado: "entregada", cobrado: 25, forma_cobro: "Efectivo" })).toBeNull();
+    expect(validarEntrega({ estado: "entregada", cobrado: NaN })).toMatch(/importe/);
   });
 });
 

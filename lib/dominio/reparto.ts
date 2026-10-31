@@ -87,24 +87,17 @@ export function cambiarCantidad(lineas: LineaEntrega[], i: number, delta: number
 
 export interface DatosEntrega {
   estado: "entregada" | "fallida";
-  hayFirma: boolean;
-  fotos: number;
-  sinFirmaMotivo?: string | null;
   motivo_fallo?: string | null;
   cobrado?: number | null;
   forma_cobro?: string | null;
 }
 
 /**
- * Qué falta para poder guardar. Una entrega lleva firma; si el cliente no puede firmar,
- * hace falta una foto de la entrega y decir por qué. Un fallo necesita el motivo.
+ * Qué falta para poder guardar. La firma va en el albarán de papel de Holded, así que una
+ * entrega no la pide; un fallo necesita el motivo y un cobro, cómo ha pagado.
  */
 export function validarEntrega(d: DatosEntrega): string | null {
   if (d.estado === "fallida") return d.motivo_fallo?.trim() ? null : "Elige el motivo.";
-  if (!d.hayFirma) {
-    if (!d.sinFirmaMotivo?.trim()) return "Falta la firma del cliente.";
-    if (!d.fotos) return "Sin firma, haz al menos una foto de la entrega.";
-  }
   if (d.cobrado != null) {
     if (!Number.isFinite(d.cobrado) || d.cobrado < 0) return "El importe cobrado no es válido.";
     if (d.cobrado > 0 && !d.forma_cobro) return "Indica cómo ha pagado.";

@@ -1,4 +1,4 @@
-// Recorrido de logística: la oficina planifica una ruta y el conductor entrega con firma,
+// Recorrido de logística: la oficina planifica una ruta y el conductor entrega (sin firma: va en el albarán de papel),
 // también sin cobertura. Requiere `npm run db:start` con datos demo y `npm run build && npm start`.
 // Uso: CHROMIUM=/ruta node tests/e2e-reparto.mjs <carpeta-capturas>
 import { createClient } from "@supabase/supabase-js";
@@ -93,34 +93,25 @@ for (let i = 0; i < 40; i++) {
 }
 assert.ok(await c.evaluate(async () => !!(await caches.match("/reparto"))), "reparto en caché");
 
-paso("Sin cobertura: entrega con firma, 1 vacío recogido y cobro");
+paso("Sin cobertura: entrega con cambios (1 vacío recogido y cobro)");
 await movil.ctx.setOffline(true);
 const t0 = Date.now();
-await c.getByRole("button", { name: "Entregar", exact: true }).click();
-await c.getByText("Firma del cliente").waitFor();
+await c.getByRole("button", { name: /^Con cambios/ }).click();
+await c.getByRole("button", { name: "Confirmar entrega" }).waitFor();
+assert.equal(await c.getByText("Firma del cliente").count(), 0, "ya no se pide firma");
 await c.getByRole("button", { name: "Más envases recogidos" }).click();
 await c.getByLabel("Ha pagado ahora").check();
 await c.getByLabel("Importe cobrado (€)").fill("45,50");
 await c.getByRole("button", { name: "Efectivo" }).click();
-// Confirmar sin firmar → avisa
-await c.getByRole("button", { name: "Confirmar entrega" }).click();
-await c.getByRole("alert").getByText("Falta la firma del cliente.").waitFor();
-await c.getByLabel("Recuadro para la firma del cliente").scrollIntoViewIfNeeded();
-const lienzo = await c.getByLabel("Recuadro para la firma del cliente").boundingBox();
-await c.mouse.move(lienzo.x + 30, lienzo.y + 100);
-await c.mouse.down();
-for (const [dx, dy] of [[60, -40], [110, 20], [160, -30], [220, 30], [280, -10]]) await c.mouse.move(lienzo.x + dx, lienzo.y + 100 + dy, { steps: 4 });
-await c.mouse.up();
-await c.getByLabel("Nombre de quien recibe (opcional)").fill("Paco");
-await c.screenshot({ path: `${SALIDA}/45-entrega-firma.png`, fullPage: true });
+await c.screenshot({ path: `${SALIDA}/45-entrega.png`, fullPage: true });
 await c.getByRole("button", { name: "Confirmar entrega" }).click();
 await c.getByText(/✓ Entrega en .* guardada/).waitFor();
-console.log(`  entrega registrada en ${((Date.now() - t0) / 1000).toFixed(1)} s (automatizado, incluye el aviso de firma)`);
+console.log(`  entrega registrada en ${((Date.now() - t0) / 1000).toFixed(1)} s (automatizado)`);
 await c.getByText("1 entrega guardada en el móvil: se subirán solas con cobertura").waitFor();
 await c.getByText("1 de 3 paradas").waitFor();
 
 paso("Sin cobertura: la segunda parada no se puede entregar (cerrado)");
-await c.getByRole("button", { name: "No se ha podido entregar" }).click();
+await c.getByRole("button", { name: /^No entregado/ }).click();
 await c.getByRole("button", { name: "Registrar: no entregada" }).click();
 await c.getByRole("alert").getByText("Elige el motivo.").waitFor();
 await c.getByRole("button", { name: "Cerrado" }).click();
@@ -136,30 +127,26 @@ await c.getByText("2 de 3 paradas").waitFor();
 await c.getByText("2 entregas guardadas en el móvil: se subirán solas con cobertura").waitFor();
 await c.screenshot({ path: `${SALIDA}/47-arranque-sin-cobertura.png`, fullPage: true });
 
-paso("Vuelve la cobertura → se sube solo, con la firma");
+paso("Vuelve la cobertura → se sube solo");
 await movil.ctx.setOffline(false);
 for (let i = 0; i < 60 && sql(`select count(*) from paradas where ruta_id = '${rutaId}' and estado <> 'pendiente'`) !== "2"; i++) await c.waitForTimeout(300);
 const entregada = sql(
-  `select p.estado || '|' || p.firmante || '|' || p.envases_recogidos || '|' || p.cobrado || '|' || p.forma_cobro || '|' || (p.firma_path is not null) || '|' || (p.lat is not null) from paradas p where ruta_id = '${rutaId}' and estado = 'entregada'`,
+  `select p.estado || '|' || p.envases_recogidos || '|' || p.cobrado || '|' || p.forma_cobro || '|' || (p.firma_path is null) || '|' || (p.lat is not null) from paradas p where ruta_id = '${rutaId}' and estado = 'entregada'`,
 );
 console.log("  en BD:", entregada);
-assert.equal(entregada, "entregada|Paco|1|45.50|Efectivo|true|true");
+assert.equal(entregada, "entregada|1|45.50|Efectivo|true|true");
 assert.equal(sql(`select motivo_fallo from paradas where ruta_id = '${rutaId}' and estado = 'fallida'`), "Cerrado");
-assert.equal(sql("select count(*) from storage.objects where bucket_id = 'entregas' and name like '%firma-%'"), "1", "la firma está en el almacén");
 assert.equal(sql(`select estado from rutas where id = '${rutaId}'`), "en_curso");
 await c.getByText(/guardadas? en el móvil/).waitFor({ state: "detached" });
 await c.screenshot({ path: `${SALIDA}/48-subido.png`, fullPage: true });
 
-paso("La oficina ve la entrega y el albarán con la firma");
+paso("La oficina ve la entrega y el albarán");
 await page.goto(`${APP}/logistica/rutas/${rutaId}`);
-await page.getByText(/firma Paco/).waitFor();
+await page.getByText(/Entregada .*1 envases recogidos · cobrado/).waitFor();
 await page.getByText(/No entregada: Cerrado/).waitFor();
 await page.screenshot({ path: `${SALIDA}/49-ruta-con-entregas.png`, fullPage: true });
 await page.getByRole("link", { name: "Ver albarán" }).first().click();
 await page.getByText("Albarán de entrega").waitFor();
-const firma = page.getByAltText("Firma de Paco");
-await firma.waitFor();
-assert.ok(await firma.evaluate((img) => img.complete && img.naturalWidth > 0), "la firma se ve");
 await page.screenshot({ path: `${SALIDA}/50-albaran.png`, fullPage: true });
 
 paso("El albarán entregado queda entregado; el que falló vuelve a «por repartir»");

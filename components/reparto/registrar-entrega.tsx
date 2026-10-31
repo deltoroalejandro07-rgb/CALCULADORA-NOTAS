@@ -1,7 +1,7 @@
 "use client";
 
 import { Camera, ChevronLeft, Loader2, Minus, Plus, X } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Boton } from "@/components/ui/boton";
 import { Chip } from "@/components/ui/chip";
 import { cn } from "@/lib/cn";
@@ -18,7 +18,6 @@ import {
 } from "@/lib/dominio/reparto";
 import { comprimirFoto, useUbicacion } from "@/lib/navegador";
 import { baseReparto, guardarEntrega } from "@/lib/offline/reparto";
-import { Firma, type PanelFirma } from "./firma";
 
 const campo = "mt-1 min-h-12 w-full rounded-xl border border-borde bg-superficie px-3 outline-none focus:border-marca";
 
@@ -54,13 +53,8 @@ export function RegistrarEntrega({
   alCancelar: () => void;
 }) {
   const { pos } = useUbicacion();
-  const firma = useRef<PanelFirma>(null);
   const entregaId = useRef(crypto.randomUUID()); // fijo: un doble toque no crea dos entregas
   const [lineas, setLineas] = useState<LineaEntrega[]>(() => lineasIniciales(parada.lineas));
-  const [hayFirma, setHayFirma] = useState(false);
-  const [sinFirma, setSinFirma] = useState(false);
-  const [sinFirmaMotivo, setSinFirmaMotivo] = useState("");
-  const [firmante, setFirmante] = useState("");
   const [envasesEntregados, setEnvasesEntregados] = useState(0);
   const [envasesRecogidos, setEnvasesRecogidos] = useState(0);
   const [cobro, setCobro] = useState(false);
@@ -73,7 +67,6 @@ export function RegistrarEntrega({
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const entradaFoto = useRef<HTMLInputElement>(null);
-  const alCambiarFirma = useCallback((v: boolean) => setHayFirma(v), []);
 
   async function anadirFotos(ficheros: FileList | null) {
     if (!ficheros?.length) return;
@@ -97,9 +90,6 @@ export function RegistrarEntrega({
     const cobrado = cobro ? leerImporte(importe) : null;
     const fallo = validarEntrega({
       estado: modo,
-      hayFirma: modo === "entregada" && !sinFirma && hayFirma,
-      fotos: fotos.length,
-      sinFirmaMotivo: sinFirma ? sinFirmaMotivo : null,
       motivo_fallo: motivo === "Otro" ? observaciones.trim() || null : motivo,
       cobrado: cobro ? cobrado : null,
       forma_cobro: formaCobro,
@@ -111,8 +101,8 @@ export function RegistrarEntrega({
     setGuardando(true);
     setError(null);
     try {
-      const blobFirma = modo === "entregada" && !sinFirma ? await firma.current?.exportar() ?? null : null;
-      const notas = [sinFirma && modo === "entregada" ? `Sin firma: ${sinFirmaMotivo.trim()}` : null, observaciones.trim() || null].filter(Boolean).join(" · ");
+      // La firma va en el albarán de papel de Holded: aquí solo se registra la entrega
+      const notas = observaciones.trim();
       await guardarEntrega(
         baseReparto(),
         {
@@ -123,7 +113,7 @@ export function RegistrarEntrega({
           estado: modo,
           datos: {
             realizada_at: new Date().toISOString(),
-            firmante: modo === "entregada" ? firmante.trim() || null : null,
+            firmante: null,
             lineas: modo === "entregada" ? lineas : [],
             envases_entregados: modo === "entregada" ? envasesEntregados : 0,
             envases_recogidos: envasesRecogidos,
@@ -136,7 +126,7 @@ export function RegistrarEntrega({
             precision_m: pos?.precision ?? null,
           },
         },
-        blobFirma,
+        null,
         fotos.map((f) => f.blob),
       );
       fotos.forEach((f) => URL.revokeObjectURL(f.url));
@@ -208,32 +198,6 @@ export function RegistrarEntrega({
             )}
           </section>
 
-          <section className="rounded-2xl border border-borde bg-superficie p-4">
-            {!sinFirma ? (
-              <>
-                <p className="mb-2 text-sm font-medium">Firma del cliente</p>
-                <Firma ref={firma} alCambiar={alCambiarFirma} />
-                <label className="mt-2 block text-sm">
-                  Nombre de quien recibe (opcional)
-                  <input value={firmante} onChange={(e) => setFirmante(e.target.value)} autoComplete="off" className={campo} />
-                </label>
-                <button type="button" onClick={() => setSinFirma(true)} className="mt-2 text-sm text-suave underline">
-                  El cliente no puede firmar
-                </button>
-              </>
-            ) : (
-              <>
-                <p className="text-sm font-medium">Entrega sin firma</p>
-                <label className="mt-1 block text-sm">
-                  ¿Por qué? (obligatorio, y haz una foto de la entrega)
-                  <input value={sinFirmaMotivo} onChange={(e) => setSinFirmaMotivo(e.target.value)} placeholder="Cerrado, dejado en el almacén del bar" className={campo} />
-                </label>
-                <button type="button" onClick={() => setSinFirma(false)} className="mt-2 text-sm text-suave underline">
-                  Volver a la firma
-                </button>
-              </>
-            )}
-          </section>
         </>
       ) : (
         <section className="rounded-2xl border border-borde bg-superficie p-4">
@@ -279,7 +243,7 @@ export function RegistrarEntrega({
               className="flex h-24 w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-borde text-xs text-suave"
             >
               {procesandoFoto ? <Loader2 className="h-6 w-6 animate-spin" /> : <Camera className="h-6 w-6" />}
-              Foto{modo === "entregada" && !sinFirma ? " (opcional)" : ""}
+              Foto (opcional)
             </button>
           )}
         </div>

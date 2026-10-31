@@ -6,12 +6,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Boton } from "@/components/ui/boton";
 import { cn } from "@/lib/cn";
 import { enlaceComoLlegar, enlaceLlamada } from "@/lib/dominio/contacto";
-import { direccionParada, ordenCarga, progreso, siguienteParada, totalCarga, type EstadoParada, type ParadaReparto, type RutaReparto } from "@/lib/dominio/reparto";
+import { direccionParada, lineasIniciales, ordenCarga, progreso, siguienteParada, totalCarga, type EstadoParada, type ParadaReparto, type RutaReparto } from "@/lib/dominio/reparto";
 import { enlaceRutaGoogle } from "@/lib/dominio/ruta";
 import { fechaDentroDe } from "@/lib/dominio/visita";
 import { fecha as formatoFecha, fechaHora } from "@/lib/formato";
 import { useEnLinea } from "@/lib/navegador";
-import { baseReparto, descargarRutas, limpiarAntiguas, reintentarErrores, sincronizarReparto, type EntregaLocal } from "@/lib/offline/reparto";
+import { baseReparto, descargarRutas, guardarEntrega, limpiarAntiguas, reintentarErrores, sincronizarReparto, type EntregaLocal } from "@/lib/offline/reparto";
 import { supabaseNavegador } from "@/lib/supabase/navegador";
 import { RegistrarEntrega } from "./registrar-entrega";
 
@@ -33,6 +33,18 @@ async function quienSoy(): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+/** Posición del móvil si se obtiene rápido (máx. 2 s); si no, se entrega sin ella. */
+function posicionRapida(): Promise<{ lat: number; lng: number; precision: number } | null> {
+  return new Promise((ok) => {
+    if (!("geolocation" in navigator)) return ok(null);
+    navigator.geolocation.getCurrentPosition(
+      (p) => ok({ lat: p.coords.latitude, lng: p.coords.longitude, precision: p.coords.accuracy }),
+      () => ok(null),
+      { maximumAge: 120_000, timeout: 2000 },
+    );
+  });
 }
 
 function avisarServiceWorker(mensaje: "preferir-reparto" | "preferir-visita") {
@@ -129,6 +141,43 @@ export function PanelReparto() {
   };
 
   const paradaVista = vista.tipo === "parada" || vista.tipo === "entrega" ? ruta?.paradas.find((p) => p.id === vista.id) : undefined;
+
+  /** Entregado tal cual (todo lo del albarán), de un toque. Se guarda en el móvil y se sube solo. */
+  async function entregarRapido(p: ParadaReparto) {
+    if (!ruta || !usuarioId || hechasEnMovil.has(p.id)) return;
+    if (!confirm(`¿Marcar ${p.cliente.nombre} como entregado?`)) return;
+    const pos = await posicionRapida();
+    await guardarEntrega(
+      baseReparto(),
+      {
+        id: crypto.randomUUID(),
+        parada_id: p.id,
+        ruta_id: ruta.id,
+        usuario_id: usuarioId,
+        estado: "entregada",
+        datos: {
+          realizada_at: new Date().toISOString(),
+          firmante: null,
+          lineas: lineasIniciales(p.lineas),
+          envases_entregados: 0,
+          envases_recogidos: 0,
+          cobrado: null,
+          forma_cobro: null,
+          motivo_fallo: null,
+          observaciones: null,
+          lat: pos?.lat ?? null,
+          lng: pos?.lng ?? null,
+          precision_m: pos?.precision ?? null,
+        },
+      },
+      null,
+      [],
+    );
+    setVista({ tipo: "lista" });
+    setAviso(`✓ ${p.cliente.nombre}: entregado`);
+    window.scrollTo({ top: 0 });
+    void actualizar(usuarioId);
+  }
 
   if (vista.tipo === "entrega" && ruta && paradaVista) {
     return (
@@ -227,7 +276,7 @@ export function PanelReparto() {
         <button type="button" onClick={() => setVista({ tipo: "lista" })} className="inline-flex min-h-11 items-center gap-1 text-sm text-suave">
           <ChevronLeft className="h-5 w-5" aria-hidden /> Ruta
         </button>
-        <FichaParada parada={paradaVista} estado={estado} local={local} destacada={estado === "pendiente"} onEntregar={(modo) => setVista({ tipo: "entrega", id: paradaVista.id, modo })} />
+        <FichaParada parada={paradaVista} estado={estado} local={local} destacada={estado === "pendiente"} onEntregar={(modo) => setVista({ tipo: "entrega", id: paradaVista.id, modo })} onRapido={() => entregarRapido(paradaVista)} />
       </div>
     );
   }
@@ -330,7 +379,7 @@ export function PanelReparto() {
       {siguiente ? (
         <section className="px-4">
           <p className="mb-1 text-sm font-semibold uppercase tracking-wide text-suave">Siguiente parada</p>
-          <FichaParada parada={siguiente} estado="pendiente" destacada numero={ordenadas.indexOf(siguiente) + 1} onEntregar={(modo) => setVista({ tipo: "entrega", id: siguiente.id, modo })} />
+          <FichaParada parada={siguiente} estado="pendiente" destacada numero={ordenadas.indexOf(siguiente) + 1} onEntregar={(modo) => setVista({ tipo: "entrega", id: siguiente.id, modo })} onRapido={() => entregarRapido(siguiente)} />
         </section>
       ) : (
         total > 0 && (
@@ -392,6 +441,7 @@ function FichaParada({
   destacada,
   numero,
   onEntregar,
+  onRapido,
 }: {
   parada: ParadaReparto;
   estado: EstadoParada;
@@ -399,6 +449,8 @@ function FichaParada({
   destacada?: boolean;
   numero?: number;
   onEntregar: (modo: "entregada" | "fallida") => void;
+  /** Entregado tal cual, de un toque (la firma va en el albarán de papel). */
+  onRapido: () => void;
 }) {
   const c = parada.cliente;
   const comoLlegar = enlaceComoLlegar({ lat: c.lat, lng: c.lng, direccion: c.direccion, localidad: c.localidad });
@@ -448,12 +500,19 @@ function FichaParada({
       </div>
       {estado === "pendiente" ? (
         <>
-          <Boton type="button" onClick={() => onEntregar("entregada")} className="mt-3 min-h-14 w-full text-lg">
-            <Check className="h-6 w-6" aria-hidden /> Entregar
+          <Boton type="button" onClick={onRapido} className="mt-3 min-h-14 w-full text-lg">
+            <Check className="h-6 w-6" aria-hidden /> Entregado
           </Boton>
-          <button type="button" onClick={() => onEntregar("fallida")} className="mt-2 min-h-11 w-full text-sm font-medium text-red-700 underline dark:text-red-300">
-            No se ha podido entregar
-          </button>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => onEntregar("entregada")} className="min-h-11 rounded-xl border border-borde text-sm font-medium active:bg-fondo">
+              Con cambios
+              <span className="block text-[11px] font-normal text-suave">falta algo, envases, cobro</span>
+            </button>
+            <button type="button" onClick={() => onEntregar("fallida")} className="min-h-11 rounded-xl border border-red-200 text-sm font-medium text-red-700 active:bg-fondo dark:border-red-900 dark:text-red-300">
+              No entregado
+              <span className="block text-[11px] font-normal opacity-75">cerrado, no lo quiere…</span>
+            </button>
+          </div>
         </>
       ) : (
         <p className={cn("mt-3 rounded-xl p-3 text-sm font-medium", estado === "entregada" ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-100" : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-100")}>

@@ -149,16 +149,10 @@ await movil.page.goto(`${APP}/reparto`);
 await movil.page.getByText("Siguiente parada").waitFor();
 await movil.page.getByText(/Llegada prevista \d{2}:\d{2}/).first().waitFor();
 await movil.page.screenshot({ path: `${SALIDA}/67-conductor.png`, fullPage: true });
-await movil.page.getByRole("button", { name: "Entregar", exact: true }).click();
-const lienzo = movil.page.getByLabel("Recuadro para la firma del cliente");
-await lienzo.scrollIntoViewIfNeeded();
-const b = await lienzo.boundingBox();
-await movil.page.mouse.move(b.x + 30, b.y + 90);
-await movil.page.mouse.down();
-await movil.page.mouse.move(b.x + 200, b.y + 60, { steps: 6 });
-await movil.page.mouse.up();
-await movil.page.getByRole("button", { name: "Confirmar entrega" }).click();
-await movil.page.getByText(/✓ Entrega en .* guardada/).waitFor();
+// Un toque (con confirmación): la firma va en el albarán de papel de Holded
+movil.page.once("dialog", (d) => d.accept());
+await movil.page.getByRole("button", { name: "Entregado", exact: true }).click();
+await movil.page.getByText(/✓ .*: entregado/).waitFor();
 for (let i = 0; i < 40 && sql("select count(*) from albaranes where estado = 'entregado'") !== "1"; i++) await movil.page.waitForTimeout(300);
 assert.equal(sql("select count(*) from albaranes where estado = 'entregado'"), "1", "el albarán pasa a entregado");
 

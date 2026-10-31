@@ -142,7 +142,7 @@ export async function pdfHojaRuta(h: HojaRuta): Promise<Uint8Array> {
     // Casilla para marcar a mano
     sitio(18);
     pagina.drawRectangle({ x, y: y - 11, width: 9, height: 9, borderColor: GRIS, borderWidth: 0.8 });
-    pagina.drawText("Entregado     Firma: ____________________", { x: x + 14, y: y - 10, size: 8, font: normal, color: GRIS });
+    pagina.drawText("Entregado", { x: x + 14, y: y - 10, size: 8, font: normal, color: GRIS });
     y -= 18;
     if (y < yInicio) pagina.drawLine({ start: { x: M, y: y + 2 }, end: { x: A4[0] - M, y: y + 2 }, thickness: 0.5, color: LINEA });
     y -= 6;
