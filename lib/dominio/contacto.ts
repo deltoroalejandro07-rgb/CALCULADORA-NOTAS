@@ -26,3 +26,21 @@ export function enlaceComoLlegar(c: { lat: number | null; lng: number | null; di
   if (c.direccion) return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent([c.direccion, c.localidad].filter(Boolean).join(", "))}`;
   return null;
 }
+
+/** Dirección pública de la app (para enlaces en mensajes). */
+export function urlDeLaApp(): string {
+  const s = (process.env.NEXT_PUBLIC_SITE_URL ?? "").trim().replace(/\/+$/, "");
+  if (/^https?:\/\//.test(s)) return s;
+  return s ? `https://${s}` : "https://crm-comercial-mu.vercel.app";
+}
+
+/** WhatsApp para el conductor con su ruta y el enlace a «Mi reparto». */
+export function mensajeRutaConductor(r: { conductor: string; cuando: string; vehiculo: string | null; paradas: number; salida: string | null; url: string }): string {
+  const nombre = r.conductor.split(" ")[0];
+  const n = r.paradas === 1 ? "1 parada" : `${r.paradas} paradas`;
+  return (
+    `Hola ${nombre} 👋, ya tienes tu ruta de ${r.cuando}` +
+    `${r.vehiculo ? ` con la ${r.vehiculo}` : ""}: ${n}${r.salida ? `, salida a las ${r.salida}` : ""}.\n` +
+    `Ábrela aquí para ver el orden, las horas y marcar las entregas: ${r.url}/reparto`
+  );
+}

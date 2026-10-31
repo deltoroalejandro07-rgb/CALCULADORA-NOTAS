@@ -27,7 +27,7 @@ async function Contenido() {
   const yo = await exigirAdmin();
   const sb = await supabaseServidor();
   const [{ data: perfiles }, { data: clientes }] = await Promise.all([
-    sb.from("perfiles").select("id, nombre, email, rol, activo, creado_at").order("activo", { ascending: false }).order("nombre"),
+    sb.from("perfiles").select("id, nombre, email, telefono, rol, activo, creado_at").order("activo", { ascending: false }).order("nombre"),
     sb.from("clientes").select("comercial_id"),
   ]);
   const porComercial = new Map<string, number>();

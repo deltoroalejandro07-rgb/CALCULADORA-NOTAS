@@ -1,4 +1,4 @@
-import { ChevronLeft, ClipboardList, FileDown } from "lucide-react";
+import { ChevronLeft, ClipboardList, FileDown, MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -8,6 +8,7 @@ import { BorrarRuta } from "@/components/logistica/acciones-ruta";
 import { AnadirParadas } from "@/components/logistica/anadir-paradas";
 import { ListaParadas, type ParadaOficina } from "@/components/logistica/lista-paradas";
 import { exigirAdmin } from "@/lib/auth";
+import { enlaceWhatsApp, mensajeRutaConductor, urlDeLaApp } from "@/lib/dominio/contacto";
 import { textoFranja } from "@/lib/dominio/horario";
 import { TEXTO_ESTADO_RUTA } from "@/lib/dominio/reparto";
 import { fecha, fechaHora } from "@/lib/formato";
@@ -38,7 +39,7 @@ async function Contenido({ id }: { id: string }) {
     sb
       .from("rutas")
       .select(
-        "id, fecha, estado, notas, iniciada_at, terminada_at, vehiculos(nombre, matricula), conductor:perfiles!rutas_conductor_id_fkey(nombre), paradas(id, orden, estado, notas_oficina, realizada_at, firmante, motivo_fallo, envases_recogidos, cobrado, pedido_id, llegada_prevista, destinos(id, nombre, direccion, localidad, telefono, lat, lng, horario_texto, ventana_desde, ventana_hasta, notas_acceso), albaranes(numero, lineas), clientes(id, nombre_negocio, direccion, localidad, telefono, lat, lng, estado, clientes_entrega(horario_entrega, notas_acceso)), pedidos(fecha, importe_total, pedido_lineas(descripcion, cantidad)))",
+        "id, fecha, estado, notas, iniciada_at, terminada_at, vehiculos(nombre, matricula), conductor:perfiles!rutas_conductor_id_fkey(nombre, telefono), paradas(id, orden, estado, notas_oficina, realizada_at, firmante, motivo_fallo, envases_recogidos, cobrado, pedido_id, llegada_prevista, destinos(id, nombre, direccion, localidad, telefono, lat, lng, horario_texto, ventana_desde, ventana_hasta, notas_acceso), albaranes(numero, lineas), clientes(id, nombre_negocio, direccion, localidad, telefono, lat, lng, estado, clientes_entrega(horario_entrega, notas_acceso)), pedidos(fecha, importe_total, pedido_lineas(descripcion, cantidad)))",
       )
       .eq("id", id)
       .maybeSingle(),
@@ -112,6 +113,26 @@ async function Contenido({ id }: { id: string }) {
           <Link href={`/logistica/rutas/${ruta.id}/carga`} className="mt-2 flex min-h-11 items-center justify-center gap-2 rounded-lg border border-borde font-semibold active:bg-fondo">
             <ClipboardList className="h-5 w-5" aria-hidden /> Hoja de carga en pantalla
           </Link>
+          {ruta.estado !== "terminada" && ruta.conductor?.telefono && (
+            <a
+              href={enlaceWhatsApp(
+                ruta.conductor.telefono,
+                mensajeRutaConductor({
+                  conductor: ruta.conductor.nombre,
+                  cuando: fecha(ruta.fecha),
+                  vehiculo: ruta.vehiculos?.nombre ?? null,
+                  paradas: paradas.length,
+                  salida: /Salida (\d{2}:\d{2})/.exec(ruta.notas ?? "")?.[1] ?? null,
+                  url: urlDeLaApp(),
+                }),
+              )}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 flex min-h-11 items-center justify-center gap-2 rounded-lg border border-emerald-200 font-semibold text-emerald-700 hover:bg-fondo dark:border-emerald-900 dark:text-emerald-300"
+            >
+              <MessageCircle className="h-5 w-5" aria-hidden /> Enviar la ruta por WhatsApp
+            </a>
+          )}
         </Tarjeta>
           {hechas === 0 && <BorrarRuta id={ruta.id} />}
         </aside>

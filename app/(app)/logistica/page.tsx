@@ -6,7 +6,7 @@ import { Cabecera, Cargando } from "@/components/app/piezas";
 import { NuevaRuta } from "@/components/logistica/nueva-ruta";
 import { cn } from "@/lib/cn";
 import { exigirAdmin } from "@/lib/auth";
-import { enlaceLlamada, enlaceWhatsApp } from "@/lib/dominio/contacto";
+import { enlaceLlamada, enlaceWhatsApp, mensajeRutaConductor, urlDeLaApp } from "@/lib/dominio/contacto";
 import { preverPedidos } from "@/lib/dominio/prevision";
 import { TEXTO_ESTADO_RUTA, type EstadoRuta } from "@/lib/dominio/reparto";
 import { fechaDentroDe } from "@/lib/dominio/visita";
@@ -79,7 +79,7 @@ async function Contenido({ dia }: { dia: string | null }) {
   const [{ data: rutas }, { data: vehiculos }, { data: perfiles }, { data: almacen }, { data: pendientes }, { count: zonas }] = await Promise.all([
     sb
       .from("rutas")
-      .select("id, fecha, estado, notas, vehiculos(nombre, matricula), conductor:perfiles!rutas_conductor_id_fkey(nombre), paradas(estado)")
+      .select("id, fecha, estado, notas, vehiculos(nombre, matricula), conductor:perfiles!rutas_conductor_id_fkey(nombre, telefono), paradas(estado)")
       .eq("fecha", fecha)
       .order("creado_at"),
     sb.from("vehiculos").select("id, nombre, matricula, conductor_habitual").eq("activo", true).order("nombre"),
@@ -205,6 +205,31 @@ async function Contenido({ dia }: { dia: string | null }) {
                         </div>
                         <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${COLOR_RUTA[r.estado]}`}>{TEXTO_ESTADO_RUTA[r.estado]}</span>
                       </div>
+                      {r.estado !== "terminada" &&
+                        (r.conductor?.telefono ? (
+                          <a
+                            href={enlaceWhatsApp(
+                              r.conductor.telefono,
+                              mensajeRutaConductor({
+                                conductor: r.conductor.nombre,
+                                cuando: fecha === hoy ? "hoy" : fecha === sumarDias(hoy, 1) ? "mañana" : nombreCorto(fecha, hoy),
+                                vehiculo: r.vehiculos?.nombre ?? null,
+                                paradas: r.paradas.length,
+                                salida: /Salida (\d{2}:\d{2})/.exec(r.notas ?? "")?.[1] ?? null,
+                                url: urlDeLaApp(),
+                              }),
+                            )}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex min-h-10 items-center justify-center gap-1.5 border-t border-borde text-sm font-medium text-emerald-700 hover:bg-fondo dark:text-emerald-300"
+                          >
+                            <MessageCircle className="h-4 w-4" aria-hidden /> Enviar la ruta por WhatsApp a {r.conductor.nombre.split(" ")[0]}
+                          </a>
+                        ) : r.conductor ? (
+                          <Link href="/ajustes/usuarios" className="flex min-h-10 items-center justify-center gap-1.5 border-t border-borde text-xs text-suave hover:bg-fondo">
+                            Para enviarle la ruta por WhatsApp, añade el móvil de {r.conductor.nombre.split(" ")[0]} en Usuarios
+                          </Link>
+                        ) : null)}
                       <div className="grid grid-cols-2 border-t border-borde text-sm font-medium">
                         <a href={`/api/logistica/rutas/${r.id}/pdf`} target="_blank" rel="noreferrer" className="flex min-h-10 items-center justify-center gap-1.5 text-marca hover:bg-fondo">
                           <FileDown className="h-4 w-4" aria-hidden /> Descargar PDF

@@ -122,6 +122,15 @@ assert.equal(sql(`select count(*) from paradas where ruta_id = '${rutaId}' and l
 assert.equal(sql("select count(*) from albaranes where estado = 'planificado'"), "4");
 const llegadaBar = sql(`select llegada_prevista from paradas p join destinos d on d.id = p.destino_id where ruta_id = '${rutaId}' and d.nombre = 'BAR LA PLAZA DE PRUEBA S.L.'`);
 assert.ok(llegadaBar < "10:00:00", `el bar llega antes de las 10 (${llegadaBar})`);
+paso("Sin móvil del conductor, la app indica dónde añadirlo; con móvil, WhatsApp de un toque");
+await page.getByRole("link", { name: /añade el móvil de Luis en Usuarios/ }).waitFor();
+sql("update perfiles set telefono = '+34600123456' where email = 'luis@demo.local'");
+await page.reload();
+const waRuta = await page.getByRole("link", { name: "Enviar la ruta por WhatsApp a Luis" }).getAttribute("href");
+assert.ok(waRuta.startsWith("https://wa.me/34600123456?text="), waRuta);
+assert.match(decodeURIComponent(waRuta), /Hola Luis.*ruta de hoy.*4 paradas.*\/reparto/s);
+sql("update perfiles set telefono = null where email = 'luis@demo.local'");
+
 paso("PDF de la ruta: hoja de carga sumada y orden de reparto con horas");
 await page.getByRole("link", { name: /Descargar PDF/ }).first().waitFor();
 const respuesta = await page.request.get(`${APP}/api/logistica/rutas/${rutaId}/pdf`);

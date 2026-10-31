@@ -11,6 +11,7 @@ interface Usuario {
   id: string;
   nombre: string;
   email: string;
+  telefono: string | null;
   rol: "admin" | "comercial" | "repartidor";
   activo: boolean;
   clientes: number;
@@ -97,6 +98,10 @@ export function GestionUsuarios({ yo, usuarios, claveConfigurada, urlApp }: { yo
             Email
             <input name="email" type="email" required inputMode="email" placeholder="ana@tuempresa.es" className={campo} />
           </label>
+          <label className="block text-sm font-medium">
+            Móvil (opcional, para enviarle la ruta por WhatsApp)
+            <input name="telefono" type="tel" inputMode="tel" placeholder="600 123 456" className={campo} />
+          </label>
           <CampoContrasena />
           <label className="block text-sm font-medium">
             Rol
@@ -131,6 +136,7 @@ export function GestionUsuarios({ yo, usuarios, claveConfigurada, urlApp }: { yo
                     {u.nombre} {u.id === yo && <span className="text-xs font-normal text-suave">(tú)</span>}
                   </p>
                   <p className="truncate text-sm text-suave">{u.email}</p>
+                  <p className="truncate text-sm text-suave">{u.telefono ? `📱 ${u.telefono}` : "Sin móvil"}</p>
                   <p className="text-xs text-suave">
                     {u.clientes} cliente{u.clientes === 1 ? "" : "s"} · {u.activo ? "Activo" : "Desactivado"}
                   </p>
@@ -158,6 +164,17 @@ export function GestionUsuarios({ yo, usuarios, claveConfigurada, urlApp }: { yo
                   className="min-h-10 rounded-lg border border-borde px-3 text-sm font-medium"
                 >
                   Cambiar contraseña
+                </button>
+                <button
+                  type="button"
+                  disabled={pendiente}
+                  onClick={() => {
+                    const t = prompt(`Móvil de ${u.nombre} (para enviarle la ruta por WhatsApp). Déjalo vacío para quitarlo:`, u.telefono ?? "");
+                    if (t !== null) cambiar({ id: u.id, accion: "telefono", telefono: t.trim() });
+                  }}
+                  className="min-h-10 rounded-lg border border-borde px-3 text-sm font-medium"
+                >
+                  {u.telefono ? "Cambiar móvil" : "Añadir móvil"}
                 </button>
               </div>
               {u.id !== yo && (
