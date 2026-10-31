@@ -1,30 +1,50 @@
 "use client";
 
 import { Copy, KeyRound } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { generarClavesAvisos } from "@/app/(app)/avisos-acciones";
 import { Boton } from "@/components/ui/boton";
 
 function Valor({ nombre, valor }: { nombre: string; valor: string }) {
-  const [copiado, setCopiado] = useState(false);
+  const [copiado, setCopiado] = useState<"" | "ok" | "manual">("");
+  const caja = useRef<HTMLTextAreaElement>(null);
+
+  async function copiar() {
+    try {
+      await navigator.clipboard.writeText(valor);
+      setCopiado("ok");
+      return;
+    } catch {}
+    // Respaldo para navegadores que no dejan usar el portapapeles: seleccionar y copiar
+    const t = caja.current;
+    if (t) {
+      t.focus();
+      t.select();
+      t.setSelectionRange(0, valor.length);
+      setCopiado(document.execCommand("copy") ? "ok" : "manual");
+    }
+  }
+
   return (
-    <div className="rounded-lg border border-borde bg-fondo/50 p-2">
-      <p className="text-xs font-semibold">
-        Key: <code>{nombre}</code>
-      </p>
-      <div className="mt-1 flex items-center gap-2">
-        <code className="min-w-0 flex-1 truncate text-xs">{valor}</code>
-        <button
-          type="button"
-          onClick={() => {
-            void navigator.clipboard?.writeText(valor);
-            setCopiado(true);
-          }}
-          className="inline-flex shrink-0 items-center gap-1 rounded-md border border-borde bg-superficie px-2 py-1 text-xs font-medium"
-        >
-          <Copy className="h-3.5 w-3.5" aria-hidden /> {copiado ? "Copiado" : "Copiar"}
+    <div className="rounded-lg border border-borde bg-superficie p-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-semibold">
+          Key: <code className="select-all">{nombre}</code>
+        </p>
+        <button type="button" onClick={copiar} className="inline-flex shrink-0 items-center gap-1 rounded-md border border-borde bg-fondo px-2.5 py-1.5 text-xs font-medium hover:bg-borde/40">
+          <Copy className="h-3.5 w-3.5" aria-hidden /> {copiado === "ok" ? "✓ Copiado" : "Copiar valor"}
         </button>
       </div>
+      <textarea
+        ref={caja}
+        readOnly
+        value={valor}
+        rows={valor.length > 60 ? 3 : 1}
+        onFocus={(e) => e.currentTarget.select()}
+        aria-label={`Valor de ${nombre}`}
+        className="mt-1.5 w-full resize-none break-all rounded-md border border-borde bg-fondo/60 px-2 py-1.5 font-mono text-xs outline-none focus:border-marca"
+      />
+      {copiado === "manual" && <p className="text-xs text-suave">Tu navegador no deja copiar solo: el valor ya está seleccionado, cópialo con Ctrl+C (o Cmd+C en Mac).</p>}
     </div>
   );
 }
