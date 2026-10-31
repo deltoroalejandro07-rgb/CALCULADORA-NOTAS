@@ -2,8 +2,10 @@
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { z } from "zod";
 import { exigirAdmin } from "@/lib/auth";
+import { enviarAvisos } from "@/lib/avisos";
 import { leerCoordenadas, leerLineasTexto } from "@/lib/dominio/destinos";
 import { interpretarHorario } from "@/lib/dominio/horario";
 import { guardarAlbaranes } from "@/lib/logistica/importar";
@@ -294,5 +296,14 @@ export async function aceptarPlan(plan: PlanPropuesto, conductores: Record<strin
       return { error: /paradas_albaran_vivo/.test(e2.message) ? "Algún albarán ya se ha planificado mientras tanto. Vuelve a calcular." : e2.message };
     }
   }
+  // Aviso al móvil de cada conductor, sin hacer esperar a la oficina
+  after(async () => {
+    const hoy = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid" }).format(new Date());
+    const cuando = plan.fecha === hoy ? "de hoy" : `del ${new Date(plan.fecha + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric" })}`;
+    for (const r of plan.rutas) {
+      const n = r.paradas.length;
+      await enviarAvisos([conductores[r.vehiculoId]], { titulo: `🚚 Ya tienes tu ruta ${cuando}`, cuerpo: `${r.vehiculo}: ${n === 1 ? "1 parada" : `${n} paradas`}, salida ${r.salida}.`, url: "/reparto", etiqueta: `ruta-${plan.fecha}` }).catch(() => 0);
+    }
+  });
   redirect(`/logistica?fecha=${plan.fecha}`);
 }

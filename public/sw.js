@@ -96,3 +96,40 @@ self.addEventListener("fetch", (event) => {
     );
   }
 });
+
+// ---------- Avisos en el móvil (push) ----------
+self.addEventListener("push", (event) => {
+  let d = {};
+  try {
+    d = event.data ? event.data.json() : {};
+  } catch {
+    d = { cuerpo: event.data ? event.data.text() : "" };
+  }
+  event.waitUntil(
+    self.registration.showNotification(d.titulo || "dliverygo", {
+      body: d.cuerpo || "",
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      tag: d.etiqueta || undefined,
+      data: { url: d.url || "/hoy" },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = new URL(event.notification.data?.url || "/hoy", self.location.origin).href;
+  event.waitUntil(
+    (async () => {
+      const ventanas = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      for (const v of ventanas) {
+        if ("focus" in v) {
+          await v.focus();
+          if ("navigate" in v) await v.navigate(url).catch(() => {});
+          return;
+        }
+      }
+      await self.clients.openWindow(url);
+    })(),
+  );
+});

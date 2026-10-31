@@ -517,6 +517,26 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"push_suscripciones": {
+                  Row: {
+                    "auth": string,"creado_at": string,"endpoint": string,"id": string,"p256dh": string,"usuario_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "auth": string,"creado_at"?: string,"endpoint": string,"id"?: string,"p256dh": string,"usuario_id"?: string
+                  }
+                  Update: {
+                    "auth"?: string,"creado_at"?: string,"endpoint"?: string,"id"?: string,"p256dh"?: string,"usuario_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "push_suscripciones_usuario_id_fkey"
+      columns: ["usuario_id"]
+isOneToOne: false
+      referencedRelation: "perfiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"rutas": {
                   Row: {
                     "conductor_id": string | null,"creado_at": string,"creado_por": string | null,"estado": Database["public"]['Enums']["estado_ruta"],"fecha": string,"id": string,"iniciada_at": string | null,"notas": string | null,"terminada_at": string | null,"vehiculo_id": string | null

@@ -51,6 +51,16 @@ await admin.page.getByRole("link", { name: "Pregúntale a tu CRM" }).click();
 await admin.page.getByText("Falta activar la IA").waitFor();
 await admin.page.screenshot({ path: `${SALIDA}/76-asistente.png` });
 
+paso("Avisos: sin claves, la oficina ve los pasos y puede crear las claves");
+await admin.page.goto(`${APP}/ajustes/avisos`);
+await admin.page.getByText("Activar los avisos (una sola vez, 5 minutos)").waitFor();
+await admin.page.getByRole("button", { name: "Crear las claves" }).click();
+await admin.page.getByText("NEXT_PUBLIC_VAPID_PUBLIC_KEY").waitFor();
+await admin.page.getByText("VAPID_PRIVATE_KEY").waitFor();
+await admin.page.screenshot({ path: `${SALIDA}/80-avisos.png` });
+await page.goto(`${APP}/mas`);
+await page.getByText("La oficina aún no ha activado los avisos.").waitFor();
+
 assert.deepEqual([...errores, ...admin.errores], [], "sin errores en la consola");
 await admin.navegador.close();
 await navegador.close();

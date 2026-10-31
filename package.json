@@ -34,6 +34,7 @@
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.7.0",
     "unpdf": "^1.9.1",
+    "web-push": "^3.6.7",
     "write-excel-file": "^4.1.1",
     "zod": "^4.6.7"
   },
@@ -44,6 +45,7 @@
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/web-push": "^3.6.4",
     "eslint": "^9",
     "eslint-config-next": "16.4.2",
     "fake-indexeddb": "^6.2.6",

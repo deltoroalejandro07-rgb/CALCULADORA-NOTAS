@@ -1,9 +1,11 @@
-import { BarChart3, CalendarClock, CalendarDays, ChevronRight, FileSpreadsheet, MapPinned, MessageCircle, Route, Sparkles, Truck, UserCog, Warehouse } from "lucide-react";
+import { Bell, BarChart3, CalendarClock, CalendarDays, ChevronRight, FileSpreadsheet, MapPinned, MessageCircle, Route, Sparkles, Truck, UserCog, Warehouse } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Cabecera, Cargando, Tarjeta } from "@/components/app/piezas";
+import { AvisosMovil } from "@/components/app/avisos";
 import { usuarioActual } from "@/lib/auth";
+import { clavePublicaAvisos } from "@/lib/avisos";
 import { TEXTO_ROL } from "@/lib/dominio/tipos";
 import { CambiarContrasena, CerrarSesion, SelectorTema } from "./controles";
 
@@ -52,6 +54,7 @@ async function Contenido() {
               { texto: "Zonas de reparto", icono: MapPinned, href: "/logistica/zonas" },
               { texto: "Vehículos y almacén", icono: Warehouse, href: "/logistica/vehiculos" },
               { texto: "Usuarios", icono: UserCog, href: "/ajustes/usuarios" },
+              { texto: "Avisos en el móvil", icono: Bell, href: "/ajustes/avisos" },
               { texto: "Importar / exportar clientes", icono: FileSpreadsheet, href: "/ajustes/importar" },
             ],
           },
@@ -90,6 +93,10 @@ async function Contenido() {
             </ul>
           </section>
         ))}
+
+        <Tarjeta>
+          <AvisosMovil clavePublica={clavePublicaAvisos()} />
+        </Tarjeta>
 
         <Tarjeta>
           <p className="mb-2 text-sm font-medium">Apariencia</p>

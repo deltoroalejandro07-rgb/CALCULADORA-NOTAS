@@ -2,6 +2,7 @@
 
 import {
   BarChart3,
+  Bell,
   CalendarClock,
   CalendarCheck,
   CalendarDays,
@@ -59,6 +60,7 @@ const GRUPOS: Grupo[] = [
       { href: "/logistica/zonas", texto: "Zonas de reparto", icono: MapPinned },
       { href: "/logistica/vehiculos", texto: "Vehículos y almacén", icono: Warehouse },
       { href: "/ajustes/usuarios", texto: "Usuarios", icono: UserCog },
+      { href: "/ajustes/avisos", texto: "Avisos en el móvil", icono: Bell },
       { href: "/ajustes/importar", texto: "Importar / exportar", icono: FileSpreadsheet },
     ],
   },
