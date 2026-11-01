@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Cabecera, Cargando } from "@/components/app/piezas";
 import { NuevaRuta } from "@/components/logistica/nueva-ruta";
+import { RecordarDia } from "@/components/logistica/recordar-dia";
+import { diaDeReparto } from "@/lib/dia-reparto";
 import { VolverAEmpezar } from "@/components/logistica/volver-a-empezar";
 import { cn } from "@/lib/cn";
 import { exigirAdmin } from "@/lib/auth";
@@ -27,7 +29,7 @@ export default function PaginaLogistica({ searchParams }: PageProps<"/logistica"
       <Cabecera titulo="Reparto" subtitulo="Prepara el reparto del día en 3 pasos" />
       <Suspense fallback={<Cargando />}>
         {searchParams.then((sp) => (
-          <Contenido dia={typeof sp.fecha === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sp.fecha) ? sp.fecha : null} />
+          <Contenido dia={sp.fecha} />
         ))}
       </Suspense>
     </>
@@ -72,10 +74,10 @@ const boton = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg
 const principal = cn(boton, "bg-marca text-marca-texto shadow-sm hover:brightness-110");
 const secundario = cn(boton, "border border-borde bg-superficie text-texto shadow-sm hover:bg-fondo");
 
-async function Contenido({ dia }: { dia: string | null }) {
+async function Contenido({ dia }: { dia: unknown }) {
   await exigirAdmin();
   const hoy = fechaDentroDe(0);
-  const fecha = dia ?? hoy;
+  const fecha = await diaDeReparto(dia, hoy);
   const sb = await supabaseServidor();
   const [{ data: rutas }, { data: vehiculos }, { data: perfiles }, { data: almacen }, { data: pendientes }, { count: zonas }] = await Promise.all([
     sb
@@ -99,6 +101,7 @@ async function Contenido({ dia }: { dia: string | null }) {
 
   return (
     <div className="space-y-4 px-4 pb-8">
+      <RecordarDia fecha={fecha} />
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-borde bg-superficie p-1.5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
         <Link href={`/logistica?fecha=${sumarDias(fecha, -1)}`} aria-label="Día anterior" className="rounded-lg p-2.5 text-suave hover:bg-fondo">
           <ChevronLeft className="h-5 w-5" />
@@ -109,7 +112,7 @@ async function Contenido({ dia }: { dia: string | null }) {
         </p>
         <div className="flex items-center gap-1">
           {fecha !== hoy && (
-            <Link href="/logistica" className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-marca hover:bg-fondo">
+            <Link href={`/logistica?fecha=${hoy}`} className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-marca hover:bg-fondo">
               Hoy
             </Link>
           )}

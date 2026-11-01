@@ -1,6 +1,6 @@
 "use server";
 
-import { refresh } from "next/cache";
+import { actualizarPantallas } from "@/lib/actualizar";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { z } from "zod";
@@ -41,7 +41,7 @@ export async function guardarZona(_: EstadoForm, form: FormData): Promise<Estado
   const datos = { ...r.data, dias };
   const { error } = zid ? await sb.from("zonas_reparto").update(datos).eq("id", zid) : await sb.from("zonas_reparto").insert(datos);
   if (error) return { error: error.message };
-  refresh();
+  actualizarPantallas();
   return { ok: zid ? "Zona guardada." : "Zona añadida." };
 }
 
@@ -49,7 +49,7 @@ export async function borrarZona(form: FormData) {
   await exigirAdmin();
   const sb = await supabaseServidor();
   await sb.from("zonas_reparto").update({ activa: false }).eq("id", id.parse(form.get("id")));
-  refresh();
+  actualizarPantallas();
 }
 
 export async function guardarAjustesPlan(_: EstadoForm, form: FormData): Promise<EstadoForm> {
@@ -65,7 +65,7 @@ export async function guardarAjustesPlan(_: EstadoForm, form: FormData): Promise
   const sb = await supabaseServidor();
   const { error } = await sb.from("ajustes_logistica").update(r.data).eq("id", true);
   if (error) return { error: error.message };
-  refresh();
+  actualizarPantallas();
   return { ok: "Ajustes guardados." };
 }
 
@@ -107,7 +107,7 @@ export async function altaManual(_: EstadoForm, form: FormData): Promise<EstadoF
     "manual",
     null,
   );
-  refresh();
+  actualizarPantallas();
   if (res.repetido) return { error: `El albarán ${res.numero} ya estaba importado.` };
   return { ok: `Entrega para ${res.cliente} añadida.${res.avisos.length ? " " + res.avisos.join(" ") : ""}` };
 }
@@ -116,7 +116,7 @@ export async function anularAlbaran(form: FormData) {
   await exigirAdmin();
   const sb = await supabaseServidor();
   await sb.from("albaranes").update({ estado: "anulado" }).eq("id", id.parse(form.get("id"))).eq("estado", "pendiente");
-  refresh();
+  actualizarPantallas();
 }
 
 type Sb = Awaited<ReturnType<typeof supabaseServidor>>;
@@ -143,7 +143,7 @@ export async function borrarAlbaran(form: FormData) {
   const { error: e2 } = await sb.from("albaranes").delete().eq("id", aid);
   if (e2) throw new Error(e2.message);
   await borrarPdfsHuerfanos(sb, [a.archivo_path]);
-  refresh();
+  actualizarPantallas();
 }
 
 /**
@@ -166,7 +166,7 @@ export async function vaciarAlbaranes(_: EstadoForm, form: FormData): Promise<Es
     if (!nombres.length) break;
     await sb.storage.from("albaranes").remove(nombres);
   }
-  refresh();
+  actualizarPantallas();
   return {
     ok: `Hecho: ${r.albaranes === 1 ? "1 albarán borrado" : `${r.albaranes} albaranes borrados`}${r.rutas ? ` y ${r.rutas === 1 ? "1 ruta" : `${r.rutas} rutas`}` : ""}${conDirecciones ? ", también las direcciones guardadas" : ""}. Todo listo para empezar.`,
   };
@@ -219,7 +219,7 @@ export async function editarDestino(_: EstadoForm, form: FormData): Promise<Esta
   }
   const { error } = await sb.from("destinos").update({ ...datos, ...ubicacion, actualizado_at: new Date().toISOString() }).eq("id", did);
   if (error) return { error: error.message };
-  refresh();
+  actualizarPantallas();
   return { ok: "Guardado." + nota };
 }
 
@@ -231,7 +231,7 @@ export async function asignarZona(form: FormData) {
   if (!ids.length) return;
   const sb = await supabaseServidor();
   await sb.from("destinos").update({ zona_id: id.safeParse(zona).success ? zona : null, actualizado_at: new Date().toISOString() }).in("id", ids);
-  refresh();
+  actualizarPantallas();
 }
 
 /** Vuelve a buscar en el mapa los clientes con albaranes pendientes que aún no tienen ubicación. */
@@ -248,7 +248,7 @@ export async function reubicarPendientes(): Promise<EstadoForm> {
       encontrados++;
     }
   }
-  refresh();
+  actualizarPantallas();
   if (!sinUbicar.length) return { ok: "Todos tienen ubicación." };
   const faltan = sinUbicar.length - encontrados;
   return faltan
@@ -306,4 +306,10 @@ export async function aceptarPlan(plan: PlanPropuesto, conductores: Record<strin
     }
   });
   redirect(`/logistica?fecha=${plan.fecha}`);
+}
+
+/** Tras subir PDF (va por la API, no por una acción): refresca todas las pantallas. */
+export async function refrescarTrasSubir() {
+  await exigirAdmin();
+  actualizarPantallas();
 }

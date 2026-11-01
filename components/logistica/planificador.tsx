@@ -1,21 +1,17 @@
 "use client";
 
-import { AlertTriangle, ChevronLeft, ChevronRight, ClipboardList, Clock, Leaf, MapPinOff, Route, Sparkles, Truck } from "lucide-react";
+import { AlertTriangle, ClipboardList, Clock, Leaf, MapPinOff, Route, Sparkles, Truck } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { aceptarPlan, calcularPlanAccion } from "@/app/(app)/logistica/acciones-planificar";
 import { Tarjeta } from "@/components/app/piezas";
 import { Boton } from "@/components/ui/boton";
 import { cn } from "@/lib/cn";
-import { DIAS_SEMANA } from "@/lib/dominio/destinos";
 import { totalCarga } from "@/lib/dominio/reparto";
-import { fechaDentroDe } from "@/lib/dominio/visita";
-import { fecha as formatoFecha } from "@/lib/formato";
 import type { PlanPropuesto } from "@/lib/logistica/planificar";
 
 const COLORES = ["#2f7d77", "#dc4f40", "#2a78d6", "#eda100"];
 const duracion = (min: number) => (min >= 60 ? `${Math.floor(min / 60)} h ${String(min % 60).padStart(2, "0")} min` : `${min} min`);
-const sumarDias = (d: string, n: number) => new Date(Date.parse(d + "T12:00:00Z") + n * 86_400_000).toISOString().slice(0, 10);
 
 interface Props {
   fecha: string;
@@ -103,20 +99,6 @@ export function Planificador({ fecha, dia, zonas, albaranes, vehiculos, conducto
 
   return (
     <div className="space-y-4 px-4 pb-8">
-      <div className="flex items-center justify-between rounded-xl border border-borde bg-superficie p-2">
-        <Link href={`/logistica/planificar?fecha=${sumarDias(fecha, -1)}`} aria-label="Día anterior" className="rounded-lg p-3 active:bg-fondo">
-          <ChevronLeft className="h-5 w-5" />
-        </Link>
-        <div className="text-center">
-          <p className="font-semibold">
-            {DIAS_SEMANA[dia - 1].largo} {formatoFecha(fecha)}
-          </p>
-          <p className="text-xs text-suave">{fecha === fechaDentroDe(0) ? "Hoy" : fecha === fechaDentroDe(1) ? "Mañana" : ""}</p>
-        </div>
-        <Link href={`/logistica/planificar?fecha=${sumarDias(fecha, 1)}`} aria-label="Día siguiente" className="rounded-lg p-3 active:bg-fondo">
-          <ChevronRight className="h-5 w-5" />
-        </Link>
-      </div>
 
       {!almacen && (
         <Tarjeta className="border-amber-300 bg-amber-50 text-sm dark:border-amber-800 dark:bg-amber-950/40">

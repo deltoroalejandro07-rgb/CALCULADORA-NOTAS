@@ -1,6 +1,6 @@
 "use server";
 
-import { refresh } from "next/cache";
+import { actualizarPantallas } from "@/lib/actualizar";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { exigirAdmin, usuarioActual } from "@/lib/auth";
@@ -66,5 +66,5 @@ export async function marcarMensaje(form: FormData) {
   const estado = z.enum(["respondido", "fallido", "enviado"]).parse(form.get("estado"));
   const sb = await supabaseServidor();
   await sb.from("mensajes").update({ estado }).eq("id", id);
-  refresh();
+  actualizarPantallas();
 }

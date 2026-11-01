@@ -1,10 +1,12 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Cabecera, Cargando } from "@/components/app/piezas";
 import { AltaManual, ListaAlbaranes, SubirAlbaranes, VaciarAlbaranes, type AlbaranPendiente } from "@/components/logistica/albaranes";
-import { PasosReparto } from "@/components/logistica/pasos";
+import { BarraDia, PasosReparto } from "@/components/logistica/pasos";
+import { diaDeReparto } from "@/lib/dia-reparto";
+import { fechaDentroDe } from "@/lib/dominio/visita";
 import { exigirAdmin } from "@/lib/auth";
 import { supabaseServidor } from "@/lib/supabase/servidor";
 
@@ -13,20 +15,18 @@ export const metadata: Metadata = { title: "Albaranes por repartir" };
 export default function PaginaAlbaranes({ searchParams }: PageProps<"/logistica/albaranes">) {
   return (
     <>
-      <Link href="/logistica" className="inline-flex min-h-11 items-center gap-1 px-3 pt-3 text-sm text-suave">
-        <ChevronLeft className="h-5 w-5" aria-hidden /> Reparto
-      </Link>
       <Cabecera titulo="Albaranes" subtitulo="Paso 1: sube los PDF de Holded y revisa zonas y direcciones" />
       <Suspense fallback={<Cargando />}>
         {searchParams.then((sp) => (
-          <Contenido fecha={typeof sp.fecha === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sp.fecha) ? sp.fecha : undefined} />
+          <Contenido param={sp.fecha} />
         ))}
       </Suspense>
     </>
   );
 }
 
-async function Contenido({ fecha }: { fecha?: string }) {
+async function Contenido({ param }: { param: unknown }) {
+  const fecha = await diaDeReparto(param, fechaDentroDe(0));
   await exigirAdmin();
   const sb = await supabaseServidor();
   const [{ data: albaranes }, { data: zonas }, { data: destinos }] = await Promise.all([
@@ -49,6 +49,7 @@ async function Contenido({ fecha }: { fecha?: string }) {
   const pendientes = lista.filter((a) => a.estado === "pendiente").length;
   return (
     <>
+    <BarraDia fecha={fecha} />
     <PasosReparto actual={1} fecha={fecha} />
     <div className="space-y-4 px-4 pb-8">
       <SubirAlbaranes />
@@ -59,7 +60,7 @@ async function Contenido({ fecha }: { fecha?: string }) {
     {pendientes > 0 && (
       <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 px-4 pb-3 lg:bottom-4">
         <Link
-          href={fecha ? `/logistica/planificar?fecha=${fecha}` : "/logistica/planificar"}
+          href={`/logistica/planificar?fecha=${fecha}`}
           className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-marca px-4 font-semibold text-marca-texto shadow-lg shadow-marca/25 hover:brightness-110"
         >
           Siguiente: calcular la ruta ({pendientes}) <ChevronRight className="h-5 w-5" aria-hidden />

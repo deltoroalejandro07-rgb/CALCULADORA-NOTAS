@@ -1,6 +1,6 @@
 "use server";
 
-import { refresh } from "next/cache";
+import { actualizarPantallas } from "@/lib/actualizar";
 import { z } from "zod";
 import { usuarioActual } from "@/lib/auth";
 import { supabaseServidor } from "@/lib/supabase/servidor";
@@ -39,7 +39,7 @@ export async function guardarEvento(_: EstadoForm, form: FormData): Promise<Esta
     ? await sb.from("agenda").update({ ...datos, actualizado_at: new Date().toISOString() }).eq("id", id)
     : await sb.from("agenda").insert(datos);
   if (error) return { error: "No se ha podido guardar. Inténtalo de nuevo." };
-  refresh();
+  actualizarPantallas();
   return { ok: id ? "Guardado." : datos.tipo === "nota" ? "Nota guardada." : datos.tipo === "tarea" ? "Tarea añadida." : "Reunión añadida." };
 }
 
@@ -47,12 +47,12 @@ export async function borrarEvento(form: FormData) {
   await usuarioActual();
   const sb = await supabaseServidor();
   await sb.from("agenda").delete().eq("id", z.guid().parse(form.get("id")));
-  refresh();
+  actualizarPantallas();
 }
 
 export async function cambiarHecha(form: FormData) {
   await usuarioActual();
   const sb = await supabaseServidor();
   await sb.from("agenda").update({ hecha: form.get("hecha") === "true" }).eq("id", z.guid().parse(form.get("id")));
-  refresh();
+  actualizarPantallas();
 }

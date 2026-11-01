@@ -1,6 +1,6 @@
 "use server";
 
-import { refresh } from "next/cache";
+import { actualizarPantallas } from "@/lib/actualizar";
 import { z } from "zod";
 import { exigirAdmin } from "@/lib/auth";
 import { normalizarTelefono } from "@/lib/dominio/visita";
@@ -41,7 +41,7 @@ export async function crearUsuario(_: Resultado, form: FormData): Promise<Result
   const telefono = r.data.telefono ? normalizarTelefono(r.data.telefono) : null;
   const { error: e2 } = await sb.from("perfiles").update({ nombre: r.data.nombre, rol: r.data.rol, telefono }).eq("id", data.user.id);
   if (e2) return { error: e2.message };
-  refresh();
+  actualizarPantallas();
   return { ok: `${r.data.nombre} ya puede entrar con ${r.data.email} y la contraseña «${r.data.contrasena}».` };
 }
 
@@ -73,7 +73,7 @@ export async function cambiarUsuario(form: FormData): Promise<Resultado> {
     if (d.telefono?.trim() && !t) return { error: "Ese teléfono no parece válido." };
     const { error } = await sb.from("perfiles").update({ telefono: t }).eq("id", d.id);
     if (error) return { error: error.message };
-    refresh();
+    actualizarPantallas();
     return { ok: t ? `Teléfono guardado: ${t}.` : "Teléfono quitado." };
   }
   if (d.accion === "rol" && d.rol) {
@@ -91,6 +91,6 @@ export async function cambiarUsuario(form: FormData): Promise<Resultado> {
     const { error } = await sb.from("clientes").update({ comercial_id: d.destino }).eq("comercial_id", d.id);
     if (error) return { error: error.message };
   }
-  refresh();
+  actualizarPantallas();
   return { ok: "Hecho." };
 }

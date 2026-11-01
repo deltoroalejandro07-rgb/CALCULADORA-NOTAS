@@ -44,3 +44,22 @@ export function PasosReparto({ actual, fecha, hechos = [] }: { actual: 1 | 2 | 3
     </nav>
   );
 }
+
+const nombre = (f: string) => {
+  const t = new Date(f + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
+  return t.charAt(0).toUpperCase() + t.slice(1);
+};
+
+/** Día fijo del reparto, con enlace para volver a «Preparar reparto» y cambiarlo allí. */
+export function BarraDia({ fecha }: { fecha: string }) {
+  return (
+    <div className="mx-4 mb-3 flex items-center justify-between gap-2 rounded-lg bg-marca-suave px-3 py-2 text-sm">
+      <span>
+        Reparto del <strong>{nombre(fecha)}</strong>
+      </span>
+      <Link href={`/logistica?fecha=${fecha}`} className="shrink-0 font-medium text-marca underline underline-offset-2">
+        Volver al reparto
+      </Link>
+    </div>
+  );
+}

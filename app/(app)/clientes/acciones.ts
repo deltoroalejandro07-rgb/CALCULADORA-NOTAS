@@ -1,6 +1,6 @@
 "use server";
 
-import { refresh } from "next/cache";
+import { actualizarPantallas } from "@/lib/actualizar";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { usuarioActual } from "@/lib/auth";
@@ -95,7 +95,7 @@ export async function registrarConsentimiento(form: FormData) {
   const sb = await supabaseServidor();
   const { error } = await sb.from("consentimientos").insert({ ...d, registrado_por: usuario.id });
   if (error) throw new Error(error.message);
-  refresh();
+  actualizarPantallas();
 }
 
 /** Derecho de supresión (RGPD): borra el cliente y en cascada visitas, fotos, mensajes y pedidos. Solo admin. */

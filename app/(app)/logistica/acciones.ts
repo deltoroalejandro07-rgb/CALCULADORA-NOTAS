@@ -1,6 +1,6 @@
 "use server";
 
-import { refresh } from "next/cache";
+import { actualizarPantallas } from "@/lib/actualizar";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { exigirAdmin } from "@/lib/auth";
@@ -64,7 +64,7 @@ export async function guardarVehiculo(_: EstadoForm, form: FormData): Promise<Es
   const sb = await supabaseServidor();
   const { error } = vid ? await sb.from("vehiculos").update(r.data).eq("id", vid) : await sb.from("vehiculos").insert(r.data);
   if (error) return { error: mensajeError(error) };
-  refresh();
+  actualizarPantallas();
   return { ok: vid ? "Vehículo guardado." : "Vehículo añadido." };
 }
 
@@ -94,7 +94,7 @@ export async function guardarAlmacen(_: EstadoForm, form: FormData): Promise<Est
   const sb = await supabaseServidor();
   const { error } = await sb.from("ajustes_logistica").update({ ...datos, actualizado_at: new Date().toISOString() }).eq("id", true);
   if (error) return { error: mensajeError(error) };
-  refresh();
+  actualizarPantallas();
   return { ok: "Almacén guardado." + nota };
 }
 
@@ -124,7 +124,7 @@ export async function cambiarRuta(form: FormData) {
   const { id: rid, ...datos } = r.data;
   const sb = await supabaseServidor();
   await sb.from("rutas").update(datos).eq("id", rid).eq("estado", "planificada");
-  refresh();
+  actualizarPantallas();
 }
 
 export async function borrarRuta(form: FormData) {
@@ -148,7 +148,7 @@ export async function deshacerRepartoDia(_: EstadoForm, form: FormData): Promise
     if (error) return { error: `No se ha podido deshacer: ${error.message}` };
     if (archivos?.length) await sb.storage.from("entregas").remove(archivos);
   }
-  refresh();
+  actualizarPantallas();
   const n = rutas?.length ?? 0;
   return { ok: n ? `${n === 1 ? "Ruta borrada" : `${n} rutas borradas`}. Los albaranes vuelven a estar por repartir: ya puedes calcular de nuevo.` : "Ese día no tenía rutas." };
 }
@@ -164,7 +164,7 @@ export async function borrarRutaCompleta(_: EstadoForm, form: FormData): Promise
   const { data: archivos, error } = await sb.rpc("borrar_ruta_completa", { p_ruta: rid });
   if (error) return { error: `No se ha podido borrar: ${error.message}` };
   if (archivos?.length) await sb.storage.from("entregas").remove(archivos);
-  refresh();
+  actualizarPantallas();
   return { ok: "Ruta borrada." };
 }
 
@@ -191,7 +191,7 @@ export async function anadirParadas(_: EstadoForm, form: FormData): Promise<Esta
   if (!filas.length) return { error: "Esos albaranes ya están en otra ruta." };
   const { error } = await sb.from("paradas").insert(filas);
   if (error) return { error: /paradas_albaran_vivo|paradas_pedido_vivo/.test(error.message) ? "Algún albarán ya está en otra ruta." : mensajeError(error) };
-  refresh();
+  actualizarPantallas();
   return { ok: `${filas.length} parada${filas.length === 1 ? "" : "s"} añadida${filas.length === 1 ? "" : "s"}.` };
 }
 
@@ -210,7 +210,7 @@ export async function moverParadaAccion(form: FormData) {
   const actuales = await paradasDe(rutaId);
   if (actuales.some((p) => p.estado !== "pendiente")) return; // con entregas hechas ya no se reordena
   await renumerar(moverParada(actuales, pid, delta));
-  refresh();
+  actualizarPantallas();
 }
 
 export async function quitarParada(form: FormData) {
@@ -221,7 +221,7 @@ export async function quitarParada(form: FormData) {
   await sb.from("paradas").delete().eq("id", pid).eq("estado", "pendiente");
   const restantes = (await paradasDe(rutaId)).filter((p) => p.estado === "pendiente");
   if (restantes.length === (await paradasDe(rutaId)).length) await renumerar(restantes.map((p, i) => ({ id: p.id, orden: i + 1 })));
-  refresh();
+  actualizarPantallas();
 }
 
 /** Orden por cercanía desde el almacén (vecino más próximo). Las paradas sin ubicación van al final. */
@@ -239,7 +239,7 @@ export async function ordenarPorCercania(form: FormData) {
   const inicio = aj?.almacen_lat != null && aj?.almacen_lng != null ? { lat: aj.almacen_lat, lng: aj.almacen_lng } : null;
   const orden = [...ordenarRuta(con, inicio), ...sin];
   await renumerar(orden.map((p, i) => ({ id: p.id, orden: i + 1 })));
-  refresh();
+  actualizarPantallas();
 }
 
 export async function guardarNotaParada(form: FormData) {
@@ -248,7 +248,7 @@ export async function guardarNotaParada(form: FormData) {
   if (!r.success) return;
   const sb = await supabaseServidor();
   await sb.from("paradas").update({ notas_oficina: r.data.notas_oficina }).eq("id", r.data.id).eq("estado", "pendiente");
-  refresh();
+  actualizarPantallas();
 }
 
 export async function guardarEntregaCliente(_: EstadoForm, form: FormData): Promise<EstadoForm> {
@@ -258,6 +258,6 @@ export async function guardarEntregaCliente(_: EstadoForm, form: FormData): Prom
   const sb = await supabaseServidor();
   const { error } = await sb.from("clientes_entrega").upsert({ ...r.data, actualizado_at: new Date().toISOString() });
   if (error) return { error: mensajeError(error) };
-  refresh();
+  actualizarPantallas();
   return { ok: "Guardado." };
 }

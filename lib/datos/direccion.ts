@@ -24,20 +24,24 @@ export async function cargarDireccion() {
   const sb = await supabaseServidor();
   const hoy = fechaDentroDe(0);
   const semanas: string[] = [];
-  for (let i = SEMANAS - 1; i >= 0; i--) semanas.push(lunesDe(new Date(Date.now() - i * 7 * 86_400_000).toISOString()));
+  // Por fechas (no restando horas): así el cambio de hora no repite ni salta semanas
+  const lunesActual = Date.parse(lunesDe(new Date().toISOString()) + "T12:00:00Z");
+  for (let i = SEMANAS - 1; i >= 0; i--) semanas.push(new Date(lunesActual - i * 7 * 86_400_000).toISOString().slice(0, 10));
   const desde = semanas[0];
+  const desdeConMargen = new Date(Date.parse(desde + "T00:00:00Z") - 86_400_000).toISOString();
   const meses: string[] = [];
   const base = new Date(hoy + "T12:00:00Z");
   for (let i = MESES - 1; i >= 0; i--) meses.push(new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth() - i, 15)).toISOString().slice(0, 7));
 
   const [{ data: visitas }, { data: clientes }, { data: perfiles }, { data: intereses }, { data: pedidos }] = await Promise.all([
-    sb.from("visitas").select("fecha, resultado, comercial_id, cliente:clientes(zona)").gte("fecha", desde + "T00:00:00+01:00"),
+    sb.from("visitas").select("fecha, resultado, comercial_id, cliente:clientes(zona)").gte("fecha", desdeConMargen),
     sb.from("clientes").select("estado, creado_at, comercial_id"),
     sb.from("perfiles").select("id, nombre, rol, activo").order("nombre"),
     sb.from("cliente_productos_interes").select("producto_id, productos(nombre, formato)"),
     sb.from("pedidos").select("fecha, importe_total").gte("fecha", meses[0] + "-01"),
   ]);
-  const vs = visitas ?? [];
+  // Solo las de las semanas mostradas (en hora de Madrid)
+  const vs = (visitas ?? []).filter((v) => lunesDe(v.fecha) >= desde);
 
   // Comerciales en orden fijo (por nombre): el color sigue a la persona, no a su posición en el ranking
   const conVisitas = new Set(vs.map((v) => v.comercial_id));

@@ -2,9 +2,8 @@
 
 import { AlertTriangle, CheckCircle2, ChevronDown, ExternalLink, FileUp, MapPinned, MapPinOff, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { startTransition, useActionState, useMemo, useRef, useState } from "react";
-import { altaManual, asignarZona, borrarAlbaran, editarDestino, reubicarPendientes, vaciarAlbaranes, type EstadoForm } from "@/app/(app)/logistica/acciones-planificar";
+import { altaManual, asignarZona, borrarAlbaran, editarDestino, refrescarTrasSubir, reubicarPendientes, vaciarAlbaranes, type EstadoForm } from "@/app/(app)/logistica/acciones-planificar";
 import type { RespuestaImportar } from "@/app/api/logistica/albaranes/route";
 import { Tarjeta } from "@/components/app/piezas";
 import { Boton } from "@/components/ui/boton";
@@ -27,7 +26,6 @@ function enviar(accion: (f: FormData) => void) {
 // ---------- Subir PDF ----------
 
 export function SubirAlbaranes() {
-  const router = useRouter();
   const entrada = useRef<HTMLInputElement>(null);
   const [estado, setEstado] = useState<{ fase: "listo" | "subiendo" | "leyendo"; n?: number }>({ fase: "listo" });
   const [resultado, setResultado] = useState<RespuestaImportar | null>(null);
@@ -54,7 +52,7 @@ export function SubirAlbaranes() {
       const datos = (await r.json()) as RespuestaImportar;
       datos.archivos.forEach((a) => (a.nombre = nombres.get(a.path)));
       setResultado(datos);
-      router.refresh();
+      await refrescarTrasSubir();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al subir");
     } finally {
