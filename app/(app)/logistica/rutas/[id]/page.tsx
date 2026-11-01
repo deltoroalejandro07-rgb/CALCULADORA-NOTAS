@@ -134,7 +134,7 @@ async function Contenido({ id }: { id: string }) {
             </a>
           )}
         </Tarjeta>
-          {hechas === 0 && <BorrarRuta id={ruta.id} />}
+          <BorrarRuta id={ruta.id} />
         </aside>
         <div className="space-y-4 lg:order-1">
         <ListaParadas rutaId={ruta.id} paradas={paradas} editable={editable} reordenable={reordenable} />

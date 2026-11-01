@@ -131,9 +131,26 @@ export async function borrarRuta(form: FormData) {
   await exigirAdmin();
   const rid = id.parse(form.get("id"));
   const sb = await supabaseServidor();
-  const { error } = await sb.from("rutas").delete().eq("id", rid);
+  const { data: archivos, error } = await sb.rpc("borrar_ruta_completa", { p_ruta: rid });
   if (error) throw new Error(error.message);
+  if (archivos?.length) await sb.storage.from("entregas").remove(archivos);
   redirect("/logistica");
+}
+
+/** Deshace todas las rutas de un día: los albaranes vuelven a «por repartir» para recalcular. */
+export async function deshacerRepartoDia(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+  await exigirAdmin();
+  const fecha = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).parse(form.get("fecha"));
+  const sb = await supabaseServidor();
+  const { data: rutas } = await sb.from("rutas").select("id").eq("fecha", fecha);
+  for (const r of rutas ?? []) {
+    const { data: archivos, error } = await sb.rpc("borrar_ruta_completa", { p_ruta: r.id });
+    if (error) return { error: `No se ha podido deshacer: ${error.message}` };
+    if (archivos?.length) await sb.storage.from("entregas").remove(archivos);
+  }
+  refresh();
+  const n = rutas?.length ?? 0;
+  return { ok: n ? `${n === 1 ? "Ruta borrada" : `${n} rutas borradas`}. Los albaranes vuelven a estar por repartir: ya puedes calcular de nuevo.` : "Ese día no tenía rutas." };
 }
 
 /**

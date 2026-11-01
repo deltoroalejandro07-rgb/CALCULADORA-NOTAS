@@ -179,13 +179,28 @@ await movil.page.getByRole("button", { name: "Día anterior" }).click();
 await movil.page.getByText("No hubo reparto este día.").waitFor();
 assert.ok(movil.page.url().includes("fecha="), ayer);
 
-paso("La oficina borra la ruta de prueba (con una entrega hecha) desde Rutas por días");
+paso("¿Te has equivocado? En Preparar reparto se puede deshacer el día sin perder los albaranes");
+await page.goto(`${APP}/logistica?fecha=${hoy}`);
+await page.getByRole("heading", { name: "¿Te has equivocado?" }).waitFor();
+await page.getByRole("button", { name: /Borrar todo y empezar de cero/ }).waitFor();
 page.once("dialog", (d) => d.accept());
-await page.goto(`${APP}/reparto/dias?fecha=${hoy}`);
-await page.getByRole("button", { name: "Borrar esta ruta" }).click();
-await page.getByText("No hubo reparto este día.").waitFor();
+await page.getByRole("button", { name: "Deshacer la ruta de hoy (los albaranes se quedan)" }).click();
+await page.getByText(/Ruta borrada\. Los albaranes vuelven a estar por repartir/).waitFor();
 assert.equal(sql("select count(*) from rutas"), "0");
-assert.equal(sql("select count(*) from albaranes where estado = 'pendiente'"), sql("select count(*) from albaranes"), "todos vuelven a por repartir");
+assert.equal(sql("select count(*) from albaranes where estado = 'pendiente'"), sql("select count(*) from albaranes"), "todos vuelven a por repartir (también el entregado)");
+await page.screenshot({ path: `${SALIDA}/81-deshacer.png`, fullPage: true });
+
+paso("En Mi reparto, la oficina (si conduce) puede borrar su ruta y volver a empezar");
+const adminId = sql("select id from perfiles where email = 'admin@demo.local'");
+sql(`insert into rutas (fecha, conductor_id) values ('${hoy}', '${adminId}')`);
+sql(`insert into paradas (ruta_id, orden, destino_id, albaran_id) select (select id from rutas limit 1), 1, destino_id, id from albaranes order by creado_at limit 1`);
+await page.goto(`${APP}/reparto`);
+await page.getByText("Siguiente parada").waitFor();
+page.once("dialog", (d) => d.accept());
+await page.getByRole("button", { name: "Borrar esta ruta y volver a empezar" }).click();
+await page.getByText(/Ruta borrada\. Los albaranes vuelven a estar por repartir en «Preparar reparto»/).waitFor();
+assert.equal(sql("select count(*) from rutas"), "0");
+assert.equal(await movil.page.getByRole("button", { name: "Borrar esta ruta y volver a empezar" }).count(), 0, "el conductor no lo ve");
 
 paso("Borrar un albarán suelto y luego todo para empezar de cero");
 await page.goto(`${APP}/logistica/albaranes`);

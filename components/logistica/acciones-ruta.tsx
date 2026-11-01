@@ -9,7 +9,7 @@ export function BorrarRuta({ id }: { id: string }) {
     <form
       action={borrarRuta}
       onSubmit={(e) => {
-        if (!confirm("¿Borrar esta ruta? Sus albaranes vuelven a «por repartir».")) e.preventDefault();
+        if (!confirm("¿Borrar esta ruta? Se borra también lo registrado en ella (entregas). Sus albaranes vuelven a «por repartir».")) e.preventDefault();
       }}
     >
       <input type="hidden" name="id" value={id} />

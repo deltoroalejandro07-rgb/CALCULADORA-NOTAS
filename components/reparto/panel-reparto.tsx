@@ -1,9 +1,10 @@
 "use client";
 
 import { useLiveQuery } from "dexie-react-hooks";
-import { AlertTriangle, CalendarDays, Check, MessageCircle, ChevronLeft, ChevronRight, ClipboardList, CloudOff, CloudUpload, Loader2, Navigation, Phone, RefreshCw, Truck, X } from "lucide-react";
+import { AlertTriangle, CalendarDays, Check, MessageCircle, RotateCcw, ChevronLeft, ChevronRight, ClipboardList, CloudOff, CloudUpload, Loader2, Navigation, Phone, RefreshCw, Truck, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { borrarRutaCompleta } from "@/app/(app)/logistica/acciones";
 import { Boton } from "@/components/ui/boton";
 import { cn } from "@/lib/cn";
 import { enlaceComoLlegar, enlaceLlamada, enlaceWhatsApp } from "@/lib/dominio/contacto";
@@ -66,6 +67,8 @@ export function PanelReparto() {
   const [actualizando, setActualizando] = useState(false);
   const [ultimaDescarga, setUltimaDescarga] = useState<number | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [esAdmin, setEsAdmin] = useState(false);
+  const [borrando, setBorrando] = useState(false);
 
   const rutas = useLiveQuery(async () => (usuarioId ? (await baseReparto().rutas.where("usuario_id").equals(usuarioId).toArray()).sort((a, b) => a.fecha.localeCompare(b.fecha)) : []), [usuarioId], undefined);
   const entregas = useLiveQuery(async () => (usuarioId ? baseReparto().entregas.where("usuario_id").equals(usuarioId).toArray() : []), [usuarioId], [] as EntregaLocal[]);
@@ -93,6 +96,13 @@ export function PanelReparto() {
       id = u;
       setUsuarioId(u);
       if (u) {
+        // ¿Es de la oficina? Solo entonces puede borrar rutas desde aquí
+        void supabaseNavegador()
+          .from("perfiles")
+          .select("rol")
+          .eq("id", u)
+          .maybeSingle()
+          .then(({ data }) => setEsAdmin(data?.rol === "admin"), () => {});
         void navigator.storage?.persist?.().catch(() => {}); // que el navegador no borre las firmas guardadas
         void actualizar(u);
       }
@@ -143,6 +153,32 @@ export function PanelReparto() {
   };
 
   const paradaVista = vista.tipo === "parada" || vista.tipo === "entrega" ? ruta?.paradas.find((p) => p.id === vista.id) : undefined;
+
+  /** Oficina: borra la ruta (y lo marcado en ella) para volver a calcularla. */
+  async function borrarRuta(r: RutaReparto) {
+    if (!usuarioId || !navigator.onLine) return;
+    if (!confirm(`¿Borrar esta ruta y volver a empezar? Se borran también las entregas marcadas. Los albaranes vuelven a «por repartir» para calcular otra vez.`)) return;
+    setBorrando(true);
+    const f = new FormData();
+    f.set("id", r.id);
+    const res = await borrarRutaCompleta({}, f);
+    setBorrando(false);
+    if (res.error) {
+      setAviso(res.error);
+      return;
+    }
+    const db = baseReparto();
+    const locales = await db.entregas.where("usuario_id").equals(usuarioId).toArray();
+    const deLaRuta = locales.filter((e) => e.ruta_id === r.id).map((e) => e.id);
+    await db.transaction("rw", [db.rutas, db.entregas, db.archivos], async () => {
+      await db.rutas.delete(r.id);
+      await db.entregas.bulkDelete(deLaRuta);
+      if (deLaRuta.length) await db.archivos.where("entrega_id").anyOf(deLaRuta).delete();
+    });
+    setRutaSel(null);
+    setAviso("Ruta borrada. Los albaranes vuelven a estar por repartir en «Preparar reparto».");
+    void actualizar(usuarioId);
+  }
 
   /** Entregado tal cual (todo lo del albarán), de un toque. Se guarda en el móvil y se sube solo. */
   async function entregarRapido(p: ParadaReparto) {
@@ -428,6 +464,21 @@ export function PanelReparto() {
           })}
         </ol>
       </section>
+
+      {esAdmin && enLinea && (
+        <section className="mx-4 rounded-xl border border-borde bg-superficie p-4">
+          <p className="font-semibold">¿Te has equivocado?</p>
+          <p className="text-sm text-suave">Solo lo ve la oficina. Borra esta ruta para volver a calcularla; los albaranes no se pierden.</p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <Boton type="button" variante="secundario" cargando={borrando} onClick={() => borrarRuta(ruta)} className="text-sm text-red-600">
+              <RotateCcw className="h-4 w-4" aria-hidden /> Borrar esta ruta y volver a empezar
+            </Boton>
+            <Link href="/logistica" className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-borde text-sm font-medium hover:bg-fondo">
+              Ir a «Preparar reparto»
+            </Link>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

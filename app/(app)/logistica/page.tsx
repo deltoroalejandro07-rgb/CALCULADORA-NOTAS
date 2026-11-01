@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Cabecera, Cargando } from "@/components/app/piezas";
 import { NuevaRuta } from "@/components/logistica/nueva-ruta";
+import { VolverAEmpezar } from "@/components/logistica/volver-a-empezar";
 import { cn } from "@/lib/cn";
 import { exigirAdmin } from "@/lib/auth";
 import { enlaceLlamada, enlaceWhatsApp, mensajeRutaConductor, urlDeLaApp } from "@/lib/dominio/contacto";
@@ -252,6 +253,8 @@ async function Contenido({ dia }: { dia: string | null }) {
       <Suspense fallback={null}>
         <PrevisionPedidos />
       </Suspense>
+
+      {(hayRutas || nPend > 0) && <VolverAEmpezar fecha={fecha} rutas={rutas?.length ?? 0} textoDia={fecha === hoy ? "hoy" : nombreCorto(fecha, hoy)} />}
 
       <details className="group rounded-xl border border-borde bg-superficie">
         <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between px-4 text-sm font-medium">
