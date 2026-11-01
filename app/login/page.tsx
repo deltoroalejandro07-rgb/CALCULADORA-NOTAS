@@ -10,8 +10,8 @@ export default function PaginaLogin() {
       <div className="mb-8">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo.svg" alt="dliverygo" width={318} height={103} className="h-16 w-auto" />
-        <h1 className="mt-4 text-2xl font-bold">CRM comercial</h1>
-        <p className="text-sm text-suave">Visitas, clientes y ofertas</p>
+        <h1 className="mt-4 text-2xl font-bold">CRM dliverygo</h1>
+        <p className="text-sm text-suave">Ventas y reparto</p>
       </div>
       <Suspense>
         <FormularioLogin />

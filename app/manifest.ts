@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "CRM dliverygo",
     short_name: "dliverygo",
-    description: "Visitas, clientes y ofertas para el equipo comercial.",
+    description: "Ventas y reparto: visitas, clientes, rutas y entregas.",
     lang: "es-ES",
     start_url: "/hoy",
     display: "standalone",
