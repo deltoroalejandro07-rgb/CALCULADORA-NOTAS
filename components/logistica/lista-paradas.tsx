@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Check, FileText, MapPinOff, MessageCircle, Navigation, Pencil, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, FileText, MapPinOff, MessageCircle, Pencil, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { startTransition, useActionState, useState } from "react";
-import { guardarEntregaCliente, guardarNotaParada, moverParadaAccion, ordenarPorCercania, quitarParada, type EstadoForm } from "@/app/(app)/logistica/acciones";
+import { guardarEntregaCliente, guardarNotaParada, moverParadaAccion, quitarParada, type EstadoForm } from "@/app/(app)/logistica/acciones";
 import { Boton } from "@/components/ui/boton";
 import { cn } from "@/lib/cn";
 import { enlaceWhatsApp } from "@/lib/dominio/contacto";
@@ -94,14 +94,6 @@ export function ListaParadas({ rutaId, paradas, editable, reordenable }: { rutaI
     <section className="space-y-2">
       <div className="flex items-center justify-between">
         <h2 className="text-[13px] font-semibold text-suave">Paradas ({paradas.length})</h2>
-        {reordenable && paradas.length > 1 && (
-          <form action={ordenarPorCercania}>
-            <input type="hidden" name="ruta_id" value={rutaId} />
-            <button type="submit" className="flex items-center gap-1 text-sm font-medium text-marca">
-              <Navigation className="h-4 w-4" aria-hidden /> Ordenar por cercanía
-            </button>
-          </form>
-        )}
       </div>
       <ol className="space-y-2">
         {paradas.map((p, i) => (

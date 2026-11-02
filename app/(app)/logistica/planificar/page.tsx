@@ -4,21 +4,20 @@ import { Cabecera, Cargando } from "@/components/app/piezas";
 import { BarraDia, PasosReparto } from "@/components/logistica/pasos";
 import { RecordarDia } from "@/components/logistica/recordar-dia";
 import { diaDeReparto } from "@/lib/dia-reparto";
-import { Planificador } from "@/components/logistica/planificador";
+import { PrepararRuta, type ClienteDelDia } from "@/components/logistica/preparar-ruta";
+import { textoFranja } from "@/lib/dominio/horario";
 import { exigirAdmin } from "@/lib/auth";
 import { diaSemana } from "@/lib/dominio/destinos";
 import { fechaDentroDe } from "@/lib/dominio/visita";
 import { supabaseServidor } from "@/lib/supabase/servidor";
 
-export const metadata: Metadata = { title: "Planificar reparto" };
+export const metadata: Metadata = { title: "Preparar la ruta" };
 
-// Calcular la ruta puede tardar unos segundos con muchas paradas
-export const maxDuration = 60;
 
 export default function PaginaPlanificar({ searchParams }: PageProps<"/logistica/planificar">) {
   return (
     <>
-      <Cabecera titulo="Calcular ruta" subtitulo="Paso 2: la ruta más rápida y con menos kilómetros" />
+      <Cabecera titulo="Preparar la ruta" subtitulo="Paso 2: furgoneta, conductor y orden de entrega" />
       <Suspense fallback={<Cargando />}>
         {searchParams.then((sp) => {
           return <ConDia param={sp.fecha} />;
@@ -43,32 +42,34 @@ async function ConDia({ param }: { param: unknown }) {
 async function Contenido({ fecha }: { fecha: string }) {
   await exigirAdmin();
   const sb = await supabaseServidor();
-  const [{ data: zonas }, { data: albaranes }, { data: vehiculos }, { data: perfiles }, { data: aj }] = await Promise.all([
+  const [{ data: zonas }, { data: albaranes }, { data: vehiculos }, { data: perfiles }] = await Promise.all([
     sb.from("zonas_reparto").select("id, nombre, dias, vehiculo_id").eq("activa", true).order("nombre"),
-    sb.from("albaranes").select("id, numero, lineas, destinos(id, nombre, localidad, zona_id, lat)").eq("estado", "pendiente").order("creado_at"),
-    sb.from("vehiculos").select("id, nombre, matricula, capacidad_bultos, conductor_habitual").eq("activo", true).order("nombre"),
+    sb
+      .from("albaranes")
+      .select("id, numero, lineas, destinos(id, nombre, direccion, localidad, telefono, zona_id, ventana_desde, ventana_hasta, horario_texto, notas_acceso, orden_habitual)")
+      .eq("estado", "pendiente")
+      .order("creado_at"),
+    sb.from("vehiculos").select("id, nombre, matricula, conductor_habitual").eq("activo", true).order("nombre"),
     sb.from("perfiles").select("id, nombre").eq("activo", true).order("nombre"),
-    sb.from("ajustes_logistica").select("almacen_lat, almacen_lng, hora_salida").single(),
   ]);
-  return (
-    <Planificador
-      fecha={fecha}
-      dia={diaSemana(fecha)}
-      zonas={zonas ?? []}
-      albaranes={(albaranes ?? [])
-        .filter((a) => a.destinos)
-        .map((a) => ({
-          id: a.id,
-          numero: a.numero,
-          nombre: a.destinos!.nombre,
-          localidad: a.destinos!.localidad,
-          zonaId: a.destinos!.zona_id,
-          ubicado: a.destinos!.lat != null,
-          lineas: ((a.lineas as { descripcion: string; cantidad: number }[] | null) ?? []).map((l) => ({ descripcion: l.descripcion, cantidad: Number(l.cantidad) })),
-        }))}
-      vehiculos={vehiculos ?? []}
-      conductores={perfiles ?? []}
-      almacen={aj?.almacen_lat != null && aj?.almacen_lng != null ? { lat: aj.almacen_lat, lng: aj.almacen_lng } : null}
-    />
-  );
+  // Un cliente con varios albaranes = una sola parada
+  const porCliente = new Map<string, ClienteDelDia>();
+  for (const a of albaranes ?? []) {
+    const d = a.destinos;
+    if (!d) continue;
+    const c = porCliente.get(d.id) ?? {
+      destinoId: d.id,
+      nombre: d.nombre,
+      direccion: [d.direccion, d.localidad].filter(Boolean).join(", "),
+      telefono: d.telefono,
+      horario: d.horario_texto ?? textoFranja(d.ventana_desde, d.ventana_hasta),
+      observaciones: d.notas_acceso,
+      zonaId: d.zona_id,
+      ordenHabitual: d.orden_habitual,
+      albaranes: [],
+    };
+    c.albaranes.push({ id: a.id, numero: a.numero, lineas: ((a.lineas as { descripcion: string; cantidad: number }[] | null) ?? []).map((l) => ({ descripcion: l.descripcion, cantidad: Number(l.cantidad) })) });
+    porCliente.set(d.id, c);
+  }
+  return <PrepararRuta fecha={fecha} dia={diaSemana(fecha)} clientes={[...porCliente.values()]} zonas={zonas ?? []} vehiculos={vehiculos ?? []} conductores={perfiles ?? []} />;
 }

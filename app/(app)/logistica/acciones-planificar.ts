@@ -186,6 +186,7 @@ export async function editarDestino(_: EstadoForm, form: FormData): Promise<Esta
       ventana_hasta: hora,
       horario_texto: texto,
       notas_acceso: texto,
+      telefono: z.preprocess(vacioANull, z.string().max(30).nullable()).optional(),
       minutos_descarga: z.preprocess((v) => (v === "" || v == null ? null : Number(v)), z.number().int().min(1).max(120).nullable()),
       coordenadas: texto,
     })
@@ -349,4 +350,47 @@ export async function vaciarDia(_: EstadoForm, form: FormData): Promise<EstadoFo
   return {
     ok: `Hecho: ${[nR && (nR === 1 ? "1 ruta" : `${nR} rutas`), nA && (nA === 1 ? "1 albarán" : `${nA} albaranes`)].filter(Boolean).join(" y ")} de ese día borrados. Los demás días no se han tocado.`,
   };
+}
+
+// ---------- Preparar la ruta a mano (en el orden que pide cada cliente) ----------
+
+const esquemaRutaManual = z.object({
+  fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  vehiculoId: z.preprocess(vacioANull, id.nullable()),
+  conductorId: id,
+  guardarOrden: z.boolean(),
+  paradas: z
+    .array(z.object({ destinoId: id, albaranIds: z.array(id).min(1), hora: z.string().regex(/^\d{2}:\d{2}$/).nullable() }))
+    .min(1, "Marca al menos un cliente."),
+});
+
+export async function crearRutaManual(datos: z.input<typeof esquemaRutaManual>): Promise<{ error?: string }> {
+  await exigirAdmin();
+  const r = esquemaRutaManual.safeParse(datos);
+  if (!r.success) return { error: r.error.issues[0].message };
+  const { fecha, vehiculoId, conductorId, guardarOrden, paradas } = r.data;
+  const sb = await supabaseServidor();
+  const { data: ruta, error } = await sb
+    .from("rutas")
+    .insert({ fecha, vehiculo_id: vehiculoId, conductor_id: conductorId, notas: paradas[0].hora ? `Primera entrega ${paradas[0].hora}.` : null })
+    .select("id")
+    .single();
+  if (error) return { error: error.message };
+  let orden = 0;
+  const filas = paradas.flatMap((p) => p.albaranIds.map((albaran_id) => ({ ruta_id: ruta.id, orden: ++orden, destino_id: p.destinoId, albaran_id, llegada_prevista: p.hora })));
+  const { error: e2 } = await sb.from("paradas").insert(filas);
+  if (e2) {
+    await sb.from("rutas").delete().eq("id", ruta.id);
+    return { error: /paradas_albaran_vivo/.test(e2.message) ? "Algún albarán ya está en otra ruta. Recarga la página." : e2.message };
+  }
+  // Recordar el orden como el habitual de estos clientes (posiciones 1, 2, 3…)
+  if (guardarOrden) await Promise.all(paradas.map((p, i) => sb.from("destinos").update({ orden_habitual: i + 1 }).eq("id", p.destinoId)));
+  after(async () => {
+    const hoy = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid" }).format(new Date());
+    const cuando = fecha === hoy ? "de hoy" : `del ${new Date(fecha + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric" })}`;
+    const n = paradas.length;
+    await enviarAvisos([conductorId], { titulo: `🚚 Ya tienes tu ruta ${cuando}`, cuerpo: `${n === 1 ? "1 parada" : `${n} paradas`}${paradas[0].hora ? `, primera a las ${paradas[0].hora}` : ""}.`, url: "/reparto", etiqueta: `ruta-${fecha}` }).catch(() => 0);
+  });
+  actualizarPantallas();
+  redirect(`/logistica?fecha=${fecha}`);
 }

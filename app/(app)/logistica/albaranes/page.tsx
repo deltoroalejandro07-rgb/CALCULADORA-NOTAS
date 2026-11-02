@@ -65,7 +65,7 @@ async function Contenido({ param }: { param: unknown }) {
           href={`/logistica/planificar?fecha=${fecha}`}
           className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-marca px-4 font-semibold text-marca-texto shadow-lg shadow-marca/25 hover:brightness-110"
         >
-          Siguiente: calcular la ruta ({pendientes}) <ChevronRight className="h-5 w-5" aria-hidden />
+          Siguiente: preparar la ruta ({pendientes}) <ChevronRight className="h-5 w-5" aria-hidden />
         </Link>
       </div>
     )}

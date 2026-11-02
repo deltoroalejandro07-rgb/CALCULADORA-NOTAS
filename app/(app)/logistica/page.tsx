@@ -1,9 +1,8 @@
-import { CalendarClock, Check, ChevronLeft, ChevronRight, FileUp, MessageCircle, Phone, FileDown, FileText, MapPinned, Sparkles, Truck, Warehouse } from "lucide-react";
+import { CalendarClock, Check, Store, ChevronLeft, ChevronRight, FileUp, MessageCircle, Phone, FileDown, FileText, MapPinned, Sparkles, Truck, Warehouse } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Cabecera, Cargando } from "@/components/app/piezas";
-import { NuevaRuta } from "@/components/logistica/nueva-ruta";
 import { RecordarDia } from "@/components/logistica/recordar-dia";
 import { diaDeReparto } from "@/lib/dia-reparto";
 import { VolverAEmpezar } from "@/components/logistica/volver-a-empezar";
@@ -79,7 +78,7 @@ async function Contenido({ dia }: { dia: unknown }) {
   const hoy = fechaDentroDe(0);
   const fecha = await diaDeReparto(dia, hoy);
   const sb = await supabaseServidor();
-  const [{ data: rutas }, { data: vehiculos }, { data: perfiles }, { data: almacen }, { data: pendientes }, { count: zonas }] = await Promise.all([
+  const [{ data: rutas }, { data: vehiculos }, , { data: almacen }, { data: pendientes }, { count: zonas }] = await Promise.all([
     sb
       .from("rutas")
       .select("id, fecha, estado, notas, vehiculos(nombre, matricula), conductor:perfiles!rutas_conductor_id_fkey(nombre, telefono), paradas(estado)")
@@ -88,16 +87,15 @@ async function Contenido({ dia }: { dia: unknown }) {
     sb.from("vehiculos").select("id, nombre, matricula, conductor_habitual").eq("activo", true).order("nombre"),
     sb.from("perfiles").select("id, nombre").eq("activo", true).order("nombre"),
     sb.from("ajustes_logistica").select("almacen_lat").single(),
-    sb.from("albaranes").select("id, destinos(zona_id, lat)").eq("estado", "pendiente"),
+    sb.from("albaranes").select("id, destinos(zona_id)").eq("estado", "pendiente"),
     sb.from("zonas_reparto").select("*", { count: "exact", head: true }).eq("activa", true),
   ]);
   const nPend = pendientes?.length ?? 0;
   const sinZona = (pendientes ?? []).filter((a) => !a.destinos?.zona_id).length;
-  const sinUbicacion = (pendientes ?? []).filter((a) => a.destinos?.lat == null).length;
   const listo = { almacen: almacen?.almacen_lat != null, vehiculos: !!vehiculos?.length, zonas: !!zonas };
   const configurado = listo.almacen && listo.vehiculos && listo.zonas;
   const hayRutas = !!rutas?.length;
-  const pasoActivo = !configurado ? 0 : nPend === 0 && !hayRutas ? 1 : nPend > 0 ? (sinZona || sinUbicacion ? 1 : 2) : 3;
+  const pasoActivo = !configurado ? 0 : nPend === 0 && !hayRutas ? 1 : nPend > 0 ? (sinZona ? 1 : 2) : 3;
 
   return (
     <div className="space-y-4 px-4 pb-8">
@@ -154,16 +152,15 @@ async function Contenido({ dia }: { dia: unknown }) {
       )}
 
       <ol className="space-y-3">
-        <Paso n={1} titulo="Sube los albaranes del día" hecho={nPend > 0 && !sinZona && !sinUbicacion} activo={pasoActivo === 1}>
+        <Paso n={1} titulo="Sube los albaranes del día" hecho={nPend > 0 && !sinZona} activo={pasoActivo === 1}>
           {nPend ? (
             <>
               <p>
                 <strong className="text-texto">{nPend === 1 ? "1 albarán" : `${nPend} albaranes`}</strong> por repartir.
                 {sinZona > 0 && <span className="text-amber-700 dark:text-amber-300"> {sinZona === 1 ? "1 sin zona" : `${sinZona} sin zona`}.</span>}
-                {sinUbicacion > 0 && <span className="text-acento"> {sinUbicacion === 1 ? "1 con dirección por revisar" : `${sinUbicacion} con dirección por revisar`}.</span>}
               </p>
-              <Link href={`/logistica/albaranes?fecha=${fecha}`} className={sinZona || sinUbicacion ? principal : secundario}>
-                <FileText className="h-4 w-4" aria-hidden /> {sinZona || sinUbicacion ? "Revisar zonas y direcciones" : "Ver o añadir albaranes"}
+              <Link href={`/logistica/albaranes?fecha=${fecha}`} className={sinZona ? principal : secundario}>
+                <FileText className="h-4 w-4" aria-hidden /> {sinZona ? "Elegir la zona de los que faltan" : "Ver o añadir albaranes"}
               </Link>
             </>
           ) : (
@@ -176,11 +173,11 @@ async function Contenido({ dia }: { dia: unknown }) {
           )}
         </Paso>
 
-        <Paso n={2} titulo="Calcula la mejor ruta" hecho={hayRutas && nPend === 0} activo={pasoActivo === 2}>
-          <p>La app reparte los albaranes entre tus vehículos y ordena las paradas para hacer menos kilómetros y llegar a tiempo a cada horario.</p>
+        <Paso n={2} titulo="Prepara la ruta" hecho={hayRutas && nPend === 0} activo={pasoActivo === 2}>
+          <p>Elige furgoneta y conductor y ordena las entregas como las pide cada cliente. Sale con el orden habitual; solo retocas lo que cambie.</p>
           {nPend ? (
             <Link href={`/logistica/planificar?fecha=${fecha}`} className={pasoActivo === 2 ? principal : secundario}>
-              <Sparkles className="h-4 w-4" aria-hidden /> Calcular ruta {nPend > 0 && `(${nPend})`}
+              <Sparkles className="h-4 w-4" aria-hidden /> Preparar la ruta {nPend > 0 && `(${nPend})`}
             </Link>
           ) : (
             <p className="text-xs">{hayRutas ? "Todos los albaranes ya están en una ruta." : "Primero sube los albaranes."}</p>
@@ -265,8 +262,10 @@ async function Contenido({ dia }: { dia: unknown }) {
           <ChevronRight className="h-4 w-4 text-suave transition group-open:rotate-90" aria-hidden />
         </summary>
         <div className="space-y-3 border-t border-borde p-4">
-          <NuevaRuta fecha={fecha} vehiculos={vehiculos ?? []} conductores={perfiles ?? []} />
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-2 sm:grid-cols-3">
+            <Link href="/logistica/clientes" className={secundario}>
+              <Store className="h-4 w-4 text-marca" aria-hidden /> Clientes de reparto
+            </Link>
             <Link href="/logistica/zonas" className={secundario}>
               <MapPinned className="h-4 w-4 text-marca" aria-hidden /> Zonas y días de reparto
             </Link>

@@ -1366,3 +1366,9 @@ create policy push_propias on push_suscripciones for all to authenticated
   using (usuario_id = auth.uid()) with check (usuario_id = auth.uid());
 
 notify pgrst, 'reload schema';
+
+-- ---- migrations/20261102000011_orden_habitual.sql ----
+-- Reparto en el orden que pide cada cliente: cada cliente de reparto recuerda su posición de siempre.
+alter table destinos add column if not exists orden_habitual integer check (orden_habitual > 0);
+
+notify pgrst, 'reload schema';

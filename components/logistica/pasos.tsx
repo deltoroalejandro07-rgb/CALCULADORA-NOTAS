@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 
 export const PASOS_REPARTO = [
   { n: 1, texto: "Albaranes", ruta: "/logistica/albaranes" },
-  { n: 2, texto: "Calcular ruta", ruta: "/logistica/planificar" },
+  { n: 2, texto: "Preparar ruta", ruta: "/logistica/planificar" },
   { n: 3, texto: "Rutas y PDF", ruta: "/logistica" },
 ] as const;
 

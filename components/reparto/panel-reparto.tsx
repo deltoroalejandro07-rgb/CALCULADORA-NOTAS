@@ -518,7 +518,13 @@ function FichaParada({
         {numero != null && <NumeroParada n={numero} estado={estado} />}
         <div className="min-w-0 flex-1">
           <p className="text-lg font-bold leading-tight">{c.nombre}</p>
-          <p className="text-sm text-suave">{direccionParada(c) || "Sin dirección"}</p>
+          {direccionParada(c) ? (
+            <a href={comoLlegar ?? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccionParada(c))}`} target="_blank" rel="noreferrer" className="text-sm text-suave underline decoration-dotted underline-offset-2">
+              {direccionParada(c)}
+            </a>
+          ) : (
+            <p className="text-sm text-suave">Sin dirección</p>
+          )}
           {(parada.llegada_prevista || parada.albaran) && (
             <p className="text-xs text-suave">
               {parada.llegada_prevista && <span className="font-semibold text-marca">Llegada prevista {parada.llegada_prevista}</span>}
@@ -531,8 +537,8 @@ function FichaParada({
       {(c.horario_entrega || c.notas_acceso || parada.notas_oficina) && (
         <div className="mt-3 space-y-1 rounded-lg bg-fondo p-3 text-sm">
           {c.horario_entrega && <p>🕘 Descarga: {c.horario_entrega}</p>}
-          {c.notas_acceso && <p>🚪 {c.notas_acceso}</p>}
-          {parada.notas_oficina && <p className="font-medium text-amber-700 dark:text-amber-300">📝 {parada.notas_oficina}</p>}
+          {c.notas_acceso && <p>📌 {c.notas_acceso}</p>}
+          {parada.notas_oficina && <p className="font-medium text-amber-700 dark:text-amber-300">📝 Hoy: {parada.notas_oficina}</p>}
         </div>
       )}
       {parada.lineas.length > 0 && (

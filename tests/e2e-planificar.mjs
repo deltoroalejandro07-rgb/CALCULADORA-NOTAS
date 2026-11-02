@@ -83,8 +83,7 @@ await page.getByLabel("Zona de KIOSKO DE PRUEBA").selectOption({ label: "Valenci
 for (let i = 0; i < 30 && sql("select coalesce(z.nombre, '') from destinos d left join zonas_reparto z on z.id = d.zona_id where d.nombre = 'KIOSKO DE PRUEBA'") !== "Valencia Centro"; i++) await page.waitForTimeout(300);
 assert.equal(sql("select z.nombre from destinos d join zonas_reparto z on z.id = d.zona_id where d.nombre = 'KIOSKO DE PRUEBA'"), "Valencia Centro");
 
-paso("Sin ubicación: se pega el enlace de Google Maps del sitio");
-await page.getByText(/clientes? sin ubicación en el mapa/).waitFor();
+paso("Ubicación exacta (opcional): se pega el enlace de Google Maps del sitio");
 await page.getByRole("button", { name: "Editar KIOSKO DE PRUEBA" }).click();
 await page.getByPlaceholder("https://maps.app.goo.gl/… o 39.4699, -0.3763").fill("https://www.google.com/maps/place/Kiosko/@39.4800,-0.3700,17z/data=!3m1");
 await page.getByRole("button", { name: "Guardar", exact: true }).click();
@@ -95,36 +94,39 @@ await page.reload();
 await page.getByText("Por repartir (4)").waitFor();
 await page.screenshot({ path: `${SALIDA}/63-albaranes-pendientes.png`, fullPage: true });
 
-paso("Planificar hoy: la zona del día ya viene marcada → calcular la mejor ruta");
+paso("Clientes de reparto: observaciones fijas para el repartidor y enlace a Google Maps");
+await page.goto(`${APP}/logistica/clientes`);
+const mapsBar = await page.getByRole("link", { name: /CALLE MAYOR, 10/ }).first().getAttribute("href");
+assert.ok(mapsBar.startsWith("https://www.google.com/maps/search/?api=1&query="), mapsBar);
+await page.getByRole("button", { name: "Editar BAR LA PLAZA DE PRUEBA S.L." }).click();
+await page.getByLabel("Observaciones para el repartidor").fill("Puerta trasera, preguntar por Paco");
+await page.getByRole("button", { name: "Guardar", exact: true }).click();
+await page.getByText(/✓/).first().waitFor();
+assert.equal(sql("select notas_acceso from destinos where nombre = 'BAR LA PLAZA DE PRUEBA S.L.'"), "Puerta trasera, preguntar por Paco");
+
+paso("Preparar la ruta a mano: orden habitual, flechas, hora, conductor y hoja de carga por familias");
 await page.goto(`${APP}/logistica/planificar?fecha=${hoy}`);
-await page.getByText("Entregas que entran en la ruta (4)").waitFor();
-// Hoja de carga del día: la suma de los 4 albaranes, antes de calcular nada
-await page.getByText("Hoja de carga del día (4 albaranes)").waitFor();
+await page.getByText("Orden de entrega (4)").waitFor();
+assert.equal(await page.getByRole("button", { name: /Calcular la mejor ruta|Sugerir orden/ }).count(), 0, "sin cálculo automático");
 const filaCerveza = page.locator("li", { hasText: "CERVEZA BARRIL 30L" }).first();
 assert.equal((await filaCerveza.locator("span").nth(1).textContent()).trim(), "2");
-// Agrupada por familias, con el total de cada una
 await page.getByText("Cerveza", { exact: true }).first().waitFor();
-await page.getByText("Agua", { exact: true }).first().waitFor();
-await page.screenshot({ path: `${SALIDA}/64-planificar.png`, fullPage: true });
-await page.getByRole("button", { name: "Calcular la mejor ruta" }).click();
-await page.getByText("tiempo total").waitFor({ timeout: 60_000 });
-await page.screenshot({ path: `${SALIDA}/65-ruta-calculada.png`, fullPage: true });
-// Orden: la cafetería (8-11) y el bar (antes de las 10) antes que el kiosko (desde las 12)
-const nombres = await page.locator("ol li p.font-medium").allTextContents();
-console.log("  orden:", nombres.join(" → "));
-assert.ok(nombres.indexOf("KIOSKO DE PRUEBA") > nombres.indexOf("BAR LA PLAZA DE PRUEBA S.L."), "el kiosko (desde las 12) va después del bar (antes de las 10)");
-assert.equal(await page.getByText(/min tarde/).count(), 0, "se cumplen todos los horarios");
-assert.equal(await page.locator(".leaflet-container").count(), 0, "sin mapa");
-
-paso("Aceptar y enviar al conductor (Luis)");
+await page.getByText("Puerta trasera, preguntar por Paco").waitFor();
+const ordenInicial = await page.locator("ol li p.font-medium").allTextContents();
+console.log("  orden inicial:", ordenInicial.map((t) => t.split(" · ")[0]).join(" → "));
+// El kiosko abre a las 12: lo paso al final
+while ((await page.locator("ol li p.font-medium").last().textContent()).startsWith("KIOSKO") === false) await page.getByRole("button", { name: "Bajar KIOSKO DE PRUEBA" }).click();
+await page.getByLabel("Hora de BAR LA PLAZA DE PRUEBA S.L.").fill("08:30");
 await page.getByLabel("Conductor").selectOption({ label: "Luis (demo)" });
-await page.getByRole("button", { name: "Aceptar y enviar al conductor" }).click();
+await page.screenshot({ path: `${SALIDA}/64-preparar-ruta.png`, fullPage: true });
+await page.getByRole("button", { name: "Crear la ruta y enviarla al conductor" }).click();
 await page.waitForURL(`**/logistica?fecha=${hoy}`);
 const rutaId = sql("select id from rutas order by creado_at desc limit 1");
-assert.equal(sql(`select count(*) from paradas where ruta_id = '${rutaId}' and llegada_prevista is not null`), "4");
+assert.equal(sql(`select count(*) from paradas where ruta_id = '${rutaId}'`), "4");
 assert.equal(sql("select count(*) from albaranes where estado = 'planificado'"), "4");
-const llegadaBar = sql(`select llegada_prevista from paradas p join destinos d on d.id = p.destino_id where ruta_id = '${rutaId}' and d.nombre = 'BAR LA PLAZA DE PRUEBA S.L.'`);
-assert.ok(llegadaBar < "10:00:00", `el bar llega antes de las 10 (${llegadaBar})`);
+assert.equal(sql(`select d.nombre from paradas p join destinos d on d.id = p.destino_id where ruta_id = '${rutaId}' order by p.orden desc limit 1`), "KIOSKO DE PRUEBA", "respeta el orden elegido");
+assert.equal(sql(`select llegada_prevista from paradas p join destinos d on d.id = p.destino_id where ruta_id = '${rutaId}' and d.nombre = 'BAR LA PLAZA DE PRUEBA S.L.'`), "08:30:00");
+assert.equal(sql("select orden_habitual from destinos where nombre = 'KIOSKO DE PRUEBA'"), "4", "se guarda como orden habitual");
 paso("Sin móvil del conductor, la app indica dónde añadirlo; con móvil, WhatsApp de un toque");
 await page.getByRole("link", { name: /añade el móvil de Luis en Usuarios/ }).waitFor();
 sql("update perfiles set telefono = '+34600123456' where email = 'luis@demo.local'");
@@ -146,6 +148,8 @@ assert.match(texto, /CERVEZA BARRIL 30L\s+2\b/);
 assert.match(texto, /Caja agua\s+2\b/);
 assert.match(texto, /ORDEN DE REPARTO/);
 assert.match(texto, /Llegada \d{2}:\d{2}/);
+assert.match(texto, /Abrir en Google Maps/);
+assert.match(texto, /Observaciones: Puerta trasera, preguntar por Paco/);
 assert.ok(texto.indexOf("BAR LA PLAZA DE PRUEBA") < texto.indexOf("KIOSKO DE PRUEBA"), "en el PDF, el bar antes que el kiosko");
 console.log(texto.split("\n").slice(0, 16).join("\n"));
 await page.goto(`${APP}/logistica/rutas/${rutaId}`);
@@ -225,4 +229,4 @@ assert.equal(sql("select count(*) from zonas_reparto"), "1", "las zonas se queda
 assert.deepEqual([...errores, ...movil.errores], [], "sin errores en la consola");
 await navegador.close();
 await movil.navegador.close();
-console.log("✓ Ruta automática: PDF de Holded → zonas → mejor ruta → conductor → entregado");
+console.log("✓ Reparto: PDF de Holded → zonas → ruta en el orden del cliente → conductor → entregado");

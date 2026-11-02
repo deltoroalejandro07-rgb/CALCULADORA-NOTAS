@@ -1,9 +1,9 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, ChevronDown, ExternalLink, FileUp, MapPinned, MapPinOff, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronDown, ExternalLink, FileUp, MapPinned, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { startTransition, useActionState, useMemo, useRef, useState } from "react";
-import { altaManual, asignarZona, borrarAlbaran, editarDestino, refrescarTrasSubir, reubicarPendientes, vaciarAlbaranes, type EstadoForm } from "@/app/(app)/logistica/acciones-planificar";
+import { altaManual, asignarZona, borrarAlbaran, editarDestino, refrescarTrasSubir, vaciarAlbaranes, type EstadoForm } from "@/app/(app)/logistica/acciones-planificar";
 import type { RespuestaImportar } from "@/app/api/logistica/albaranes/route";
 import { Tarjeta } from "@/components/app/piezas";
 import { Boton } from "@/components/ui/boton";
@@ -228,7 +228,7 @@ export function AltaManual({ destinos, zonas }: { destinos: { id: string; nombre
 
 // ---------- Lista de pendientes ----------
 
-interface Destino {
+export interface Destino {
   id: string;
   nombre: string;
   direccion: string | null;
@@ -242,6 +242,8 @@ interface Destino {
   horario_texto: string | null;
   notas_acceso: string | null;
   minutos_descarga: number | null;
+  telefono?: string | null;
+  orden_habitual?: number | null;
 }
 
 export interface AlbaranPendiente {
@@ -255,7 +257,7 @@ export interface AlbaranPendiente {
   destino: Destino;
 }
 
-function EditarDestino({ d, zonas, alCerrar }: { d: Destino; zonas: { id: string; nombre: string }[]; alCerrar: () => void }) {
+export function EditarDestino({ d, zonas, alCerrar }: { d: Destino; zonas: { id: string; nombre: string }[]; alCerrar: () => void }) {
   const [estado, accion, pendiente] = useActionState<EstadoForm, FormData>(editarDestino, {});
   return (
     <form onSubmit={enviar(accion)} className="mt-3 space-y-2 rounded-lg bg-fondo p-3 text-sm">
@@ -301,8 +303,12 @@ function EditarDestino({ d, zonas, alCerrar }: { d: Destino; zonas: { id: string
         <input name="horario_texto" defaultValue={d.horario_texto ?? ""} placeholder="antes de las 10" className={campo} />
       </label>
       <label className="block">
-        Cómo llegar / acceso
-        <input name="notas_acceso" defaultValue={d.notas_acceso ?? ""} placeholder="Entrar por la calle de atrás" className={campo} />
+        Observaciones para el repartidor
+        <textarea name="notas_acceso" rows={2} defaultValue={d.notas_acceso ?? ""} placeholder="Puerta trasera, timbre 2 · Preguntar por Paco · Cobrar en efectivo" className={cn(campo, "py-2")} />
+      </label>
+      <label className="block">
+        Teléfono
+        <input name="telefono" type="tel" inputMode="tel" defaultValue={d.telefono ?? ""} placeholder="600 123 456" className={campo} />
       </label>
       <label className="block">
         Minutos de descarga aquí (vacío = el general)
@@ -364,22 +370,6 @@ function SelectorZona({ destinos, actual, zonas, texto, aria }: { destinos: stri
   );
 }
 
-function ReubicarPendientes({ n }: { n: number }) {
-  const [estado, accion, pendiente] = useActionState<EstadoForm, FormData>(reubicarPendientes, {});
-  return (
-    <form action={accion} className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm dark:border-red-900 dark:bg-red-950/40">
-      <p className="flex items-center gap-1.5 font-semibold text-red-800 dark:text-red-200">
-        <MapPinOff className="h-4 w-4" aria-hidden /> {n} {n === 1 ? "cliente sin ubicación" : "clientes sin ubicación"} en el mapa
-      </p>
-      <p className="mt-1 text-xs text-red-800/80 dark:text-red-200/80">Sin ubicación no pueden entrar en la ruta. Vuelve a buscarlos; si alguno sigue sin salir, pulsa su lápiz y pega el enlace de Google Maps.</p>
-      {estado.ok && <p className="mt-1 text-xs font-medium text-emerald-800 dark:text-emerald-300">✓ {estado.ok}</p>}
-      <Boton type="submit" variante="secundario" cargando={pendiente} className="mt-2 min-h-11 w-full text-sm">
-        <Search className="h-4 w-4" aria-hidden /> {pendiente ? "Buscando (1 por segundo)…" : "Volver a buscar en el mapa"}
-      </Boton>
-    </form>
-  );
-}
-
 export function ListaAlbaranes({ albaranes, zonas }: { albaranes: AlbaranPendiente[]; zonas: { id: string; nombre: string; dias: number[] }[] }) {
   const [editando, setEditando] = useState<string | null>(null);
   const [verPlanificados, setVerPlanificados] = useState(false);
@@ -401,7 +391,6 @@ export function ListaAlbaranes({ albaranes, zonas }: { albaranes: AlbaranPendien
               {a.numero && <span className="font-normal text-suave"> · {a.numero}</span>}
             </p>
             <p className="flex items-center gap-1 text-xs text-suave">
-              {a.destino.lat == null && <MapPinOff className="h-3.5 w-3.5 shrink-0 text-red-600" aria-label="Sin ubicación" />}
               {a.destino.direccion || a.destino.localidad ? (
                 <a
                   href={
@@ -423,7 +412,6 @@ export function ListaAlbaranes({ albaranes, zonas }: { albaranes: AlbaranPendien
               {franja ? <span className="font-medium text-marca">🕘 {franja}</span> : a.destino.horario_texto ? <span className="text-amber-700 dark:text-amber-300">🕘 «{a.destino.horario_texto}» sin interpretar</span> : <span className="text-suave">Sin horario</span>}
               {a.lineas.length > 0 && <span className="text-suave"> · {a.lineas.map((l) => `${l.cantidad} × ${l.descripcion}`).join(", ")}</span>}
             </p>
-            {a.destino.lat == null && <p className="text-xs font-medium text-red-600">No está en el mapa: pulsa el lápiz y corrige la dirección o pega el enlace de Google Maps.</p>}
             {a.estado === "pendiente" && zonas.length > 0 && (
               <div className="mt-2">
                 <SelectorZona key={a.destino.zona_id ?? "sin"} destinos={[a.destino.id]} actual={a.destino.zona_id} zonas={zonas} texto="Zona:" aria={`Zona de ${a.destino.nombre}`} />
@@ -471,10 +459,6 @@ export function ListaAlbaranes({ albaranes, zonas }: { albaranes: AlbaranPendien
           </span>
         </p>
       )}
-      {(() => {
-        const n = new Set(pendientes.filter((a) => a.destino.lat == null).map((a) => a.destino.id)).size;
-        return n ? <ReubicarPendientes n={n} /> : null;
-      })()}
       {grupos.map((g) => (
         <div key={g.id} className="overflow-hidden rounded-xl border border-borde bg-superficie">
           <p className={cn("flex items-center justify-between px-3 py-2 text-sm font-semibold", g.id === "sin" ? "bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200" : "bg-fondo")}>

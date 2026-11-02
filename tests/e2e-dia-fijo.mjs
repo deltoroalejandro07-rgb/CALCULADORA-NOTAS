@@ -25,7 +25,7 @@ await page.getByRole("link", { name: "Mañana", exact: true }).click();
 await page.waitForURL(`**/logistica?fecha=${manana}`);
 await page.getByRole("link", { name: /Ver o añadir albaranes/ }).click();
 await page.getByText(`Reparto del ${textoManana}`).waitFor();
-await page.getByRole("link", { name: /Calcular ruta/ }).first().click();
+await page.getByRole("link", { name: /Preparar ruta/ }).first().click();
 await page.getByText(`Reparto del ${textoManana}`).waitFor();
 paso("Aunque entre desde el menú (sin fecha), sigue el día elegido");
 await page.getByRole("link", { name: "Preparar reparto" }).click();

@@ -1,5 +1,5 @@
 import "server-only";
-import { PDFDocument, rgb, StandardFonts, type PDFFont, type PDFPage } from "pdf-lib";
+import { PDFDocument, PDFString, rgb, StandardFonts, type PDFFont, type PDFPage } from "pdf-lib";
 import { agruparPorFamilia } from "@/lib/dominio/familias";
 
 // PDF de la hoja de ruta: hoja de carga (suma por producto) + orden de reparto. Sin mapas.
@@ -29,6 +29,7 @@ const VERDE = rgb(0.184, 0.49, 0.467);
 const GRIS = rgb(0.36, 0.39, 0.45);
 const LINEA = rgb(0.85, 0.87, 0.9);
 const FONDO_FAMILIA = rgb(0.9, 0.953, 0.945);
+const AZUL = rgb(0.1, 0.42, 0.85);
 
 /** Quita los caracteres que las fuentes estándar del PDF no pueden escribir. */
 function limpiar(texto: string, f: PDFFont): string {
@@ -147,9 +148,26 @@ export async function pdfHojaRuta(h: HojaRuta): Promise<Uint8Array> {
     const max = ancho - 30 - (p.hora ? 90 : 0);
     escribir(p.cliente + (p.albaran ? `  (${p.albaran})` : ""), { f: negrita, tam: 11, x, max });
     escribir(p.direccion || "Sin dirección", { tam: 10, x, max: ancho - 30 });
-    const datos = [p.telefono && `Tel. ${p.telefono}`, p.horario && `Horario: ${p.horario}`, p.acceso && `Acceso: ${p.acceso}`].filter(Boolean).join(" · ");
+    if (p.direccion) {
+      // Enlace que abre la dirección en Google Maps (al pulsarlo en el móvil o en el ordenador)
+      sitio(13);
+      const t = "Abrir en Google Maps >";
+      pagina.drawText(t, { x, y: y - 9, size: 8.5, font: negrita, color: AZUL });
+      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.direccion)}`;
+      const anotacion = doc.context.obj({
+        Type: "Annot",
+        Subtype: "Link",
+        Rect: [x, y - 11, x + negrita.widthOfTextAtSize(t, 8.5), y],
+        Border: [0, 0, 0],
+        A: { Type: "Action", S: "URI", URI: PDFString.of(url) },
+      });
+      pagina.node.addAnnot(doc.context.register(anotacion));
+      y -= 12;
+    }
+    const datos = [p.telefono && `Tel. ${p.telefono}`, p.horario && `Horario: ${p.horario}`].filter(Boolean).join(" · ");
     if (datos) escribir(datos, { tam: 9, x, color: GRIS, max: ancho - 30 });
-    if (p.notas) escribir(`Nota: ${p.notas}`, { tam: 9, x, color: rgb(0.7, 0.4, 0), max: ancho - 30 });
+    if (p.acceso) escribir(`Observaciones: ${p.acceso}`, { tam: 9, x, color: rgb(0.7, 0.4, 0), max: ancho - 30 });
+    if (p.notas) escribir(`Nota de hoy: ${p.notas}`, { tam: 9, x, color: rgb(0.7, 0.4, 0), max: ancho - 30 });
     if (productos) escribir(productos, { tam: 9, x, max: ancho - 30 });
     // Casilla para marcar a mano
     sitio(18);

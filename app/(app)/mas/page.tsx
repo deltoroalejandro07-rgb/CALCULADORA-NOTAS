@@ -1,4 +1,4 @@
-import { Bell, BarChart3, CalendarClock, CalendarDays, ChevronRight, FileSpreadsheet, MapPinned, MessageCircle, Route, Sparkles, Truck, UserCog, Warehouse } from "lucide-react";
+import { Bell, BarChart3, CalendarClock, CalendarDays, ChevronRight, FileSpreadsheet, MapPinned, MessageCircle, Route, Sparkles, Store, Truck, UserCog, Warehouse } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -51,6 +51,7 @@ async function Contenido() {
           {
             titulo: "Ajustes",
             items: [
+              { texto: "Clientes de reparto", icono: Store, href: "/logistica/clientes" },
               { texto: "Zonas de reparto", icono: MapPinned, href: "/logistica/zonas" },
               { texto: "Vehículos y almacén", icono: Warehouse, href: "/logistica/vehiculos" },
               { texto: "Usuarios", icono: UserCog, href: "/ajustes/usuarios" },

@@ -227,14 +227,14 @@ isOneToOne: false
                   ]
                 },"destinos": {
                   Row: {
-                    "actualizado_at": string,"clave": string,"codigo_postal": string | null,"creado_at": string,"direccion": string | null,"horario_texto": string | null,"id": string,"lat": number | null,"lng": number | null,"localidad": string | null,"minutos_descarga": number | null,"nombre": string,"notas_acceso": string | null,"telefono": string | null,"ubicacion_origen": string | null,"ventana_desde": string | null,"ventana_hasta": string | null,"zona_id": string | null
+                    "actualizado_at": string,"clave": string,"codigo_postal": string | null,"creado_at": string,"direccion": string | null,"horario_texto": string | null,"id": string,"lat": number | null,"lng": number | null,"localidad": string | null,"minutos_descarga": number | null,"nombre": string,"notas_acceso": string | null,"orden_habitual": number | null,"telefono": string | null,"ubicacion_origen": string | null,"ventana_desde": string | null,"ventana_hasta": string | null,"zona_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "actualizado_at"?: string,"clave": string,"codigo_postal"?: string | null,"creado_at"?: string,"direccion"?: string | null,"horario_texto"?: string | null,"id"?: string,"lat"?: number | null,"lng"?: number | null,"localidad"?: string | null,"minutos_descarga"?: number | null,"nombre": string,"notas_acceso"?: string | null,"telefono"?: string | null,"ubicacion_origen"?: string | null,"ventana_desde"?: string | null,"ventana_hasta"?: string | null,"zona_id"?: string | null
+                    "actualizado_at"?: string,"clave": string,"codigo_postal"?: string | null,"creado_at"?: string,"direccion"?: string | null,"horario_texto"?: string | null,"id"?: string,"lat"?: number | null,"lng"?: number | null,"localidad"?: string | null,"minutos_descarga"?: number | null,"nombre": string,"notas_acceso"?: string | null,"orden_habitual"?: number | null,"telefono"?: string | null,"ubicacion_origen"?: string | null,"ventana_desde"?: string | null,"ventana_hasta"?: string | null,"zona_id"?: string | null
                   }
                   Update: {
-                    "actualizado_at"?: string,"clave"?: string,"codigo_postal"?: string | null,"creado_at"?: string,"direccion"?: string | null,"horario_texto"?: string | null,"id"?: string,"lat"?: number | null,"lng"?: number | null,"localidad"?: string | null,"minutos_descarga"?: number | null,"nombre"?: string,"notas_acceso"?: string | null,"telefono"?: string | null,"ubicacion_origen"?: string | null,"ventana_desde"?: string | null,"ventana_hasta"?: string | null,"zona_id"?: string | null
+                    "actualizado_at"?: string,"clave"?: string,"codigo_postal"?: string | null,"creado_at"?: string,"direccion"?: string | null,"horario_texto"?: string | null,"id"?: string,"lat"?: number | null,"lng"?: number | null,"localidad"?: string | null,"minutos_descarga"?: number | null,"nombre"?: string,"notas_acceso"?: string | null,"orden_habitual"?: number | null,"telefono"?: string | null,"ubicacion_origen"?: string | null,"ventana_desde"?: string | null,"ventana_hasta"?: string | null,"zona_id"?: string | null
                   }
                   Relationships: [
                     {

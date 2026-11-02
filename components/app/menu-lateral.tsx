@@ -13,6 +13,7 @@ import {
   Route,
   Settings,
   Sparkles,
+  Store,
   Truck,
   UserCog,
   Users,
@@ -57,6 +58,7 @@ const GRUPOS: Grupo[] = [
     titulo: "Ajustes",
     soloAdmin: true,
     enlaces: [
+      { href: "/logistica/clientes", texto: "Clientes de reparto", icono: Store },
       { href: "/logistica/zonas", texto: "Zonas de reparto", icono: MapPinned },
       { href: "/logistica/vehiculos", texto: "Vehículos y almacén", icono: Warehouse },
       { href: "/ajustes/usuarios", texto: "Usuarios", icono: UserCog },
