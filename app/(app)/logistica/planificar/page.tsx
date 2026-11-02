@@ -52,12 +52,13 @@ async function Contenido({ fecha }: { fecha: string }) {
     sb.from("vehiculos").select("id, nombre, matricula, conductor_habitual").eq("activo", true).order("nombre"),
     sb.from("perfiles").select("id, nombre").eq("activo", true).order("nombre"),
   ]);
-  // Un cliente con varios albaranes = una sola parada
+  // Un albarán = una parada (aunque dos albaranes tengan el mismo nombre de cliente)
   const porCliente = new Map<string, ClienteDelDia>();
   for (const a of albaranes ?? []) {
     const d = a.destinos;
     if (!d) continue;
-    const c = porCliente.get(d.id) ?? {
+    const c = porCliente.get(a.id) ?? {
+      clave: a.id,
       destinoId: d.id,
       nombre: d.nombre,
       direccion: [d.direccion, d.localidad].filter(Boolean).join(", "),
@@ -69,7 +70,7 @@ async function Contenido({ fecha }: { fecha: string }) {
       albaranes: [],
     };
     c.albaranes.push({ id: a.id, numero: a.numero, lineas: ((a.lineas as { descripcion: string; cantidad: number }[] | null) ?? []).map((l) => ({ descripcion: l.descripcion, cantidad: Number(l.cantidad) })) });
-    porCliente.set(d.id, c);
+    porCliente.set(a.id, c);
   }
   return <PrepararRuta fecha={fecha} dia={diaSemana(fecha)} clientes={[...porCliente.values()]} zonas={zonas ?? []} vehiculos={vehiculos ?? []} conductores={perfiles ?? []} />;
 }

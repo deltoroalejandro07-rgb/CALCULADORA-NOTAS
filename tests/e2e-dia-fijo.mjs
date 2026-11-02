@@ -51,6 +51,13 @@ await page.waitForURL(`**/logistica?fecha=${hoy}`);
 await page.goto(`${APP}/logistica/planificar`);
 assert.equal(await page.getByText(`Reparto del ${textoManana}`).count(), 0, "ya no está en mañana");
 
+paso("Dos albaranes con el mismo nombre de cliente salen como dos pedidos separados");
+sql(`insert into albaranes (numero, fecha, destino_id, lineas) select n, '${hoy}', (select id from destinos where clave = 'dh'), '[]' from (values ('DH2'), ('DH3')) v(n)`);
+await page.goto(`${APP}/logistica/planificar?fecha=${hoy}`);
+await page.getByText("Orden de entrega (3)").waitFor();
+assert.equal(await page.locator("ol li p.font-medium", { hasText: "BAR DE HOY" }).count(), 3, "un albarán = una parada");
+await page.getByLabel("Hora de BAR DE HOY (DH2)").waitFor();
+
 assert.deepEqual(errores, [], "sin errores en la consola");
 await navegador.close();
 console.log("✓ Día fijo y cambios al momento");

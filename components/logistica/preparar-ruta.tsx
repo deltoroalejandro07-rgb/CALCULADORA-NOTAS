@@ -10,6 +10,8 @@ import { cn } from "@/lib/cn";
 import { totalCarga } from "@/lib/dominio/reparto";
 
 export interface ClienteDelDia {
+  /** Una parada por albarán: aunque dos albaranes tengan el mismo nombre, se reparten por separado. */
+  clave: string;
   destinoId: string;
   nombre: string;
   direccion: string;
@@ -26,7 +28,7 @@ export const enlaceMaps = (direccion: string, nombre?: string) => `https://www.g
 
 /** Orden de partida: el habitual de cada cliente; los nuevos, al final por nombre. */
 const ordenInicial = (cs: ClienteDelDia[]) =>
-  [...cs].sort((a, b) => (a.ordenHabitual ?? 9999) - (b.ordenHabitual ?? 9999) || a.nombre.localeCompare(b.nombre, "es")).map((c) => c.destinoId);
+  [...cs].sort((a, b) => (a.ordenHabitual ?? 9999) - (b.ordenHabitual ?? 9999) || a.nombre.localeCompare(b.nombre, "es")).map((c) => c.clave);
 
 export function PrepararRuta({
   fecha,
@@ -46,7 +48,7 @@ export function PrepararRuta({
   const zonasHoy = zonas.filter((z) => z.dias.includes(dia)).map((z) => z.id);
   // Marcados de entrada: los de las zonas que tocan hoy (si no hay zonas, todos)
   const [marcados, setMarcados] = useState<Set<string>>(
-    () => new Set(clientes.filter((c) => !zonas.length || (c.zonaId && zonasHoy.includes(c.zonaId)) || !c.zonaId).map((c) => c.destinoId)),
+    () => new Set(clientes.filter((c) => !zonas.length || (c.zonaId && zonasHoy.includes(c.zonaId)) || !c.zonaId).map((c) => c.clave)),
   );
   const [orden, setOrden] = useState<string[]>(() => ordenInicial(clientes));
   const [horas, setHoras] = useState<Record<string, string>>({});
@@ -57,7 +59,7 @@ export function PrepararRuta({
   const [error, setError] = useState<string | null>(null);
   const [creando, empezar] = useTransition();
 
-  const porId = useMemo(() => new Map(clientes.map((c) => [c.destinoId, c])), [clientes]);
+  const porId = useMemo(() => new Map(clientes.map((c) => [c.clave, c])), [clientes]);
   const enRuta = orden.filter((id) => marcados.has(id)).map((id) => porId.get(id)!);
   const fuera = orden.filter((id) => !marcados.has(id)).map((id) => porId.get(id)!);
   const carga = totalCarga(enRuta.flatMap((c) => c.albaranes.map((a) => ({ lineas: a.lineas.map((l) => ({ producto_id: null, ...l })) }))));
@@ -87,7 +89,7 @@ export function PrepararRuta({
         vehiculoId: vehiculo || null,
         conductorId: conductor,
         guardarOrden,
-        paradas: enRuta.map((c) => ({ destinoId: c.destinoId, albaranIds: c.albaranes.map((a) => a.id), hora: horas[c.destinoId] || null })),
+        paradas: enRuta.map((c) => ({ destinoId: c.destinoId, albaranIds: c.albaranes.map((a) => a.id), hora: horas[c.clave] || null })),
       });
       if (r?.error) setError(r.error);
     });
@@ -108,7 +110,7 @@ export function PrepararRuta({
           <p className="text-xs text-suave">Sale con el orden habitual de cada cliente. Muévelos con las flechas y, si quieres, pon la hora.</p>
           <ol className="mt-2 divide-y divide-borde">
             {enRuta.map((c, i) => (
-              <li key={c.destinoId} className="flex gap-3 py-2.5">
+              <li key={c.clave} className="flex gap-3 py-2.5">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-marca text-sm font-bold text-marca-texto">{i + 1}</span>
                 <div className="min-w-0 flex-1 text-sm">
                   <p className="font-medium">
@@ -139,22 +141,22 @@ export function PrepararRuta({
                       Hora
                       <input
                         type="time"
-                        value={horas[c.destinoId] ?? ""}
-                        onChange={(e) => setHoras((h) => ({ ...h, [c.destinoId]: e.target.value }))}
-                        aria-label={`Hora de ${c.nombre}`}
+                        value={horas[c.clave] ?? ""}
+                        onChange={(e) => setHoras((h) => ({ ...h, [c.clave]: e.target.value }))}
+                        aria-label={`Hora de ${c.nombre}${c.albaranes[0]?.numero ? ` (${c.albaranes[0].numero})` : ""}`}
                         className="min-h-8 rounded-md border border-borde bg-superficie px-1.5 text-xs"
                       />
                     </label>
-                    <button type="button" onClick={() => alternar(c.destinoId)} className="text-xs text-suave underline">
+                    <button type="button" onClick={() => alternar(c.clave)} className="text-xs text-suave underline">
                       Quitar de esta ruta
                     </button>
                   </div>
                 </div>
                 <div className="flex shrink-0 flex-col">
-                  <button type="button" onClick={() => mover(c.destinoId, -1)} disabled={i === 0} aria-label={`Subir ${c.nombre}`} className="rounded-md p-1.5 text-suave hover:bg-fondo disabled:opacity-30">
+                  <button type="button" onClick={() => mover(c.clave, -1)} disabled={i === 0} aria-label={`Subir ${c.nombre}`} className="rounded-md p-1.5 text-suave hover:bg-fondo disabled:opacity-30">
                     <ArrowUp className="h-5 w-5" />
                   </button>
-                  <button type="button" onClick={() => mover(c.destinoId, 1)} disabled={i === enRuta.length - 1} aria-label={`Bajar ${c.nombre}`} className="rounded-md p-1.5 text-suave hover:bg-fondo disabled:opacity-30">
+                  <button type="button" onClick={() => mover(c.clave, 1)} disabled={i === enRuta.length - 1} aria-label={`Bajar ${c.nombre}`} className="rounded-md p-1.5 text-suave hover:bg-fondo disabled:opacity-30">
                     <ArrowDown className="h-5 w-5" />
                   </button>
                 </div>
@@ -170,11 +172,13 @@ export function PrepararRuta({
             <p className="text-xs text-suave">De otras zonas o para otra furgoneta. Márcalos para añadirlos a esta ruta.</p>
             <ul className="mt-2 divide-y divide-borde text-sm">
               {fuera.map((c) => (
-                <li key={c.destinoId} className="flex items-center gap-2 py-2">
-                  <input type="checkbox" checked={false} onChange={() => alternar(c.destinoId)} aria-label={`Añadir ${c.nombre}`} className="h-5 w-5 accent-[var(--marca)]" />
+                <li key={c.clave} className="flex items-center gap-2 py-2">
+                  <input type="checkbox" checked={false} onChange={() => alternar(c.clave)} aria-label={`Añadir ${c.nombre}`} className="h-5 w-5 accent-[var(--marca)]" />
                   <span className="min-w-0 flex-1 truncate">
                     {c.nombre}
-                    <span className="text-suave"> · {zonas.find((z) => z.id === c.zonaId)?.nombre ?? "sin zona"}</span>
+                    <span className="text-suave">
+                      {c.albaranes[0]?.numero ? ` · ${c.albaranes[0].numero}` : ""} · {zonas.find((z) => z.id === c.zonaId)?.nombre ?? "sin zona"}
+                    </span>
                   </span>
                 </li>
               ))}
@@ -244,7 +248,7 @@ export function PrepararRuta({
           Crear la ruta y enviarla al conductor
         </Boton>
         <p className="text-center text-xs text-suave">
-          {enRuta.length} {enRuta.length === 1 ? "cliente" : "clientes"}
+          {enRuta.length} {enRuta.length === 1 ? "pedido" : "pedidos"}
           {fuera.length > 0 && ` · los ${fuera.length} restantes quedan para otra furgoneta`}
         </p>
       </div>
