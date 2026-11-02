@@ -100,8 +100,11 @@ await page.goto(`${APP}/logistica/planificar?fecha=${hoy}`);
 await page.getByText("Entregas que entran en la ruta (4)").waitFor();
 // Hoja de carga del día: la suma de los 4 albaranes, antes de calcular nada
 await page.getByText("Hoja de carga del día (4 albaranes)").waitFor();
-const filaCerveza = page.locator("tr", { hasText: "CERVEZA BARRIL 30L" }).first();
-assert.equal((await filaCerveza.locator("td").nth(1).textContent()).trim(), "2");
+const filaCerveza = page.locator("li", { hasText: "CERVEZA BARRIL 30L" }).first();
+assert.equal((await filaCerveza.locator("span").nth(1).textContent()).trim(), "2");
+// Agrupada por familias, con el total de cada una
+await page.getByText("Cerveza", { exact: true }).first().waitFor();
+await page.getByText("Agua", { exact: true }).first().waitFor();
 await page.screenshot({ path: `${SALIDA}/64-planificar.png`, fullPage: true });
 await page.getByRole("button", { name: "Calcular la mejor ruta" }).click();
 await page.getByText("tiempo total").waitFor({ timeout: 60_000 });
