@@ -14,6 +14,8 @@ export interface HojaRuta {
     hora: string | null;
     cliente: string;
     direccion: string;
+    /** Ese día se entrega en otra dirección (la de `direccion`). */
+    otraDireccion?: boolean;
     telefono: string | null;
     horario: string | null;
     acceso: string | null;
@@ -147,7 +149,8 @@ export async function pdfHojaRuta(h: HojaRuta): Promise<Uint8Array> {
     const x = M + 30;
     const max = ancho - 30 - (p.hora ? 90 : 0);
     escribir(p.cliente + (p.albaran ? `  (${p.albaran})` : ""), { f: negrita, tam: 11, x, max });
-    escribir(p.direccion || "Sin dirección", { tam: 10, x, max: ancho - 30 });
+    if (p.otraDireccion) escribir("ATENCIÓN: HOY SE ENTREGA EN OTRA DIRECCIÓN", { f: negrita, tam: 9, x, color: rgb(0.78, 0.25, 0.18), max: ancho - 30 });
+    escribir(p.direccion || "Sin dirección", { tam: 10, x, max: ancho - 30, f: p.otraDireccion ? negrita : normal });
     if (p.direccion) {
       // Enlace que abre la dirección en Google Maps (al pulsarlo en el móvil o en el ordenador)
       sitio(13);

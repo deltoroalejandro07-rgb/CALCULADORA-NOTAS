@@ -4,6 +4,7 @@ import { actualizarPantallas } from "@/lib/actualizar";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { exigirAdmin } from "@/lib/auth";
+import { unirNota } from "@/lib/dominio/nota-parada";
 import { ETIQUETAS_AMBIENTALES, moverParada } from "@/lib/dominio/reparto";
 import { ordenarRuta } from "@/lib/dominio/ruta";
 import { supabaseServidor } from "@/lib/supabase/servidor";
@@ -244,10 +245,10 @@ export async function ordenarPorCercania(form: FormData) {
 
 export async function guardarNotaParada(form: FormData) {
   await exigirAdmin();
-  const r = z.object({ id, notas_oficina: texto }).safeParse(Object.fromEntries(form));
+  const r = z.object({ id, notas_oficina: texto, otra_direccion: texto.optional() }).safeParse(Object.fromEntries(form));
   if (!r.success) return;
   const sb = await supabaseServidor();
-  await sb.from("paradas").update({ notas_oficina: r.data.notas_oficina }).eq("id", r.data.id).eq("estado", "pendiente");
+  await sb.from("paradas").update({ notas_oficina: unirNota(r.data.otra_direccion, r.data.notas_oficina) }).eq("id", r.data.id).eq("estado", "pendiente");
   actualizarPantallas();
 }
 

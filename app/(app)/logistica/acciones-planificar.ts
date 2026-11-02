@@ -8,6 +8,7 @@ import { exigirAdmin } from "@/lib/auth";
 import { enviarAvisos } from "@/lib/avisos";
 import { leerCoordenadas, leerLineasTexto } from "@/lib/dominio/destinos";
 import { interpretarHorario } from "@/lib/dominio/horario";
+import { unirNota } from "@/lib/dominio/nota-parada";
 import { guardarAlbaranes } from "@/lib/logistica/importar";
 import { ubicarDireccion } from "@/lib/logistica/mapas";
 import { calcularPlan, type PlanPropuesto } from "@/lib/logistica/planificar";
@@ -360,7 +361,15 @@ const esquemaRutaManual = z.object({
   conductorId: id,
   guardarOrden: z.boolean(),
   paradas: z
-    .array(z.object({ destinoId: id, albaranIds: z.array(id).min(1), hora: z.string().regex(/^\d{2}:\d{2}$/).nullable() }))
+    .array(
+      z.object({
+        destinoId: id,
+        albaranIds: z.array(id).min(1),
+        hora: z.string().regex(/^\d{2}:\d{2}$/).nullable(),
+        nota: z.string().max(1000).nullable().optional(),
+        otraDireccion: z.string().max(300).nullable().optional(),
+      }),
+    )
     .min(1, "Marca al menos un cliente."),
 });
 
@@ -377,7 +386,9 @@ export async function crearRutaManual(datos: z.input<typeof esquemaRutaManual>):
     .single();
   if (error) return { error: error.message };
   let orden = 0;
-  const filas = paradas.flatMap((p) => p.albaranIds.map((albaran_id) => ({ ruta_id: ruta.id, orden: ++orden, destino_id: p.destinoId, albaran_id, llegada_prevista: p.hora })));
+  const filas = paradas.flatMap((p) =>
+    p.albaranIds.map((albaran_id) => ({ ruta_id: ruta.id, orden: ++orden, destino_id: p.destinoId, albaran_id, llegada_prevista: p.hora, notas_oficina: unirNota(p.otraDireccion, p.nota) })),
+  );
   const { error: e2 } = await sb.from("paradas").insert(filas);
   if (e2) {
     await sb.from("rutas").delete().eq("id", ruta.id);

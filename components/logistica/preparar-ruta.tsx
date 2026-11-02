@@ -52,6 +52,8 @@ export function PrepararRuta({
   );
   const [orden, setOrden] = useState<string[]>(() => ordenInicial(clientes));
   const [horas, setHoras] = useState<Record<string, string>>({});
+  const [notas, setNotas] = useState<Record<string, string>>({});
+  const [otras, setOtras] = useState<Record<string, string>>({});
   const vehiculoZona = zonas.find((z) => zonasHoy.includes(z.id) && z.vehiculo_id)?.vehiculo_id;
   const [vehiculo, setVehiculo] = useState(vehiculoZona ?? vehiculos[0]?.id ?? "");
   const [conductor, setConductor] = useState(vehiculos.find((v) => v.id === (vehiculoZona ?? vehiculos[0]?.id))?.conductor_habitual ?? "");
@@ -89,7 +91,13 @@ export function PrepararRuta({
         vehiculoId: vehiculo || null,
         conductorId: conductor,
         guardarOrden,
-        paradas: enRuta.map((c) => ({ destinoId: c.destinoId, albaranIds: c.albaranes.map((a) => a.id), hora: horas[c.clave] || null })),
+        paradas: enRuta.map((c) => ({
+          destinoId: c.destinoId,
+          albaranIds: c.albaranes.map((a) => a.id),
+          hora: horas[c.clave] || null,
+          nota: notas[c.clave] || null,
+          otraDireccion: otras[c.clave] || null,
+        })),
       });
       if (r?.error) setError(r.error);
     });
@@ -150,6 +158,32 @@ export function PrepararRuta({
                     <button type="button" onClick={() => alternar(c.clave)} className="text-xs text-suave underline">
                       Quitar de esta ruta
                     </button>
+                  </div>
+                  <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
+                    <textarea
+                      value={notas[c.clave] ?? ""}
+                      onChange={(e) => setNotas((n) => ({ ...n, [c.clave]: e.target.value }))}
+                      rows={2}
+                      maxLength={1000}
+                      placeholder="Nota para el repartidor (solo este pedido)"
+                      aria-label={`Nota para el repartidor: ${c.nombre}${c.albaranes[0]?.numero ? ` (${c.albaranes[0].numero})` : ""}`}
+                      className="w-full resize-y rounded-md border border-borde bg-superficie px-2 py-1.5 text-xs outline-none focus:border-marca"
+                    />
+                    <div>
+                      <input
+                        value={otras[c.clave] ?? ""}
+                        onChange={(e) => setOtras((o) => ({ ...o, [c.clave]: e.target.value }))}
+                        maxLength={300}
+                        placeholder="Entregar en otra dirección (solo hoy)"
+                        aria-label={`Otra dirección de entrega: ${c.nombre}${c.albaranes[0]?.numero ? ` (${c.albaranes[0].numero})` : ""}`}
+                        className={cn("w-full rounded-md border bg-superficie px-2 py-1.5 text-xs outline-none focus:border-marca", otras[c.clave] ? "border-amber-400" : "border-borde")}
+                      />
+                      {otras[c.clave]?.trim() && (
+                        <a href={enlaceMaps(otras[c.clave])} target="_blank" rel="noreferrer" className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-marca underline">
+                          <ExternalLink className="h-3 w-3" aria-hidden /> Comprobar en Google Maps
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="flex shrink-0 flex-col">

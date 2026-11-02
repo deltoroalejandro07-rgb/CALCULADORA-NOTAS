@@ -9,6 +9,7 @@ import { CargaPorFamilias } from "@/components/logistica/carga-familias";
 import { Boton } from "@/components/ui/boton";
 import { cn } from "@/lib/cn";
 import { enlaceComoLlegar, enlaceLlamada, enlaceWhatsApp } from "@/lib/dominio/contacto";
+import { mapsDeDireccion, partirNota } from "@/lib/dominio/nota-parada";
 import { mensajeLlegada } from "@/lib/dominio/prevision";
 import { direccionParada, lineasIniciales, ordenCarga, progreso, siguienteParada, totalCarga, type EstadoParada, type ParadaReparto, type RutaReparto } from "@/lib/dominio/reparto";
 import { enlaceRutaGoogle } from "@/lib/dominio/ruta";
@@ -445,7 +446,7 @@ export function PanelReparto() {
                     <span className={cn("block truncate font-medium", estado !== "pendiente" && "text-suave")}>{p.cliente.nombre}</span>
                     <span className="block truncate text-xs text-suave">
                       {estado === "pendiente"
-                        ? [p.llegada_prevista && `≈ ${p.llegada_prevista}`, p.cliente.horario_entrega, direccionParada(p.cliente)].filter(Boolean).join(" · ") || "Sin dirección"
+                        ? [p.llegada_prevista && `≈ ${p.llegada_prevista}`, p.cliente.horario_entrega, partirNota(p.notas_oficina).otraDireccion ? `⚠ Otra dirección: ${partirNota(p.notas_oficina).otraDireccion}` : direccionParada(p.cliente)].filter(Boolean).join(" · ") || "Sin dirección"
                         : `${estado === "entregada" ? "Entregada" : "No entregada"} ${local ? fechaHora(local.datos.realizada_at) : p.realizada_at ? fechaHora(p.realizada_at) : ""}`}
                     </span>
                   </span>
@@ -511,14 +512,24 @@ function FichaParada({
   onRapido: () => void;
 }) {
   const c = parada.cliente;
-  const comoLlegar = enlaceComoLlegar({ lat: c.lat, lng: c.lng, direccion: c.direccion, localidad: c.localidad });
+  const nota = partirNota(parada.notas_oficina);
+  // Si ese día se entrega en otra dirección, Google Maps abre esa
+  const comoLlegar = nota.otraDireccion ? mapsDeDireccion(nota.otraDireccion) : enlaceComoLlegar({ lat: c.lat, lng: c.lng, direccion: c.direccion, localidad: c.localidad });
   return (
     <div className={cn("rounded-xl border bg-superficie p-4", destacada ? "border-marca shadow-sm" : "border-borde")}>
       <div className="flex items-start gap-3">
         {numero != null && <NumeroParada n={numero} estado={estado} />}
         <div className="min-w-0 flex-1">
           <p className="text-lg font-bold leading-tight">{c.nombre}</p>
-          {direccionParada(c) ? (
+          {nota.otraDireccion ? (
+            <div className="mt-1 rounded-md bg-amber-100 px-2 py-1 text-sm dark:bg-amber-900/40">
+              <p className="text-xs font-bold uppercase text-amber-800 dark:text-amber-200">Hoy se entrega en otra dirección</p>
+              <a href={comoLlegar!} target="_blank" rel="noreferrer" className="font-semibold underline decoration-dotted underline-offset-2">
+                {nota.otraDireccion}
+              </a>
+              {direccionParada(c) && <p className="text-xs text-suave line-through">{direccionParada(c)}</p>}
+            </div>
+          ) : direccionParada(c) ? (
             <a href={comoLlegar ?? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccionParada(c))}`} target="_blank" rel="noreferrer" className="text-sm text-suave underline decoration-dotted underline-offset-2">
               {direccionParada(c)}
             </a>
@@ -534,11 +545,11 @@ function FichaParada({
           )}
         </div>
       </div>
-      {(c.horario_entrega || c.notas_acceso || parada.notas_oficina) && (
+      {(c.horario_entrega || c.notas_acceso || nota.texto) && (
         <div className="mt-3 space-y-1 rounded-lg bg-fondo p-3 text-sm">
           {c.horario_entrega && <p>🕘 Descarga: {c.horario_entrega}</p>}
           {c.notas_acceso && <p>📌 {c.notas_acceso}</p>}
-          {parada.notas_oficina && <p className="font-medium text-amber-700 dark:text-amber-300">📝 Hoy: {parada.notas_oficina}</p>}
+          {nota.texto && <p className="whitespace-pre-line font-medium text-amber-700 dark:text-amber-300">📝 Hoy: {nota.texto}</p>}
         </div>
       )}
       {parada.lineas.length > 0 && (

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { DIAS_SEMANA, diaSemana } from "@/lib/dominio/destinos";
 import { textoFranja } from "@/lib/dominio/horario";
+import { partirNota } from "@/lib/dominio/nota-parada";
 import { totalCarga } from "@/lib/dominio/reparto";
 import { fecha } from "@/lib/formato";
 import { pdfHojaRuta } from "@/lib/logistica/pdf-ruta";
@@ -29,17 +30,19 @@ export async function GET(_: Request, ctx: RouteContext<"/api/logistica/rutas/[i
         : ((p.albaranes?.lineas as { descripcion: string; cantidad: number }[] | null) ?? []).map((l) => ({ producto_id: null, descripcion: l.descripcion, cantidad: Number(l.cantidad) }));
       const c = p.clientes;
       const d = p.destinos;
+      const nota = partirNota(p.notas_oficina);
       return {
         estado: p.estado,
         lineas,
         hoja: {
           hora: p.llegada_prevista?.slice(0, 5) ?? null,
           cliente: c?.nombre_negocio ?? d?.nombre ?? "—",
-          direccion: (c ? [c.direccion, c.localidad] : [d?.direccion, d?.codigo_postal, d?.localidad]).filter(Boolean).join(", "),
+          direccion: nota.otraDireccion ?? (c ? [c.direccion, c.localidad] : [d?.direccion, d?.codigo_postal, d?.localidad]).filter(Boolean).join(", "),
+          otraDireccion: !!nota.otraDireccion,
           telefono: c?.telefono ?? d?.telefono ?? null,
           horario: c ? (c.clientes_entrega?.horario_entrega ?? null) : (d?.horario_texto ?? textoFranja(d?.ventana_desde ?? null, d?.ventana_hasta ?? null)),
           acceso: c ? (c.clientes_entrega?.notas_acceso ?? null) : (d?.notas_acceso ?? null),
-          notas: p.notas_oficina,
+          notas: nota.texto,
           albaran: p.albaranes?.numero ?? null,
           lineas: lineas.map((l) => `${l.cantidad.toLocaleString("es-ES")} x ${l.descripcion}`),
         },

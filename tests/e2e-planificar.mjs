@@ -116,7 +116,10 @@ const ordenInicial = await page.locator("ol li p.font-medium").allTextContents()
 console.log("  orden inicial:", ordenInicial.map((t) => t.split(" · ")[0]).join(" → "));
 // El kiosko abre a las 12: lo paso al final
 while ((await page.locator("ol li p.font-medium").last().textContent()).startsWith("KIOSKO") === false) await page.getByRole("button", { name: "Bajar KIOSKO DE PRUEBA" }).click();
-await page.getByLabel("Hora de BAR LA PLAZA DE PRUEBA S.L.").fill("08:30");
+await page.getByLabel("Hora de BAR LA PLAZA DE PRUEBA S.L. (SO900001)").fill("08:30");
+await page.getByLabel("Nota para el repartidor: BAR LA PLAZA DE PRUEBA S.L. (SO900001)").fill("Hoy recoger 2 barriles vacíos");
+await page.getByLabel("Otra dirección de entrega: BAR LA PLAZA DE PRUEBA S.L. (SO900001)").fill("Calle del Almacén 3, Valencia");
+await page.getByRole("link", { name: "Comprobar en Google Maps" }).waitFor();
 await page.getByLabel("Conductor").selectOption({ label: "Luis (demo)" });
 await page.screenshot({ path: `${SALIDA}/64-preparar-ruta.png`, fullPage: true });
 await page.getByRole("button", { name: "Crear la ruta y enviarla al conductor" }).click();
@@ -127,6 +130,7 @@ assert.equal(sql("select count(*) from albaranes where estado = 'planificado'"),
 assert.equal(sql(`select d.nombre from paradas p join destinos d on d.id = p.destino_id where ruta_id = '${rutaId}' order by p.orden desc limit 1`), "KIOSKO DE PRUEBA", "respeta el orden elegido");
 assert.equal(sql(`select llegada_prevista from paradas p join destinos d on d.id = p.destino_id where ruta_id = '${rutaId}' and d.nombre = 'BAR LA PLAZA DE PRUEBA S.L.'`), "08:30:00");
 assert.equal(sql("select orden_habitual from destinos where nombre = 'KIOSKO DE PRUEBA'"), "4", "se guarda como orden habitual");
+assert.equal(sql(`select notas_oficina from paradas p join destinos d on d.id = p.destino_id where ruta_id = '${rutaId}' and d.nombre = 'BAR LA PLAZA DE PRUEBA S.L.'`), "Entregar en: Calle del Almacén 3, Valencia\nHoy recoger 2 barriles vacíos");
 paso("Sin móvil del conductor, la app indica dónde añadirlo; con móvil, WhatsApp de un toque");
 await page.getByRole("link", { name: /añade el móvil de Luis en Usuarios/ }).waitFor();
 sql("update perfiles set telefono = '+34600123456' where email = 'luis@demo.local'");
@@ -149,6 +153,9 @@ assert.match(texto, /Caja agua\s+2\b/);
 assert.match(texto, /ORDEN DE REPARTO/);
 assert.match(texto, /Llegada \d{2}:\d{2}/);
 assert.match(texto, /Abrir en Google Maps/);
+assert.match(texto, /HOY SE ENTREGA EN OTRA DIRECCI/);
+assert.match(texto, /Calle del Almacén 3, Valencia/);
+assert.match(texto, /Nota de hoy: Hoy recoger 2 barriles vacíos/);
 assert.match(texto, /Observaciones: Puerta trasera, preguntar por Paco/);
 assert.ok(texto.indexOf("BAR LA PLAZA DE PRUEBA") < texto.indexOf("KIOSKO DE PRUEBA"), "en el PDF, el bar antes que el kiosko");
 console.log(texto.split("\n").slice(0, 16).join("\n"));
@@ -164,6 +171,8 @@ await entrar(movil.page, "luis@demo.local");
 await movil.page.goto(`${APP}/reparto`);
 await movil.page.getByText("Siguiente parada").waitFor();
 await movil.page.getByText(/Llegada prevista \d{2}:\d{2}/).first().waitFor();
+await movil.page.getByText("Hoy se entrega en otra dirección").waitFor();
+assert.ok((await movil.page.getByRole("link", { name: "Calle del Almacén 3, Valencia" }).getAttribute("href")).includes("Calle%20del%20Alma"), "Google Maps abre la dirección de hoy");
 await movil.page.screenshot({ path: `${SALIDA}/67-conductor.png`, fullPage: true });
 // Un toque (con confirmación): la firma va en el albarán de papel de Holded
 movil.page.once("dialog", (d) => d.accept());

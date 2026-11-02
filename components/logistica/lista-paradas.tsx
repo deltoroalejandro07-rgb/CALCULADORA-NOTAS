@@ -8,6 +8,7 @@ import { Boton } from "@/components/ui/boton";
 import { cn } from "@/lib/cn";
 import { enlaceWhatsApp } from "@/lib/dominio/contacto";
 import { mensajeLlegada } from "@/lib/dominio/prevision";
+import { mapsDeDireccion, partirNota } from "@/lib/dominio/nota-parada";
 import type { EstadoParada } from "@/lib/dominio/reparto";
 import { euros, fechaHora } from "@/lib/formato";
 
@@ -71,8 +72,12 @@ function EditarParada({ p, alCerrar }: { p: ParadaOficina; alCerrar: () => void 
       <form action={guardarNotaParada} className="space-y-2">
         <input type="hidden" name="id" value={p.id} />
         <label className="block text-sm">
-          Nota solo para esta entrega
-          <input name="notas_oficina" defaultValue={p.notas_oficina ?? ""} placeholder="Cobrar la factura pendiente" className={campo} />
+          Nota para el repartidor (solo esta entrega)
+          <textarea name="notas_oficina" rows={2} defaultValue={partirNota(p.notas_oficina).texto ?? ""} placeholder="Cobrar la factura pendiente" className={cn(campo, "py-2")} />
+        </label>
+        <label className="block text-sm">
+          Entregar en otra dirección (solo hoy)
+          <input name="otra_direccion" defaultValue={partirNota(p.notas_oficina).otraDireccion ?? ""} placeholder="Calle, número y localidad" className={campo} />
         </label>
         <Boton type="submit" variante="secundario" className="min-h-11 w-full text-sm">
           Guardar nota
@@ -142,7 +147,15 @@ export function ListaParadas({ rutaId, paradas, editable, reordenable }: { rutaI
                 ) : (
                   <p className="mt-1 text-sm text-suave">Parada sin albarán (recogida, visita…)</p>
                 )}
-                {p.notas_oficina && <p className="text-sm text-amber-700 dark:text-amber-300">Nota: {p.notas_oficina}</p>}
+                {partirNota(p.notas_oficina).otraDireccion && (
+                  <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                    ⚠ Hoy en otra dirección:{" "}
+                    <a href={mapsDeDireccion(partirNota(p.notas_oficina).otraDireccion!)} target="_blank" rel="noreferrer" className="underline">
+                      {partirNota(p.notas_oficina).otraDireccion}
+                    </a>
+                  </p>
+                )}
+                {partirNota(p.notas_oficina).texto && <p className="whitespace-pre-line text-sm text-amber-700 dark:text-amber-300">Nota: {partirNota(p.notas_oficina).texto}</p>}
                 {p.estado === "entregada" && (
                   <p className="mt-1 text-sm text-emerald-700 dark:text-emerald-300">
                     Entregada {p.realizada_at && fechaHora(p.realizada_at)}
