@@ -5,6 +5,7 @@ import { AlertTriangle, CalendarDays, Check, MessageCircle, RotateCcw, ChevronLe
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { borrarRutaCompleta } from "@/app/(app)/logistica/acciones";
+import { CargaPorFamilias } from "@/components/logistica/carga-familias";
 import { Boton } from "@/components/ui/boton";
 import { cn } from "@/lib/cn";
 import { enlaceComoLlegar, enlaceLlamada, enlaceWhatsApp } from "@/lib/dominio/contacto";
@@ -336,14 +337,7 @@ export function PanelReparto() {
         <h2 className="text-xl font-bold">Hoja de carga</h2>
         <div className="rounded-xl border border-borde bg-superficie p-4">
           <p className="mb-2 font-semibold">Total a cargar</p>
-          <ul className="divide-y divide-borde text-sm">
-            {totalCarga(porEntregar).map((l) => (
-              <li key={l.clave} className="flex justify-between py-2">
-                <span>{l.descripcion}</span>
-                <span className="font-semibold tabular-nums">{l.cantidad.toLocaleString("es-ES")}</span>
-              </li>
-            ))}
-          </ul>
+          <CargaPorFamilias lineas={totalCarga(porEntregar)} />
         </div>
         <div className="rounded-xl border border-borde bg-superficie p-4">
           <p className="font-semibold">Orden de carga</p>

@@ -1,5 +1,6 @@
 import "server-only";
 import { PDFDocument, rgb, StandardFonts, type PDFFont, type PDFPage } from "pdf-lib";
+import { agruparPorFamilia } from "@/lib/dominio/familias";
 
 // PDF de la hoja de ruta: hoja de carga (suma por producto) + orden de reparto. Sin mapas.
 
@@ -27,6 +28,7 @@ const M = 42; // margen
 const VERDE = rgb(0.184, 0.49, 0.467);
 const GRIS = rgb(0.36, 0.39, 0.45);
 const LINEA = rgb(0.85, 0.87, 0.9);
+const FONDO_FAMILIA = rgb(0.9, 0.953, 0.945);
 
 /** Quita los caracteres que las fuentes estándar del PDF no pueden escribir. */
 function limpiar(texto: string, f: PDFFont): string {
@@ -101,19 +103,29 @@ export async function pdfHojaRuta(h: HojaRuta): Promise<Uint8Array> {
     pagina.drawLine({ start: { x: M, y }, end: { x: A4[0] - M, y }, thickness: 1, color: VERDE });
     y -= 6;
   };
-  titulo("HOJA DE CARGA (total del día)");
+  titulo("HOJA DE CARGA (total del día, por familias)");
   if (!h.carga.length) escribir("Sin productos en los albaranes.", { color: GRIS });
-  for (const l of h.carga) {
-    sitio(16);
-    const cantidad = l.cantidad.toLocaleString("es-ES");
-    const lineas = partir(l.descripcion, normal, 10, ancho - 80);
-    lineas.forEach((t, i) => {
-      sitio(14);
-      pagina.drawText(t, { x: M, y: y - 10, size: 10, font: normal });
-      if (i === 0) pagina.drawText(cantidad, { x: A4[0] - M - negrita.widthOfTextAtSize(cantidad, 11), y: y - 10, size: 11, font: negrita });
-      y -= 14;
-    });
-    pagina.drawLine({ start: { x: M, y: y + 2 }, end: { x: A4[0] - M, y: y + 2 }, thickness: 0.5, color: LINEA });
+  for (const g of agruparPorFamilia(h.carga)) {
+    // Cabecera de la familia con su total (no se separa de su primera línea)
+    sitio(36);
+    y -= 4;
+    pagina.drawRectangle({ x: M, y: y - 16, width: ancho, height: 16, color: FONDO_FAMILIA });
+    pagina.drawText(limpiar(g.familia.toUpperCase(), negrita), { x: M + 6, y: y - 12, size: 10, font: negrita, color: VERDE });
+    const tot = `${g.total.toLocaleString("es-ES")} uds.`;
+    pagina.drawText(tot, { x: A4[0] - M - 6 - negrita.widthOfTextAtSize(tot, 10), y: y - 12, size: 10, font: negrita, color: VERDE });
+    y -= 20;
+    for (const l of g.lineas) {
+      sitio(16);
+      const cantidad = l.cantidad.toLocaleString("es-ES");
+      const lineas = partir(l.descripcion, normal, 10, ancho - 90);
+      lineas.forEach((t, i) => {
+        sitio(14);
+        pagina.drawText(t, { x: M + 12, y: y - 10, size: 10, font: normal });
+        if (i === 0) pagina.drawText(cantidad, { x: A4[0] - M - 6 - negrita.widthOfTextAtSize(cantidad, 11), y: y - 10, size: 11, font: negrita });
+        y -= 14;
+      });
+      pagina.drawLine({ start: { x: M + 12, y: y + 2 }, end: { x: A4[0] - M, y: y + 2 }, thickness: 0.5, color: LINEA });
+    }
   }
   y -= 10;
 

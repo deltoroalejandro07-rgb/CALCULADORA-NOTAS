@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { CargaPorFamilias } from "@/components/logistica/carga-familias";
 import { Cabecera, Cargando, Tarjeta } from "@/components/app/piezas";
 import { BotonImprimir, EstiloImpresion } from "@/components/logistica/acciones-ruta";
 import { exigirAdmin } from "@/lib/auth";
@@ -60,16 +61,7 @@ async function Contenido({ id }: { id: string }) {
         <Tarjeta>
           <h2 className="mb-2 font-semibold">Total a cargar</h2>
           {total.length ? (
-            <table className="w-full text-sm">
-              <tbody className="divide-y divide-borde">
-                {total.map((l) => (
-                  <tr key={l.clave}>
-                    <td className="py-2">{l.descripcion}</td>
-                    <td className="py-2 text-right font-semibold tabular-nums">{l.cantidad.toLocaleString("es-ES")}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <CargaPorFamilias lineas={total} />
           ) : (
             <p className="text-sm text-suave">No hay productos pendientes de entregar en esta ruta.</p>
           )}

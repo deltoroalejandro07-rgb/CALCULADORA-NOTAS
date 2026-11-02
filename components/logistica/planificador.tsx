@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { aceptarPlan, calcularPlanAccion } from "@/app/(app)/logistica/acciones-planificar";
 import { Tarjeta } from "@/components/app/piezas";
+import { CargaPorFamilias } from "@/components/logistica/carga-familias";
 import { Boton } from "@/components/ui/boton";
 import { cn } from "@/lib/cn";
 import { totalCarga } from "@/lib/dominio/reparto";
@@ -32,16 +33,9 @@ function HojaCarga({ albaranes, titulo }: { albaranes: Props["albaranes"]; titul
         <ClipboardList className="h-5 w-5 text-marca" aria-hidden /> {titulo}
       </p>
       {total.length ? (
-        <table className="mt-2 w-full text-sm">
-          <tbody className="divide-y divide-borde">
-            {total.map((l) => (
-              <tr key={l.clave}>
-                <td className="py-1.5 pr-2">{l.descripcion}</td>
-                <td className="py-1.5 text-right font-semibold tabular-nums">{l.cantidad.toLocaleString("es-ES")}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="mt-2">
+          <CargaPorFamilias lineas={total} />
+        </div>
       ) : (
         <p className="mt-1 text-sm text-suave">Sin productos en los albaranes elegidos.</p>
       )}
