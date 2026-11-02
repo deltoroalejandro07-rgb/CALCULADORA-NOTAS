@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { Cabecera, Cargando } from "@/components/app/piezas";
 import { AltaManual, ListaAlbaranes, SubirAlbaranes, VaciarAlbaranes, type AlbaranPendiente } from "@/components/logistica/albaranes";
 import { BarraDia, PasosReparto } from "@/components/logistica/pasos";
+import { VolverAEmpezar } from "@/components/logistica/volver-a-empezar";
 import { diaDeReparto } from "@/lib/dia-reparto";
 import { fechaDentroDe } from "@/lib/dominio/visita";
 import { exigirAdmin } from "@/lib/auth";
@@ -55,6 +56,7 @@ async function Contenido({ param }: { param: unknown }) {
       <SubirAlbaranes />
       <AltaManual destinos={destinos ?? []} zonas={zonas ?? []} />
       <ListaAlbaranes albaranes={lista} zonas={zonas ?? []} />
+      <VolverAEmpezar fecha={fecha} rutas={0} textoDia={textoDia(fecha)} />
       <VaciarAlbaranes />
     </div>
     {pendientes > 0 && (
@@ -69,4 +71,12 @@ async function Contenido({ param }: { param: unknown }) {
     )}
     </>
   );
+}
+
+function textoDia(f: string) {
+  const hoy = fechaDentroDe(0);
+  const manana = new Date(Date.parse(hoy + "T12:00:00Z") + 86_400_000).toISOString().slice(0, 10);
+  if (f === hoy) return "hoy";
+  if (f === manana) return "mañana";
+  return new Date(f + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
 }

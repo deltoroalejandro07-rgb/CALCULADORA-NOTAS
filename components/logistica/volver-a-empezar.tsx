@@ -1,14 +1,15 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Trash2 } from "lucide-react";
 import { startTransition, useActionState } from "react";
 import { deshacerRepartoDia, type EstadoForm } from "@/app/(app)/logistica/acciones";
+import { vaciarDia } from "@/app/(app)/logistica/acciones-planificar";
 import { Boton } from "@/components/ui/boton";
-import { VaciarAlbaranes } from "./albaranes";
 
 /** «¿Te has equivocado?»: deshacer las rutas del día (sin perder los albaranes) o borrar todo. */
 export function VolverAEmpezar({ fecha, rutas, textoDia }: { fecha: string; rutas: number; textoDia: string }) {
   const [estado, accion, pendiente] = useActionState<EstadoForm, FormData>(deshacerRepartoDia, {});
+  const [estadoDia, accionDia, borrandoDia] = useActionState<EstadoForm, FormData>(vaciarDia, {});
   return (
     <section className="space-y-3 rounded-xl border border-borde bg-superficie p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
       <div>
@@ -33,7 +34,21 @@ export function VolverAEmpezar({ fecha, rutas, textoDia }: { fecha: string; ruta
       )}
       {estado.ok && <p className="text-sm text-emerald-700 dark:text-emerald-300">✓ {estado.ok}</p>}
       {estado.error && <p className="text-sm text-red-600">{estado.error}</p>}
-      <VaciarAlbaranes />
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!confirm(`¿Borrar el reparto de ${textoDia}? Se borran sus rutas (con las entregas marcadas) y sus albaranes. Los demás días NO se tocan.`)) return;
+          const f = new FormData(e.currentTarget);
+          startTransition(() => accionDia(f));
+        }}
+      >
+        <input type="hidden" name="fecha" value={fecha} />
+        <Boton type="submit" variante="secundario" cargando={borrandoDia} className="w-full text-sm text-red-600">
+          <Trash2 className="h-4 w-4" aria-hidden /> Borrar el reparto de {textoDia} y empezar de cero
+        </Boton>
+      </form>
+      {estadoDia.ok && <p className="text-sm text-emerald-700 dark:text-emerald-300">✓ {estadoDia.ok}</p>}
+      {estadoDia.error && <p className="text-sm text-red-600">{estadoDia.error}</p>}
     </section>
   );
 }

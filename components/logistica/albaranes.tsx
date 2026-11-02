@@ -523,7 +523,7 @@ export function VaciarAlbaranes() {
     <section className="rounded-xl border border-red-200 p-4 dark:border-red-900">
       <button type="button" onClick={() => setAbierto((v) => !v)} className="flex w-full items-center justify-between text-sm font-semibold text-red-700 dark:text-red-300">
         <span className="flex items-center gap-1.5">
-          <Trash2 className="h-4 w-4" aria-hidden /> Borrar todo y empezar de cero
+          <Trash2 className="h-4 w-4" aria-hidden /> Borrar TODOS los días y empezar de cero
         </span>
         <ChevronDown className={cn("h-4 w-4 transition", abierto && "rotate-180")} aria-hidden />
       </button>
@@ -532,14 +532,14 @@ export function VaciarAlbaranes() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (!confirm("¿Seguro? Se borran TODOS los albaranes, sus PDF y sus rutas (también las entregas hechas). No se puede deshacer.")) return;
+            if (!confirm("¿Seguro? Se borran los albaranes y rutas de TODOS los días (también las entregas hechas). Para borrar solo un día, usa «Borrar el reparto de…» en Preparar reparto. No se puede deshacer.")) return;
             const datos = new FormData(e.currentTarget);
             startTransition(() => accion(datos));
           }}
           className="mt-3 space-y-3 text-sm"
         >
           <p className="text-suave">
-            Para dejarlo limpio después de las pruebas. Se borran <strong>todos los albaranes</strong> (por repartir, en ruta y entregados), sus PDF y las rutas de reparto. <strong>Se quedan</strong> tus zonas, vehículos, almacén, usuarios y todo el CRM.
+            Para dejarlo limpio después de las pruebas: <strong>afecta a todos los días</strong>. Se borran <strong>todos los albaranes</strong> (por repartir, en ruta y entregados), sus PDF y las rutas de reparto. <strong>Se quedan</strong> tus zonas, vehículos, almacén, usuarios y todo el CRM.
           </p>
           <label className="flex items-start gap-2">
             <input type="checkbox" name="direcciones" className="mt-0.5 h-5 w-5 accent-red-600" />

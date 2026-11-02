@@ -12,7 +12,9 @@ sql(`update ajustes_logistica set almacen_lat = 39.49, almacen_lng = -0.42;
   insert into vehiculos (nombre, matricula) values ('F1', 'DIA1');
   insert into zonas_reparto (nombre, dias) values ('Z', '{1,2,3,4,5,6,7}');
   insert into destinos (nombre, clave, direccion, localidad, lat, lng, zona_id) values ('BAR DIA FIJO', 'df', 'Calle 1', 'Valencia', 39.47, -0.37, (select id from zonas_reparto limit 1));
-  insert into albaranes (numero, destino_id, lineas) select 'DF1', id, '[]' from destinos where clave = 'df';`);
+  insert into albaranes (numero, fecha, destino_id, lineas) select 'DF1', '${manana}', id, '[]' from destinos where clave = 'df';
+  insert into destinos (nombre, clave, direccion, localidad, lat, lng, zona_id) values ('BAR DE HOY', 'dh', 'Calle 2', 'Valencia', 39.47, -0.37, (select id from zonas_reparto limit 1));
+  insert into albaranes (numero, fecha, destino_id, lineas) select 'DH1', '${hoy}', id, '[]' from destinos where clave = 'dh';`);
 
 const { page, errores, navegador } = await abrirNavegador({ viewport: { width: 1440, height: 900 }, isMobile: false, hasTouch: false });
 await entrar(page, "admin@demo.local");
@@ -31,18 +33,17 @@ await page.getByText(/^Mañana, /).first().waitFor();
 await page.goto(`${APP}/logistica/albaranes`);
 await page.getByText(`Reparto del ${textoManana}`).waitFor();
 
-paso("Borro todo y al volver al reparto ya no aparece (sin recargar)");
+paso("Borro el reparto de mañana: se va su albarán, el de hoy se queda, y se ve al momento");
 await page.getByText("BAR DIA FIJO").first().waitFor();
-await page.getByRole("button", { name: /Borrar todo y empezar de cero/ }).last().click();
 page.once("dialog", (d) => d.accept());
-await page.getByRole("button", { name: "Borrar todo", exact: true }).click();
-await page.getByText(/Todo listo para empezar/).waitFor();
-assert.equal(await page.getByText("BAR DIA FIJO").count(), 0, "desaparece de la lista");
+await page.getByRole("button", { name: "Borrar el reparto de mañana y empezar de cero" }).click();
+await page.getByText(/1 albarán de ese día borrados\. Los demás días no se han tocado/).waitFor();
+assert.equal(await page.getByText("BAR DIA FIJO").count(), 0, "desaparece de la lista sin recargar");
+await page.getByText("BAR DE HOY").first().waitFor();
+assert.equal(sql("select string_agg(numero, ',') from albaranes"), "DH1", "el de hoy sigue");
 await page.getByRole("link", { name: "Volver al reparto" }).click();
 await page.waitForURL(`**/logistica?fecha=${manana}`);
-await page.getByRole("heading", { name: "Sube los albaranes del día" }).waitFor();
-await page.getByRole("link", { name: "Subir PDF de Holded" }).waitFor();
-assert.equal(await page.getByText(/^1 albarán$/).count(), 0, "el reparto ya no cuenta el albarán borrado");
+await page.getByText(/^1 albarán$/).waitFor();
 
 paso("Volver a hoy");
 await page.locator('a[href^="/logistica?fecha="]', { hasText: /^Hoy$/ }).click();

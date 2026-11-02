@@ -313,3 +313,40 @@ export async function refrescarTrasSubir() {
   await exigirAdmin();
   actualizarPantallas();
 }
+
+/**
+ * Borrar el reparto de UN día (no los demás): sus rutas con lo marcado en ellas, los albaranes de
+ * esas rutas y los albaranes por repartir de ese día (por su fecha de Holded o, sin fecha, por el día
+ * en que se subieron). Zonas, vehículos, direcciones y CRM se quedan.
+ */
+export async function vaciarDia(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+  await exigirAdmin();
+  const fecha = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).safeParse(form.get("fecha"));
+  if (!fecha.success) return { error: "Día no válido." };
+  const dia = fecha.data;
+  const sb = await supabaseServidor();
+  // 1) Rutas del día (con sus entregas): sus albaranes vuelven a «por repartir» y se apuntan para borrar
+  const { data: rutas } = await sb.from("rutas").select("id, paradas(albaran_id)").eq("fecha", dia);
+  const deRutas = new Set((rutas ?? []).flatMap((r) => r.paradas.map((p) => p.albaran_id).filter((x): x is string => !!x)));
+  for (const r of rutas ?? []) {
+    const { data: archivos, error } = await sb.rpc("borrar_ruta_completa", { p_ruta: r.id });
+    if (error) return { error: `No se ha podido borrar: ${error.message}` };
+    if (archivos?.length) await sb.storage.from("entregas").remove(archivos);
+  }
+  // 2) Albaranes por repartir de ese día
+  const { data: pendientes } = await sb.from("albaranes").select("id, fecha, creado_at, archivo_path").eq("estado", "pendiente");
+  const diaMadrid = (iso: string) => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid" }).format(new Date(iso));
+  const aBorrar = (pendientes ?? []).filter((a) => deRutas.has(a.id) || a.fecha === dia || (!a.fecha && diaMadrid(a.creado_at) === dia));
+  if (aBorrar.length) {
+    const { error } = await sb.from("albaranes").delete().in("id", aBorrar.map((a) => a.id));
+    if (error) return { error: `No se ha podido borrar: ${error.message}` };
+    await borrarPdfsHuerfanos(sb, aBorrar.map((a) => a.archivo_path));
+  }
+  actualizarPantallas();
+  const nR = rutas?.length ?? 0;
+  const nA = aBorrar.length;
+  if (!nR && !nA) return { ok: "Ese día no tenía rutas ni albaranes." };
+  return {
+    ok: `Hecho: ${[nR && (nR === 1 ? "1 ruta" : `${nR} rutas`), nA && (nA === 1 ? "1 albarán" : `${nA} albaranes`)].filter(Boolean).join(" y ")} de ese día borrados. Los demás días no se han tocado.`,
+  };
+}
