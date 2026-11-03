@@ -719,7 +719,10 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "borrar_ruta_completa":
+            "borrar_albaranes":
+{ Args: { "p_ids": (string)[] }; Returns: Json
+                           },
+"borrar_ruta_completa":
 { Args: { "p_ruta": string }; Returns: (string)[]
                            },
 "buscar_posibles_duplicados":

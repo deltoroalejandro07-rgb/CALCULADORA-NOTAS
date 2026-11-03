@@ -58,6 +58,20 @@ await page.getByText("Orden de entrega (3)").waitFor();
 assert.equal(await page.locator("ol li p.font-medium", { hasText: "BAR DE HOY" }).count(), 3, "un albarán = una parada");
 await page.getByLabel("Hora de BAR DE HOY (DH2)").waitFor();
 
+paso("Se puede borrar un albarán que tuvo un «No entregado» (antes daba error)");
+const ayer = new Date(Date.parse(hoy + "T12:00:00Z") - 864e5).toISOString().slice(0, 10);
+sql(`insert into rutas (fecha) values ('${ayer}');
+  insert into paradas (ruta_id, orden, destino_id, albaran_id) select (select id from rutas where fecha = '${ayer}' limit 1), 1, destino_id, id from albaranes where numero = 'DH2';
+  update paradas set estado = 'fallida', motivo_fallo = 'Cerrado', realizada_at = now() where albaran_id = (select id from albaranes where numero = 'DH2');`);
+assert.equal(sql("select estado from albaranes where numero = 'DH2'"), "pendiente", "vuelve a por repartir");
+await page.goto(`${APP}/logistica/albaranes`);
+page.once("dialog", (d) => d.accept());
+await page.locator("li", { hasText: "DH2" }).getByRole("button", { name: "Borrar albarán de BAR DE HOY" }).click();
+for (let i = 0; i < 30 && sql("select count(*) from albaranes where numero = 'DH2'") !== "0"; i++) await page.waitForTimeout(300);
+assert.equal(sql("select count(*) from albaranes where numero = 'DH2'"), "0", "borrado");
+assert.equal(sql(`select count(*) from rutas where fecha = '${ayer}'`), "0", "la ruta que quedó vacía también se borra");
+await page.locator("li", { hasText: "DH2" }).waitFor({ state: "detached" });
+
 assert.deepEqual(errores, [], "sin errores en la consola");
 await navegador.close();
 console.log("✓ Día fijo y cambios al momento");

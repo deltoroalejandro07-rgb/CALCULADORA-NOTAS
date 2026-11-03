@@ -122,29 +122,42 @@ export async function anularAlbaran(form: FormData) {
 
 type Sb = Awaited<ReturnType<typeof supabaseServidor>>;
 
-/** Borra los PDF que ya no use ningún albarán (un PDF puede traer varios). */
-async function borrarPdfsHuerfanos(sb: Sb, paths: (string | null)[]) {
-  const unicos = [...new Set(paths.filter((x): x is string => !!x))];
-  if (!unicos.length) return;
-  const { data: siguen } = await sb.from("albaranes").select("archivo_path").in("archivo_path", unicos);
-  const usados = new Set((siguen ?? []).map((a) => a.archivo_path));
-  const sobran = unicos.filter((x) => !usados.has(x));
-  if (sobran.length) await sb.storage.from("albaranes").remove(sobran);
+
+/** Borra albaranes con todo lo suyo (también intentos de entrega anteriores) y limpia sus archivos. */
+async function borrarAlbaranesPorId(sb: Sb, ids: string[]): Promise<{ borrados: number; error?: string }> {
+  if (!ids.length) return { borrados: 0 };
+  const { data, error } = await sb.rpc("borrar_albaranes", { p_ids: ids });
+  if (error) {
+    console.error("borrar_albaranes:", error);
+    return {
+      borrados: 0,
+      error: /borrar_albaranes|function/i.test(error.message)
+        ? "Falta actualizar la base de datos: ejecuta en Supabase el último fichero SQL (borrar_albaranes)."
+        : "No se ha podido borrar. Inténtalo de nuevo.",
+    };
+  }
+  const r = data as { borrados: number; archivos: string[]; pdfs: string[] };
+  if (r.archivos.length) await sb.storage.from("entregas").remove(r.archivos);
+  if (r.pdfs.length) await sb.storage.from("albaranes").remove(r.pdfs);
+  return { borrados: r.borrados };
 }
 
-/** Borra de verdad un albarán por repartir o ya en una ruta (sin entregar): sale de la ruta y se puede volver a subir. */
-export async function borrarAlbaran(form: FormData) {
+/** Borra de verdad un albarán (por repartir, en una ruta sin entregar o con un «No entregado» anterior). */
+export async function borrarAlbaran(form: FormData): Promise<EstadoForm> {
   await exigirAdmin();
-  const aid = id.parse(form.get("id"));
+  const aid = id.safeParse(form.get("id"));
+  if (!aid.success) return { error: "Albarán no válido." };
   const sb = await supabaseServidor();
-  const { data: a } = await sb.from("albaranes").select("id, estado, archivo_path").eq("id", aid).maybeSingle();
-  if (!a || !["pendiente", "planificado", "anulado"].includes(a.estado)) return;
-  const { error: e1 } = await sb.from("paradas").delete().eq("albaran_id", aid).eq("estado", "pendiente");
-  if (e1) throw new Error(e1.message);
-  const { error: e2 } = await sb.from("albaranes").delete().eq("id", aid);
-  if (e2) throw new Error(e2.message);
-  await borrarPdfsHuerfanos(sb, [a.archivo_path]);
+  const { data: a } = await sb.from("albaranes").select("id, estado").eq("id", aid.data).maybeSingle();
+  if (!a) {
+    actualizarPantallas();
+    return { ok: "Ya estaba borrado." };
+  }
+  if (a.estado === "entregado") return { error: "Este albarán ya está entregado: bórralo borrando su ruta o el reparto de ese día." };
+  const r = await borrarAlbaranesPorId(sb, [a.id]);
+  if (r.error) return { error: r.error };
   actualizarPantallas();
+  return { ok: "Albarán borrado." };
 }
 
 /**
@@ -336,13 +349,12 @@ export async function vaciarDia(_: EstadoForm, form: FormData): Promise<EstadoFo
     if (archivos?.length) await sb.storage.from("entregas").remove(archivos);
   }
   // 2) Albaranes por repartir de ese día
-  const { data: pendientes } = await sb.from("albaranes").select("id, fecha, creado_at, archivo_path").eq("estado", "pendiente");
+  const { data: pendientes } = await sb.from("albaranes").select("id, fecha, creado_at").eq("estado", "pendiente");
   const diaMadrid = (iso: string) => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid" }).format(new Date(iso));
   const aBorrar = (pendientes ?? []).filter((a) => deRutas.has(a.id) || a.fecha === dia || (!a.fecha && diaMadrid(a.creado_at) === dia));
   if (aBorrar.length) {
-    const { error } = await sb.from("albaranes").delete().in("id", aBorrar.map((a) => a.id));
-    if (error) return { error: `No se ha podido borrar: ${error.message}` };
-    await borrarPdfsHuerfanos(sb, aBorrar.map((a) => a.archivo_path));
+    const r = await borrarAlbaranesPorId(sb, aBorrar.map((a) => a.id));
+    if (r.error) return { error: r.error };
   }
   actualizarPantallas();
   const nR = rutas?.length ?? 0;

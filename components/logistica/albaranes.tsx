@@ -424,18 +424,21 @@ export function ListaAlbaranes({ albaranes, zonas }: { albaranes: AlbaranPendien
                 <Pencil className="h-5 w-5" />
               </button>
             )}
-            <form
-              action={borrarAlbaran}
-              onSubmit={(e) => {
+            <button
+              type="button"
+              onClick={async () => {
                 const txt = `¿Borrar el albarán${a.numero ? ` ${a.numero}` : ""} de ${a.destino.nombre}?${a.estado === "planificado" ? " También sale de su ruta." : ""}`;
-                if (!confirm(txt)) e.preventDefault();
+                if (!confirm(txt)) return;
+                const f = new FormData();
+                f.set("id", a.id);
+                const r = await borrarAlbaran(f);
+                if (r.error) alert(r.error);
               }}
+              aria-label={`Borrar albarán de ${a.destino.nombre}`}
+              className="rounded-full p-2 text-red-600 active:bg-fondo"
             >
-              <input type="hidden" name="id" value={a.id} />
-              <button type="submit" aria-label={`Borrar albarán de ${a.destino.nombre}`} className="rounded-full p-2 text-red-600 active:bg-fondo">
-                <Trash2 className="h-5 w-5" />
-              </button>
-            </form>
+              <Trash2 className="h-5 w-5" />
+            </button>
           </div>
         </div>
         {editando === a.id && <EditarDestino d={a.destino} zonas={zonas} alCerrar={() => setEditando(null)} />}
