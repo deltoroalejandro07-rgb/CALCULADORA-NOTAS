@@ -169,6 +169,27 @@ export async function borrarRutaCompleta(_: EstadoForm, form: FormData): Promise
   return { ok: "Ruta borrada." };
 }
 
+/**
+ * Deshace una entrega marcada por error («Entregado» o «No entregado»): la parada vuelve a pendiente.
+ * Con quitar=on, además sale de la ruta y su albarán vuelve a «por repartir». Oficina o repartidor de la ruta.
+ */
+export async function deshacerEntrega(form: FormData): Promise<EstadoForm> {
+  const pid = id.safeParse(form.get("id"));
+  if (!pid.success) return { error: "Parada no válida." };
+  const quitar = form.get("quitar") === "on";
+  const sb = await supabaseServidor();
+  const { data, error } = await sb.rpc("deshacer_entrega", { p_parada: pid.data, p_quitar: quitar });
+  if (error) {
+    console.error("deshacer_entrega:", error);
+    if (error.code === "PGRST202") return { error: "Falta actualizar la base de datos: ejecuta en Supabase el último fichero SQL (deshacer_entregas)." };
+    return { error: error.code === "P0001" || error.code === "P0002" || error.code === "42501" ? error.message : "No se ha podido deshacer. Inténtalo de nuevo." };
+  }
+  const archivos = ((data as { archivos?: string[] } | null)?.archivos ?? []).filter(Boolean);
+  if (archivos.length) await sb.storage.from("entregas").remove(archivos); // si no hay permiso, se quedan (no estorban)
+  actualizarPantallas();
+  return { ok: quitar ? "Hecho: sale de la ruta y el albarán vuelve a «por repartir»." : "Hecho: vuelve a estar pendiente de entregar." };
+}
+
 async function paradasDe(rutaId: string) {
   const sb = await supabaseServidor();
   const { data } = await sb.from("paradas").select("id, orden, estado").eq("ruta_id", rutaId).order("orden");

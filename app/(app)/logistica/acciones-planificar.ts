@@ -161,6 +161,53 @@ export async function borrarAlbaran(form: FormData): Promise<EstadoForm> {
 }
 
 /**
+ * Vuelve a poner albaranes «por repartir» aunque estén entregados o en una ruta (p. ej. se marcó
+ * «Entregado» sin querer o se aplazó a otro día). Se quitan de sus rutas con lo registrado.
+ */
+export async function reactivarAlbaranes(form: FormData): Promise<EstadoForm> {
+  await exigirAdmin();
+  const ids = form.getAll("id").map((x) => id.safeParse(x)).filter((x) => x.success).map((x) => x.data!);
+  if (!ids.length) return { error: "Albarán no válido." };
+  const sb = await supabaseServidor();
+  const { data, error } = await sb.rpc("reactivar_albaranes", { p_ids: ids });
+  if (error) {
+    console.error("reactivar_albaranes:", error);
+    return { error: error.code === "PGRST202" ? "Falta actualizar la base de datos: ejecuta en Supabase el último fichero SQL (deshacer_entregas)." : "No se ha podido. Inténtalo de nuevo." };
+  }
+  const r = data as { reactivados: number; archivos: string[] };
+  if (r.archivos.length) await sb.storage.from("entregas").remove(r.archivos);
+  actualizarPantallas();
+  return { ok: r.reactivados === 1 ? "Listo: vuelve a estar «por repartir»." : `Listo: ${r.reactivados} albaranes vuelven a estar «por repartir».` };
+}
+
+/** Corrige un albarán a mano: número, fecha, productos y notas. Si va en una ruta sin entregar, el repartidor lo ve cambiado. */
+export async function editarAlbaran(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+  await exigirAdmin();
+  const r = z
+    .object({
+      id,
+      numero: texto,
+      fecha: z.preprocess(vacioANull, z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable()),
+      productos: texto,
+      notas: texto,
+    })
+    .safeParse(Object.fromEntries(form));
+  if (!r.success) return { error: "Revisa los datos." };
+  const d = r.data;
+  const sb = await supabaseServidor();
+  const { data: a } = await sb.from("albaranes").select("estado").eq("id", d.id).maybeSingle();
+  if (!a) return { error: "Ese albarán ya no existe." };
+  if (a.estado === "entregado") return { error: "Ya está entregado: primero vuelve a ponerlo «por repartir»." };
+  const { error } = await sb
+    .from("albaranes")
+    .update({ numero: d.numero?.toUpperCase() ?? null, fecha: d.fecha, lineas: d.productos ? leerLineasTexto(d.productos) : [], notas: d.notas })
+    .eq("id", d.id);
+  if (error) return { error: error.code === "23505" ? `Ya hay otro albarán con el número ${d.numero?.toUpperCase()}.` : "No se ha podido guardar." };
+  actualizarPantallas();
+  return { ok: "Albarán guardado." };
+}
+
+/**
  * Empezar de cero (tras las pruebas): borra todos los albaranes, sus PDF, sus paradas (también las ya
  * entregadas) y las rutas que se queden vacías. No toca zonas, vehículos, almacén ni nada del CRM.
  */

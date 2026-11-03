@@ -103,7 +103,27 @@ export async function descargarRutas(sb: Cliente, db: BaseReparto, usuarioId: st
   if (error) throw error;
   const rutas = (data ?? []) as unknown as RutaReparto[];
   await guardarRutas(db, usuarioId, rutas);
+  await olvidarDeshechas(db, usuarioId, rutas);
   return rutas;
+}
+
+/**
+ * Si la oficina deshizo una entrega ya subida (la parada vuelve a estar pendiente en el servidor),
+ * el móvil la olvida para poder marcarla otra vez.
+ */
+export async function olvidarDeshechas(db: BaseReparto, usuarioId: string, rutas: RutaReparto[]) {
+  const pendientes = new Set(rutas.flatMap((r) => r.paradas.filter((p) => p.estado === "pendiente").map((p) => p.id)));
+  const deshechas = (await db.entregas.where("usuario_id").equals(usuarioId).toArray()).filter((e) => (e.subida === "subida" || e.subida === "conflicto") && pendientes.has(e.parada_id));
+  if (!deshechas.length) return;
+  await olvidarEntregas(db, deshechas.map((e) => e.id));
+}
+
+/** Borra del móvil entregas guardadas (y sus fotos/firma). */
+export async function olvidarEntregas(db: BaseReparto, ids: string[]) {
+  await db.transaction("rw", [db.entregas, db.archivos], async () => {
+    await db.entregas.bulkDelete(ids);
+    await db.archivos.where("entrega_id").anyOf(ids).delete();
+  });
 }
 
 /**

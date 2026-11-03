@@ -4,7 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { AlertTriangle, CalendarDays, Check, MessageCircle, RotateCcw, ChevronLeft, ChevronRight, ClipboardList, CloudOff, CloudUpload, Loader2, Navigation, Phone, RefreshCw, Truck, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { borrarRutaCompleta } from "@/app/(app)/logistica/acciones";
+import { borrarRutaCompleta, deshacerEntrega } from "@/app/(app)/logistica/acciones";
 import { CargaPorFamilias } from "@/components/logistica/carga-familias";
 import { Boton } from "@/components/ui/boton";
 import { cn } from "@/lib/cn";
@@ -16,7 +16,7 @@ import { enlaceRutaGoogle } from "@/lib/dominio/ruta";
 import { fechaDentroDe } from "@/lib/dominio/visita";
 import { fecha as formatoFecha, fechaHora } from "@/lib/formato";
 import { useEnLinea } from "@/lib/navegador";
-import { baseReparto, descargarRutas, guardarEntrega, limpiarAntiguas, reintentarErrores, sincronizarReparto, type EntregaLocal } from "@/lib/offline/reparto";
+import { baseReparto, descargarRutas, guardarEntrega, limpiarAntiguas, olvidarEntregas, reintentarErrores, sincronizarReparto, type EntregaLocal } from "@/lib/offline/reparto";
 import { supabaseNavegador } from "@/lib/supabase/navegador";
 import { RegistrarEntrega } from "./registrar-entrega";
 
@@ -182,6 +182,36 @@ export function PanelReparto() {
     void actualizar(usuarioId);
   }
 
+  /** Me he equivocado: la parada vuelve a estar pendiente (en el móvil y, si ya se subió, en el servidor). */
+  async function deshacer(p: ParadaReparto) {
+    if (!usuarioId) return;
+    const local = locales.get(p.id);
+    const enServidor = p.estado !== "pendiente" || local?.subida === "subida" || local?.subida === "conflicto";
+    if (enServidor && !navigator.onLine) {
+      setAviso("Esa entrega ya se subió: necesitas cobertura para deshacerla.");
+      return;
+    }
+    if (!confirm(`¿Deshacer lo marcado en ${p.cliente.nombre}? Vuelve a quedar pendiente de entregar.`)) return;
+    setBorrando(true);
+    if (local) await olvidarEntregas(baseReparto(), [local.id]);
+    if (navigator.onLine) {
+      const f = new FormData();
+      f.set("id", p.id);
+      const r = await deshacerEntrega(f);
+      if (r.error && enServidor) {
+        setBorrando(false);
+        setAviso(r.error);
+        void actualizar(usuarioId);
+        return;
+      }
+    }
+    await actualizar(usuarioId);
+    setBorrando(false);
+    setVista({ tipo: "lista" });
+    setAviso(`↩ ${p.cliente.nombre}: vuelve a estar pendiente`);
+    window.scrollTo({ top: 0 });
+  }
+
   /** Entregado tal cual (todo lo del albarán), de un toque. Se guarda en el móvil y se sube solo. */
   async function entregarRapido(p: ParadaReparto) {
     if (!ruta || !usuarioId || hechasEnMovil.has(p.id)) return;
@@ -321,7 +351,7 @@ export function PanelReparto() {
         <button type="button" onClick={() => setVista({ tipo: "lista" })} className="inline-flex min-h-11 items-center gap-1 text-sm text-suave">
           <ChevronLeft className="h-5 w-5" aria-hidden /> Ruta
         </button>
-        <FichaParada parada={paradaVista} estado={estado} local={local} destacada={estado === "pendiente"} onEntregar={(modo) => setVista({ tipo: "entrega", id: paradaVista.id, modo })} onRapido={() => entregarRapido(paradaVista)} />
+        <FichaParada parada={paradaVista} estado={estado} local={local} destacada={estado === "pendiente"} onEntregar={(modo) => setVista({ tipo: "entrega", id: paradaVista.id, modo })} onRapido={() => entregarRapido(paradaVista)} onDeshacer={() => deshacer(paradaVista)} deshaciendo={borrando} />
       </div>
     );
   }
@@ -501,6 +531,8 @@ function FichaParada({
   numero,
   onEntregar,
   onRapido,
+  onDeshacer,
+  deshaciendo,
 }: {
   parada: ParadaReparto;
   estado: EstadoParada;
@@ -510,6 +542,9 @@ function FichaParada({
   onEntregar: (modo: "entregada" | "fallida") => void;
   /** Entregado tal cual, de un toque (la firma va en el albarán de papel). */
   onRapido: () => void;
+  /** Me he equivocado al marcarla: vuelve a pendiente. */
+  onDeshacer?: () => void;
+  deshaciendo?: boolean;
 }) {
   const c = parada.cliente;
   const nota = partirNota(parada.notas_oficina);
@@ -605,6 +640,11 @@ function FichaParada({
           {local?.subida === "pendiente" && " · guardada en el móvil, se subirá con cobertura"}
           {local?.subida === "subida" && " · subida"}
         </p>
+      )}
+      {estado !== "pendiente" && onDeshacer && (
+        <Boton type="button" variante="secundario" cargando={deshaciendo} onClick={onDeshacer} className="mt-2 w-full text-sm">
+          <RotateCcw className="h-4 w-4" aria-hidden /> Deshacer: me he equivocado
+        </Boton>
       )}
     </div>
   );

@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Check, FileText, MapPinOff, MessageCircle, Pencil, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, FileText, MapPinOff, MessageCircle, Pencil, RotateCcw, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { startTransition, useActionState, useState } from "react";
-import { guardarEntregaCliente, guardarNotaParada, moverParadaAccion, quitarParada, type EstadoForm } from "@/app/(app)/logistica/acciones";
+import { deshacerEntrega, guardarEntregaCliente, guardarNotaParada, moverParadaAccion, quitarParada, type EstadoForm } from "@/app/(app)/logistica/acciones";
 import { Boton } from "@/components/ui/boton";
 import { cn } from "@/lib/cn";
 import { enlaceWhatsApp } from "@/lib/dominio/contacto";
@@ -90,6 +90,40 @@ function EditarParada({ p, alCerrar }: { p: ParadaOficina; alCerrar: () => void 
   );
 }
 
+/** Corregir una entrega marcada por error: vuelve a pendiente o sale de la ruta. */
+export function DeshacerEntrega({ paradaId, nombre, estado }: { paradaId: string; nombre: string; estado: EstadoParada }) {
+  const [ocupado, setOcupado] = useState(false);
+  const [msg, setMsg] = useState<{ ok?: string; error?: string } | null>(null);
+  async function hacer(quitar: boolean) {
+    const marcado = estado === "entregada" ? "Entregado" : "No entregado";
+    const txt = quitar
+      ? `¿Quitar ${nombre} de esta ruta? Se borra el «${marcado}» y el albarán vuelve a «por repartir» para llevarlo otro día.`
+      : `¿Deshacer el «${marcado}» de ${nombre}? Vuelve a quedar pendiente de entregar en esta ruta.`;
+    if (!confirm(txt)) return;
+    setOcupado(true);
+    const f = new FormData();
+    f.set("id", paradaId);
+    if (quitar) f.set("quitar", "on");
+    const r = await deshacerEntrega(f);
+    setOcupado(false);
+    setMsg(r);
+  }
+  return (
+    <div className="mt-2">
+      <div className="flex flex-wrap gap-2">
+        <button type="button" disabled={ocupado} onClick={() => hacer(false)} className="inline-flex min-h-9 items-center gap-1 rounded-md border border-borde px-2 text-xs font-medium hover:bg-fondo disabled:opacity-50">
+          <RotateCcw className="h-3.5 w-3.5" aria-hidden /> Deshacer (me equivoqué)
+        </button>
+        <button type="button" disabled={ocupado} onClick={() => hacer(true)} className="inline-flex min-h-9 items-center gap-1 rounded-md border border-borde px-2 text-xs font-medium hover:bg-fondo disabled:opacity-50">
+          Pasar a otro día (por repartir)
+        </button>
+      </div>
+      {msg?.error && <p className="mt-1 text-xs text-red-600">{msg.error}</p>}
+      {msg?.ok && <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-300">✓ {msg.ok}</p>}
+    </div>
+  );
+}
+
 export function ListaParadas({ rutaId, paradas, editable, reordenable }: { rutaId: string; paradas: ParadaOficina[]; editable: boolean; reordenable: boolean }) {
   const [editando, setEditando] = useState<string | null>(null);
   if (!paradas.length) {
@@ -170,9 +204,12 @@ export function ListaParadas({ rutaId, paradas, editable, reordenable }: { rutaI
                   </p>
                 )}
                 {p.estado !== "pendiente" && (
-                  <Link href={`/logistica/albaran/${p.id}`} className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-marca underline">
-                    <FileText className="h-4 w-4" aria-hidden /> Ver albarán
-                  </Link>
+                  <>
+                    <Link href={`/logistica/albaran/${p.id}`} className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-marca underline">
+                      <FileText className="h-4 w-4" aria-hidden /> Ver albarán
+                    </Link>
+                    <DeshacerEntrega paradaId={p.id} nombre={p.cliente.nombre} estado={p.estado} />
+                  </>
                 )}
               </div>
               {editable && p.estado === "pendiente" && (

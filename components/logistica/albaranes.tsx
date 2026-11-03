@@ -1,9 +1,9 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, ChevronDown, ExternalLink, FileUp, MapPinned, Pencil, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronDown, ExternalLink, FileText, FileUp, MapPinned, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { startTransition, useActionState, useMemo, useRef, useState } from "react";
-import { altaManual, asignarZona, borrarAlbaran, editarDestino, refrescarTrasSubir, vaciarAlbaranes, type EstadoForm } from "@/app/(app)/logistica/acciones-planificar";
+import { altaManual, asignarZona, borrarAlbaran, editarAlbaran, editarDestino, reactivarAlbaranes, refrescarTrasSubir, vaciarAlbaranes, type EstadoForm } from "@/app/(app)/logistica/acciones-planificar";
 import type { RespuestaImportar } from "@/app/api/logistica/albaranes/route";
 import { Tarjeta } from "@/components/app/piezas";
 import { Boton } from "@/components/ui/boton";
@@ -24,6 +24,31 @@ function enviar(accion: (f: FormData) => void) {
 }
 
 // ---------- Subir PDF ----------
+
+/** Vuelve a poner «por repartir» albaranes ya entregados o en una ruta (p. ej. marcados sin querer). */
+export function BotonPorRepartir({ ids, texto, pregunta }: { ids: string[]; texto: string; pregunta?: string }) {
+  const [estado, setEstado] = useState<{ cargando?: boolean; ok?: string; error?: string }>({});
+  if (estado.ok) return <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300">✓ {estado.ok}</p>;
+  return (
+    <div>
+      <button
+        type="button"
+        disabled={estado.cargando}
+        onClick={async () => {
+          if (pregunta && !confirm(pregunta)) return;
+          setEstado({ cargando: true });
+          const f = new FormData();
+          ids.forEach((x) => f.append("id", x));
+          setEstado(await reactivarAlbaranes(f));
+        }}
+        className="inline-flex min-h-9 items-center gap-1 rounded-md border border-marca px-2 text-xs font-semibold text-marca hover:bg-fondo disabled:opacity-50"
+      >
+        <RotateCcw className="h-3.5 w-3.5" aria-hidden /> {estado.cargando ? "Un momento…" : texto}
+      </button>
+      {estado.error && <p className="mt-1 text-xs text-red-600">{estado.error}</p>}
+    </div>
+  );
+}
 
 export function SubirAlbaranes() {
   const entrada = useRef<HTMLInputElement>(null);
@@ -88,6 +113,10 @@ export function SubirAlbaranes() {
             {repetidos > 0 && <span className="text-amber-700 dark:text-amber-300"> · {repetidos} ya {repetidos === 1 ? "estaba subido" : "estaban subidos"} (mira abajo)</span>}
             {conError > 0 && <span className="text-red-600"> · {conError} PDF sin leer</span>}
           </p>
+          {(() => {
+            const ids = [...new Set(leidos.flatMap((x) => (x.existente ? [x.existente.id] : [])))];
+            return ids.length > 1 ? <BotonPorRepartir ids={ids} texto={`Leer los ${ids.length} igualmente (ponerlos por repartir)`} pregunta={`¿Poner los ${ids.length} albaranes ya subidos otra vez por repartir? Se borra lo marcado en ellos.`} /> : null;
+          })()}
           {resultado.archivos.map((a) => (
             <div key={a.path} className="rounded-lg bg-fondo p-2">
               <p className="truncate text-xs text-suave">{a.nombre}</p>
@@ -103,6 +132,15 @@ export function SubirAlbaranes() {
                       {av}
                     </p>
                   ))}
+                  {x.existente && (
+                    <div className="mt-1 pl-5">
+                      <BotonPorRepartir
+                        ids={[x.existente.id]}
+                        texto="Leerlo igualmente (ponerlo por repartir)"
+                        pregunta={x.existente.estado === "entregado" ? `¿Poner ${x.numero ?? "este albarán"} otra vez por repartir? Se borra el «Entregado» que tenía.` : undefined}
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -255,7 +293,7 @@ export interface AlbaranPendiente {
   id: string;
   numero: string | null;
   fecha: string | null;
-  estado: "pendiente" | "planificado";
+  estado: "pendiente" | "planificado" | "entregado";
   origen: string;
   notas: string | null;
   lineas: { descripcion: string; cantidad: number }[];
@@ -375,11 +413,55 @@ function SelectorZona({ destinos, actual, zonas, texto, aria }: { destinos: stri
   );
 }
 
+function EditarAlbaran({ a, alCerrar }: { a: AlbaranPendiente; alCerrar: () => void }) {
+  const [estado, accion, pendiente] = useActionState<EstadoForm, FormData>(editarAlbaran, {});
+  return (
+    <form onSubmit={enviar(accion)} className="mt-3 space-y-2 rounded-lg bg-fondo p-3 text-sm">
+      <p className="text-xs font-semibold text-suave">Editar albarán{a.estado === "planificado" ? " (el repartidor lo verá cambiado)" : ""}</p>
+      <input type="hidden" name="id" value={a.id} />
+      <div className="grid grid-cols-2 gap-2">
+        <label className="block">
+          Número
+          <input name="numero" defaultValue={a.numero ?? ""} className={campo} />
+        </label>
+        <label className="block">
+          Fecha
+          <input name="fecha" type="date" defaultValue={a.fecha ?? ""} className={campo} />
+        </label>
+      </div>
+      <label className="block">
+        Productos (uno por línea: «24 Coca-Cola 33cl»)
+        <textarea name="productos" rows={Math.min(10, Math.max(3, a.lineas.length + 1))} defaultValue={a.lineas.map((l) => `${l.cantidad} ${l.descripcion}`).join("\n")} className={cn(campo, "py-2")} />
+      </label>
+      <label className="block">
+        Notas
+        <input name="notas" defaultValue={a.notas ?? ""} className={campo} />
+      </label>
+      {estado.error && <p className="text-red-600">{estado.error}</p>}
+      {estado.ok && <p className="text-emerald-700 dark:text-emerald-300">✓ {estado.ok}</p>}
+      <div className="grid grid-cols-2 gap-2">
+        <Boton type="submit" cargando={pendiente} className="min-h-11 text-sm">
+          Guardar
+        </Boton>
+        <button type="button" onClick={alCerrar} className="min-h-11 rounded-lg border border-borde text-sm">
+          Cerrar
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export function ListaAlbaranes({ albaranes, zonas }: { albaranes: AlbaranPendiente[]; zonas: { id: string; nombre: string; dias: number[] }[] }) {
   const [editando, setEditando] = useState<string | null>(null);
+  const [editandoAlbaran, setEditandoAlbaran] = useState<string | null>(null);
   const [verPlanificados, setVerPlanificados] = useState(false);
+  const [verEntregados, setVerEntregados] = useState(false);
+  const [buscar, setBuscar] = useState("");
   const pendientes = albaranes.filter((a) => a.estado === "pendiente");
   const planificados = albaranes.filter((a) => a.estado === "planificado");
+  const entregados = albaranes.filter((a) => a.estado === "entregado");
+  const q = buscar.trim().toLowerCase();
+  const entregadosVistos = q ? entregados.filter((a) => `${a.numero ?? ""} ${a.destino.nombre}`.toLowerCase().includes(q)) : entregados;
   const grupos = [
     ...zonas.map((z) => ({ id: z.id, titulo: z.nombre, dias: z.dias, lista: pendientes.filter((a) => a.destino.zona_id === z.id) })),
     { id: "sin", titulo: "Sin zona", dias: [] as number[], lista: pendientes.filter((a) => !a.destino.zona_id || !zonas.some((z) => z.id === a.destino.zona_id)) },
@@ -424,11 +506,17 @@ export function ListaAlbaranes({ albaranes, zonas }: { albaranes: AlbaranPendien
             )}
           </div>
           <div className="flex shrink-0 gap-1">
+            {a.estado !== "entregado" && (
+              <button type="button" onClick={() => setEditandoAlbaran(editandoAlbaran === a.id ? null : a.id)} aria-label={`Editar albarán de ${a.destino.nombre}`} title="Editar albarán (productos)" className="rounded-full p-2 text-suave active:bg-fondo">
+                <FileText className="h-5 w-5" />
+              </button>
+            )}
             {a.estado === "pendiente" && (
-              <button type="button" onClick={() => setEditando(editando === a.id ? null : a.id)} aria-label={`Editar ${a.destino.nombre}`} className="rounded-full p-2 text-suave active:bg-fondo">
+              <button type="button" onClick={() => setEditando(editando === a.id ? null : a.id)} aria-label={`Editar ${a.destino.nombre}`} title="Editar cliente (dirección, horario)" className="rounded-full p-2 text-suave active:bg-fondo">
                 <Pencil className="h-5 w-5" />
               </button>
             )}
+            {a.estado !== "entregado" && (
             <button
               type="button"
               onClick={async () => {
@@ -444,8 +532,19 @@ export function ListaAlbaranes({ albaranes, zonas }: { albaranes: AlbaranPendien
             >
               <Trash2 className="h-5 w-5" />
             </button>
+            )}
           </div>
         </div>
+        {a.estado !== "pendiente" && (
+          <div className="mt-2">
+            <BotonPorRepartir
+              ids={[a.id]}
+              texto={a.estado === "entregado" ? "No se entregó: volver a por repartir" : "Sacar de la ruta (por repartir)"}
+              pregunta={a.estado === "entregado" ? `¿Poner ${a.numero ?? "este albarán"} de ${a.destino.nombre} otra vez por repartir? Se borra el «Entregado».` : `¿Sacar ${a.numero ?? "este albarán"} de su ruta? Vuelve a «por repartir».`}
+            />
+          </div>
+        )}
+        {editandoAlbaran === a.id && <EditarAlbaran a={a} alCerrar={() => setEditandoAlbaran(null)} />}
         {editando === a.id && <EditarDestino d={a.destino} zonas={zonas} alCerrar={() => setEditando(null)} />}
       </li>
     );
@@ -495,7 +594,20 @@ export function ListaAlbaranes({ albaranes, zonas }: { albaranes: AlbaranPendien
           <button type="button" onClick={() => setVerPlanificados((v) => !v)} className="flex items-center gap-1 text-sm text-suave">
             <ChevronDown className={cn("h-4 w-4 transition", verPlanificados && "rotate-180")} aria-hidden /> Ya en una ruta ({planificados.length})
           </button>
-          {verPlanificados && <ul className="mt-2 divide-y divide-borde overflow-hidden rounded-xl border border-borde bg-superficie opacity-75">{planificados.map(fila)}</ul>}
+          {verPlanificados && <ul className="mt-2 divide-y divide-borde overflow-hidden rounded-xl border border-borde bg-superficie">{planificados.map(fila)}</ul>}
+        </div>
+      )}
+      {entregados.length > 0 && (
+        <div>
+          <button type="button" onClick={() => setVerEntregados((v) => !v)} className="flex items-center gap-1 text-sm text-suave">
+            <ChevronDown className={cn("h-4 w-4 transition", verEntregados && "rotate-180")} aria-hidden /> Entregados últimos 30 días ({entregados.length}) · deshacer si te equivocaste
+          </button>
+          {verEntregados && (
+            <>
+              <input value={buscar} onChange={(e) => setBuscar(e.target.value)} placeholder="Buscar por número o cliente" aria-label="Buscar albarán entregado" className={cn(campo, "text-sm")} />
+              <ul className="mt-2 divide-y divide-borde overflow-hidden rounded-xl border border-borde bg-superficie">{entregadosVistos.slice(0, 50).map(fila)}</ul>
+            </>
+          )}
         </div>
       )}
       {(() => {

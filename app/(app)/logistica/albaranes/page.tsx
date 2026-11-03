@@ -30,12 +30,15 @@ async function Contenido({ param }: { param: unknown }) {
   const fecha = await diaDeReparto(param, fechaDentroDe(0));
   await exigirAdmin();
   const sb = await supabaseServidor();
-  const [{ data: albaranes }, { data: zonas }, { data: destinos }] = await Promise.all([
-    sb.from("albaranes").select("id, numero, fecha, lineas, notas, origen, estado, creado_at, destinos(*)").in("estado", ["pendiente", "planificado"]).order("creado_at", { ascending: false }),
+  const hace30 = `${fechaDentroDe(-30)}T00:00:00`;
+  const campos = "id, numero, fecha, lineas, notas, origen, estado, creado_at, destinos(*)";
+  const [{ data: activos }, { data: entregados }, { data: zonas }, { data: destinos }] = await Promise.all([
+    sb.from("albaranes").select(campos).in("estado", ["pendiente", "planificado"]).order("creado_at", { ascending: false }),
+    sb.from("albaranes").select(campos).eq("estado", "entregado").gte("creado_at", hace30).order("creado_at", { ascending: false }).limit(300),
     sb.from("zonas_reparto").select("id, nombre, dias").eq("activa", true).order("nombre"),
     sb.from("destinos").select("id, nombre, direccion, localidad").order("nombre"),
   ]);
-  const lista: AlbaranPendiente[] = (albaranes ?? [])
+  const lista: AlbaranPendiente[] = [...(activos ?? []), ...(entregados ?? [])]
     .filter((a) => a.destinos)
     .map((a) => ({
       id: a.id,

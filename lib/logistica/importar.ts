@@ -14,6 +14,8 @@ export interface ResultadoImportacion {
   destinoId: string;
   albaranId: string | null;
   repetido: boolean;
+  /** Ya estaba subido y ENTREGADO o en una ruta: se puede volver a poner «por repartir». */
+  existente?: { id: string; estado: "planificado" | "entregado" };
   avisos: string[];
 }
 
@@ -93,6 +95,7 @@ export async function guardarAlbaranes(sb: Cliente, leidos: AlbaranLeido[], orig
       : await sb.from("albaranes").insert(fila).select("id");
     if (error) throw error;
     const repetido = !nuevo?.length;
+    let existente: ResultadoImportacion["existente"];
     if (repetido && a.numero) {
       // Ya estaba: si sigue pendiente, se actualiza con la nueva lectura (p. ej. cantidades corregidas)
       const { data: act } = await sb
@@ -104,17 +107,18 @@ export async function guardarAlbaranes(sb: Cliente, leidos: AlbaranLeido[], orig
       if (act?.length) avisos.unshift("Ya estaba subido: se actualiza con esta lectura (sigue por repartir).");
       else {
         // Dónde está: en una ruta o ya entregado (por eso no sale en «Por repartir»)
-        const { data: ex } = await sb.from("albaranes").select("estado, paradas(rutas(fecha))").eq("numero", a.numero).maybeSingle();
+        const { data: ex } = await sb.from("albaranes").select("id, estado, paradas(rutas(fecha))").eq("numero", a.numero).maybeSingle();
         const fechas = ((ex?.paradas ?? []) as { rutas: { fecha: string } | null }[]).map((p) => p.rutas?.fecha).filter(Boolean) as string[];
         const dia = fechas.length ? new Date(fechas.sort().at(-1)! + "T12:00:00").toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" }) : null;
+        if (ex && (ex.estado === "entregado" || ex.estado === "planificado")) existente = { id: ex.id, estado: ex.estado };
         avisos.unshift(
           ex?.estado === "entregado"
-            ? `Ya estaba subido y ENTREGADO${dia ? ` (ruta del ${dia})` : ""}: no sale en «Por repartir». Si hay que llevarlo otra vez, borra esa ruta o el reparto de ese día.`
-            : `Ya estaba subido y está en una ruta${dia ? ` (la del ${dia})` : ""}: no sale en «Por repartir». Para cambiarlo, deshaz esa ruta.`,
+            ? `Ya estaba subido y marcado ENTREGADO${dia ? ` (ruta del ${dia})` : ""}. Si no se entregó, pulsa «Leerlo igualmente».`
+            : `Ya estaba subido y está en una ruta${dia ? ` (la del ${dia})` : ""}. Si quieres repartirlo otro día, pulsa «Leerlo igualmente».`,
         );
       }
     }
-    resultados.push({ numero: a.numero, cliente: a.cliente, destinoId: destino.id, albaranId: nuevo?.[0]?.id ?? null, repetido, avisos });
+    resultados.push({ numero: a.numero, cliente: a.cliente, destinoId: destino.id, albaranId: nuevo?.[0]?.id ?? null, repetido, existente, avisos });
   }
   return resultados;
 }

@@ -733,6 +733,9 @@ isOneToOne: false
 "conduce_ruta":
 { Args: { "rid": string }; Returns: boolean
                            },
+"deshacer_entrega":
+{ Args: { "p_parada": string,"p_quitar"?: boolean }; Returns: Json
+                           },
 "es_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
@@ -759,6 +762,12 @@ isOneToOne: false
                            },
 "puede_ver_visita":
 { Args: { "vid": string }; Returns: boolean
+                           },
+"reactivar_albaranes":
+{ Args: { "p_ids": (string)[] }; Returns: Json
+                           },
+"recalcular_ruta":
+{ Args: { "p_ruta": string }; Returns: undefined
                            },
 "registrar_entrega":
 { Args: { "p_datos": Json,"p_entrega": string,"p_estado": Database["public"]['Enums']["estado_parada"],"p_parada": string }; Returns: string

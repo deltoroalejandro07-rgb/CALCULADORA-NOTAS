@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { startTransition, useActionState, useState } from "react";
 import { borrarRutaCompleta, type EstadoForm } from "@/app/(app)/logistica/acciones";
+import { DeshacerEntrega } from "@/components/logistica/lista-paradas";
 import { Boton } from "@/components/ui/boton";
 import { cn } from "@/lib/cn";
 import { fechaDentroDe } from "@/lib/dominio/visita";
@@ -172,6 +173,7 @@ function TarjetaRuta({ r, esAdmin }: { r: RutaDelDia; esAdmin: boolean }) {
                     </p>
                   )}
                   {p.observaciones && <p className="text-suave">Nota: {p.observaciones}</p>}
+                  {p.estado !== "pendiente" && <DeshacerEntrega paradaId={p.id} nombre={p.nombre ?? "este cliente"} estado={p.estado} />}
                 </div>
               )}
             </li>
