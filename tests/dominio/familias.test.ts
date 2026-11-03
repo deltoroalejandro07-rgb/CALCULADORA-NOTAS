@@ -29,6 +29,10 @@ describe("familiaDe", () => {
     ["Producto raro sin pistas", "Otros"],
   ])("«%s» → %s", (desc, fam) => expect(familiaDe(desc)).toBe(fam));
 
+  it("las marcas de refrescos sin palabra clave (Enjoy, Upgrade) van juntas en Refrescos", () => {
+    for (const d of ["ENJOY FRESA 0,5", "ENJOY TROPICAL 0,5", "ENJOY LIMONADA 0,5L", "ENJOY NARANJADA 0,5", "UPGRADE BLUE"]) expect(familiaDe(d)).toBe("Refrescos y zumos");
+  });
+
   it("no confunde palabras dentro de otras (gin/original, ron/naranja)", () => {
     expect(familiaDe("Zumo naranja original")).toBe("Refrescos y zumos");
     expect(familiaDe("Bitter Kas original")).toBe("Refrescos y zumos");
