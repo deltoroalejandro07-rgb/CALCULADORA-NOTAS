@@ -61,7 +61,10 @@ export function SubirAlbaranes() {
     }
   }
 
-  const nuevos = resultado?.archivos.flatMap((a) => a.albaranes).filter((x) => !x.repetido).length ?? 0;
+  const leidos = resultado?.archivos.flatMap((a) => a.albaranes) ?? [];
+  const nuevos = leidos.filter((x) => !x.repetido).length;
+  const repetidos = leidos.length - nuevos;
+  const conError = resultado?.archivos.filter((a) => a.error).length ?? 0;
   return (
     <Tarjeta>
       <input ref={entrada} type="file" accept="application/pdf,.pdf" multiple className="hidden" onChange={(e) => subir(e.target.files)} aria-label="Elegir PDF de albaranes" />
@@ -81,7 +84,9 @@ export function SubirAlbaranes() {
       {resultado && (
         <div className="mt-3 space-y-2 text-sm">
           <p className="font-semibold">
-            {nuevos} {nuevos === 1 ? "albarán nuevo" : "albaranes nuevos"}
+            {leidos.length} {leidos.length === 1 ? "albarán leído" : "albaranes leídos"}: {nuevos} {nuevos === 1 ? "nuevo" : "nuevos"}
+            {repetidos > 0 && <span className="text-amber-700 dark:text-amber-300"> · {repetidos} ya {repetidos === 1 ? "estaba subido" : "estaban subidos"} (mira abajo)</span>}
+            {conError > 0 && <span className="text-red-600"> · {conError} PDF sin leer</span>}
           </p>
           {resultado.archivos.map((a) => (
             <div key={a.path} className="rounded-lg bg-fondo p-2">

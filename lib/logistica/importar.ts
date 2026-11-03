@@ -101,7 +101,18 @@ export async function guardarAlbaranes(sb: Cliente, leidos: AlbaranLeido[], orig
         .eq("numero", a.numero)
         .eq("estado", "pendiente")
         .select("id");
-      avisos.unshift(act?.length ? "Ya estaba importado: actualizado con esta lectura." : "Ya estaba importado y en una ruta: no se cambia.");
+      if (act?.length) avisos.unshift("Ya estaba subido: se actualiza con esta lectura (sigue por repartir).");
+      else {
+        // Dónde está: en una ruta o ya entregado (por eso no sale en «Por repartir»)
+        const { data: ex } = await sb.from("albaranes").select("estado, paradas(rutas(fecha))").eq("numero", a.numero).maybeSingle();
+        const fechas = ((ex?.paradas ?? []) as { rutas: { fecha: string } | null }[]).map((p) => p.rutas?.fecha).filter(Boolean) as string[];
+        const dia = fechas.length ? new Date(fechas.sort().at(-1)! + "T12:00:00").toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" }) : null;
+        avisos.unshift(
+          ex?.estado === "entregado"
+            ? `Ya estaba subido y ENTREGADO${dia ? ` (ruta del ${dia})` : ""}: no sale en «Por repartir». Si hay que llevarlo otra vez, borra esa ruta o el reparto de ese día.`
+            : `Ya estaba subido y está en una ruta${dia ? ` (la del ${dia})` : ""}: no sale en «Por repartir». Para cambiarlo, deshaz esa ruta.`,
+        );
+      }
     }
     resultados.push({ numero: a.numero, cliente: a.cliente, destinoId: destino.id, albaranId: nuevo?.[0]?.id ?? null, repetido, avisos });
   }

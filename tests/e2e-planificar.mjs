@@ -50,7 +50,7 @@ paso("Sube dos PDF de Holded (uno con dos albaranes)");
 await page.goto(`${APP}/logistica/albaranes`);
 await page.waitForLoadState("networkidle"); // que la página haya cargado del todo antes de elegir los PDF
 await page.getByLabel("Elegir PDF de albaranes").setInputFiles(["tests/fixtures/albaranes-holded-prueba.pdf", "tests/fixtures/albaran-holded-prueba-2.pdf"]);
-await page.getByText("3 albaranes nuevos").waitFor({ timeout: 60_000 });
+await page.getByText("3 albaranes leídos: 3 nuevos").waitFor({ timeout: 60_000 });
 await page.screenshot({ path: `${SALIDA}/62-pdf-leidos.png`, fullPage: true });
 assert.equal(sql("select count(*) from albaranes where estado = 'pendiente'"), "3");
 assert.equal(sql("select ventana_hasta from destinos where nombre = 'BAR LA PLAZA DE PRUEBA S.L.'"), "10:00:00", "«antes de las 10» se entiende");
@@ -60,8 +60,9 @@ assert.equal(sql("select direccion from destinos where nombre = 'CAFETERIA SOL D
 
 paso("Subir otra vez el mismo PDF no duplica");
 await page.getByLabel("Elegir PDF de albaranes").setInputFiles("tests/fixtures/albaran-holded-prueba-2.pdf");
-await page.getByText("0 albaranes nuevos").waitFor({ timeout: 60_000 });
-await page.getByText("Ya estaba importado: actualizado con esta lectura.").first().waitFor();
+await page.getByText(/leídos?: 0 nuevos/).waitFor({ timeout: 60_000 });
+await page.getByText(/ya estaba subido \(mira abajo\)|ya estaban subidos \(mira abajo\)/).waitFor();
+await page.getByText("Ya estaba subido: se actualiza con esta lectura (sigue por repartir).").first().waitFor();
 assert.equal(sql("select count(*) from albaranes"), "3");
 
 paso("Alta manual de una entrega sin PDF");
