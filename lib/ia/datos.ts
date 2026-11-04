@@ -116,19 +116,24 @@ export async function consultarReparto(sb: Sb, f: { desde: string; hasta: string
   };
 }
 
-export async function consultarAlbaranes(sb: Sb, f: { desde: string; hasta: string; cliente?: string }) {
+export async function consultarAlbaranes(sb: Sb, f: { desde: string; hasta: string; cliente?: string; producto?: string }) {
+  // Día del albarán = su fecha de Holded (o el día en que se subió, si no la trae)
   const { data, error } = await sb
     .from("albaranes")
     .select("numero, fecha, creado_at, estado, lineas, destinos(nombre, localidad)")
     .neq("estado", "anulado")
-    .gte("creado_at", f.desde + "T00:00:00")
-    .lte("creado_at", f.hasta + "T23:59:59")
+    .or(`and(fecha.gte.${f.desde},fecha.lte.${f.hasta}),and(fecha.is.null,creado_at.gte.${f.desde}T00:00:00,creado_at.lte.${f.hasta}T23:59:59)`)
     .limit(3000);
   if (error) throw error;
+  type Linea = { descripcion?: string; cantidad?: number };
+  const lineasDe = (a: { lineas: unknown }) => ((a.lineas as Linea[] | null) ?? []).filter((l) => l.descripcion);
+  const prod = f.producto ? normalizarTexto(f.producto) : null;
+  const coincide = (l: Linea) => !prod || normalizarTexto(l.descripcion ?? "").includes(prod);
   let lista = data ?? [];
   if (f.cliente) lista = lista.filter((a) => normalizarTexto(a.destinos?.nombre ?? "").includes(normalizarTexto(f.cliente!)));
+  if (prod) lista = lista.filter((a) => lineasDe(a).some(coincide));
   const productos: Record<string, number> = {};
-  for (const a of lista) for (const l of (a.lineas as { descripcion?: string; cantidad?: number }[] | null) ?? []) if (l.descripcion) productos[l.descripcion] = (productos[l.descripcion] ?? 0) + (Number(l.cantidad) || 0);
+  for (const a of lista) for (const l of lineasDe(a).filter(coincide)) productos[l.descripcion!] = (productos[l.descripcion!] ?? 0) + (Number(l.cantidad) || 0);
   return {
     albaranes: lista.length,
     por_estado: contar(lista, (a) => a.estado),
@@ -138,6 +143,20 @@ export async function consultarAlbaranes(sb: Sb, f: { desde: string; hasta: stri
         .sort((a, b) => b[1] - a[1])
         .slice(0, 20),
     ),
+    // Detalle de cada albarán (si se busca un producto, solo sus líneas de ese producto)
+    lista: lista
+      .sort((a, b) => (b.fecha ?? b.creado_at).localeCompare(a.fecha ?? a.creado_at))
+      .slice(0, 80)
+      .map((a) => ({
+        numero: a.numero,
+        fecha: a.fecha ?? a.creado_at.slice(0, 10),
+        cliente: a.destinos?.nombre,
+        localidad: a.destinos?.localidad,
+        estado: a.estado,
+        lineas: lineasDe(a)
+          .filter(coincide)
+          .map((l) => `${l.cantidad ?? ""} ${l.descripcion}`.trim()),
+      })),
   };
 }
 

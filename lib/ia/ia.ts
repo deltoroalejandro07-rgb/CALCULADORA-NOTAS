@@ -115,8 +115,15 @@ export async function preguntarCRM(sb: Sb, historial: TurnoChat[]): Promise<stri
     }),
     betaZodTool({
       name: "consultar_albaranes",
-      description: "Albaranes subidos entre dos fechas: cuántos, por cliente y productos más repartidos (unidades).",
-      inputSchema: z.object({ desde: fecha, hasta: fecha, cliente: z.string().optional() }),
+      description:
+        "Albaranes (pedidos de Holded) entre dos fechas del albarán: cuántos, por cliente, productos más pedidos (unidades) y la lista de albaranes con cliente, fecha, estado (pendiente, planificado, entregado) y líneas. " +
+        "Para «quién pidió X» usa `producto` (una palabra del nombre, p. ej. «coca»): devuelve solo los albaranes con ese producto y sus líneas.",
+      inputSchema: z.object({
+        desde: fecha,
+        hasta: fecha,
+        cliente: z.string().optional().describe("Parte del nombre del cliente"),
+        producto: z.string().optional().describe("Parte del nombre del producto, sin tildes ni marca completa: «coca», «agua», «aceite»"),
+      }),
       run: async (f) => json(await consultarAlbaranes(sb, f)),
     }),
     betaZodTool({

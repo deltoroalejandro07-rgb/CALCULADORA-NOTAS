@@ -56,4 +56,20 @@ describe.skipIf(!disponible)("datos para la IA", () => {
     const rp = await riesgoYPrevision(dir, hoy);
     expect(Array.isArray(rp.clientes_en_riesgo) && Array.isArray(rp.les_toca_pedir)).toBe(true);
   });
+
+  it("dice quién pidió un producto un día concreto (por la fecha del albarán)", async () => {
+    const dir = await sesionDe("admin@demo.local");
+    const { execFileSync } = await import("node:child_process");
+    const q = (x: string) => execFileSync("psql", ["postgresql://postgres:postgres@127.0.0.1:54322/postgres", "-tAc", x]).toString().trim();
+    q(`insert into destinos (nombre, clave) values ('BAR COCA TEST', 'coca-test') on conflict do nothing;
+      insert into albaranes (numero, fecha, destino_id, lineas) select 'TEST-COCA', '2026-10-15', id, '[{"descripcion":"COCA COLA ZERO 33CL","cantidad":24},{"descripcion":"AGUA 1,5L","cantidad":6}]' from destinos where clave = 'coca-test';`);
+    try {
+      const al = await consultarAlbaranes(dir, { desde: "2026-10-15", hasta: "2026-10-15", producto: "coca" });
+      const fila = al.lista.find((a) => a.numero === "TEST-COCA");
+      expect(fila).toMatchObject({ cliente: "BAR COCA TEST", fecha: "2026-10-15", lineas: ["24 COCA COLA ZERO 33CL"] });
+      expect((await consultarAlbaranes(dir, { desde: "2026-10-16", hasta: "2026-10-16", producto: "coca" })).lista.some((a) => a.numero === "TEST-COCA")).toBe(false);
+    } finally {
+      q(`delete from albaranes where numero = 'TEST-COCA'; delete from destinos where clave = 'coca-test';`);
+    }
+  });
 });

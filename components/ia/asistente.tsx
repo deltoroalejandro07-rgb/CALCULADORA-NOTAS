@@ -7,6 +7,7 @@ import { cn } from "@/lib/cn";
 import type { TurnoChat } from "@/lib/ia/ia";
 
 const EJEMPLOS = [
+  "¿Quién me pidió Coca-Cola ayer y cuántas?",
   "¿Qué clientes interesados llevan más de 3 semanas sin visita?",
   "¿Cuántas visitas ha hecho cada comercial esta semana?",
   "¿Qué entregas fallaron la semana pasada y por qué?",
