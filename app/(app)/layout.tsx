@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { Barra, BarraInferior } from "@/components/app/barra-inferior";
 import { Menu, MenuLateral } from "@/components/app/menu-lateral";
+import { RefrescarPantalla } from "@/components/app/refrescar-pantalla";
 import { Sincronizador } from "@/components/app/sincronizador";
 import { usuarioActual } from "@/lib/auth";
 
@@ -11,6 +12,9 @@ export default function LayoutApp({ children }: LayoutProps<"/">) {
   return (
     <>
       <Sincronizador />
+      <Suspense>
+        <RefrescarPantalla />
+      </Suspense>
       <Suspense fallback={<Menu ruta={null} usuario={null} />}>
         <MenuConUsuario />
       </Suspense>

@@ -47,10 +47,10 @@ export function PrepararRuta({
 }) {
   const zonasHoy = zonas.filter((z) => z.dias.includes(dia)).map((z) => z.id);
   // Marcados de entrada: los de las zonas que tocan hoy (si no hay zonas, todos)
-  const [marcados, setMarcados] = useState<Set<string>>(
-    () => new Set(clientes.filter((c) => !zonas.length || (c.zonaId && zonasHoy.includes(c.zonaId)) || !c.zonaId).map((c) => c.clave)),
-  );
-  const [orden, setOrden] = useState<string[]>(() => ordenInicial(clientes));
+  const porDefecto = (c: ClienteDelDia) => !zonas.length || (!!c.zonaId && zonasHoy.includes(c.zonaId)) || !c.zonaId;
+  const [conocidos, setConocidos] = useState<Set<string>>(() => new Set(clientes.map((c) => c.clave)));
+  const [marcadosGuardados, setMarcados] = useState<Set<string>>(() => new Set(clientes.filter(porDefecto).map((c) => c.clave)));
+  const [ordenGuardado, setOrden] = useState<string[]>(() => ordenInicial(clientes));
   const [horas, setHoras] = useState<Record<string, string>>({});
   const [notas, setNotas] = useState<Record<string, string>>({});
   const [otras, setOtras] = useState<Record<string, string>>({});
@@ -62,6 +62,12 @@ export function PrepararRuta({
   const [creando, empezar] = useTransition();
 
   const porId = useMemo(() => new Map(clientes.map((c) => [c.clave, c])), [clientes]);
+  // Si se suben o borran albaranes con la pantalla abierta, se ve al momento: los borrados
+  // desaparecen y los nuevos se añaden al final (sin perder el orden ya hecho a mano)
+  const nuevos = clientes.filter((c) => !conocidos.has(c.clave));
+  const orden = [...ordenGuardado.filter((k) => porId.has(k)), ...ordenInicial(nuevos)];
+  const marcados = new Set([...marcadosGuardados, ...nuevos.filter(porDefecto).map((c) => c.clave)]);
+  const fijar = () => setConocidos(new Set(clientes.map((c) => c.clave)));
   const enRuta = orden.filter((id) => marcados.has(id)).map((id) => porId.get(id)!);
   const fuera = orden.filter((id) => !marcados.has(id)).map((id) => porId.get(id)!);
   const carga = totalCarga(enRuta.flatMap((c) => c.albaranes.map((a) => ({ lineas: a.lineas.map((l) => ({ producto_id: null, ...l })) }))));
@@ -73,14 +79,17 @@ export function PrepararRuta({
     if (j < 0 || j >= lista.length) return;
     [lista[i], lista[j]] = [lista[j], lista[i]];
     setOrden([...lista, ...orden.filter((x) => !marcados.has(x))]);
+    setMarcados(marcados);
+    fijar();
   };
-  const alternar = (id: string) =>
-    setMarcados((s) => {
-      const n = new Set(s);
-      if (n.has(id)) n.delete(id);
-      else n.add(id);
-      return n;
-    });
+  const alternar = (id: string) => {
+    const n = new Set(marcados);
+    if (n.has(id)) n.delete(id);
+    else n.add(id);
+    setMarcados(n);
+    setOrden(orden);
+    fijar();
+  };
 
   function crear() {
     setError(null);

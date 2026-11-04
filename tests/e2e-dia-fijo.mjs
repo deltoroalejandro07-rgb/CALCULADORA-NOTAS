@@ -72,6 +72,19 @@ assert.equal(sql("select count(*) from albaranes where numero = 'DH2'"), "0", "b
 assert.equal(sql(`select count(*) from rutas where fecha = '${ayer}'`), "0", "la ruta que quedó vacía también se borra");
 await page.locator("li", { hasText: "DH2" }).waitFor({ state: "detached" });
 
+paso("Al volver atrás a una pantalla ya vista, se ve lo nuevo (sin F5)");
+await page.goto(`${APP}/logistica/planificar?fecha=${hoy}`);
+await page.getByText("Orden de entrega (2)").waitFor();
+await page.goto(`${APP}/logistica/albaranes`);
+sql(`insert into albaranes (numero, fecha, destino_id, lineas) select 'DH9', '${hoy}', id, '[]' from destinos where clave = 'dh'`);
+await page.goBack();
+await page.getByText("Orden de entrega (3)").waitFor();
+await page.getByLabel("Hora de BAR DE HOY (DH9)").waitFor();
+paso("Y al volver a la app desde otra (WhatsApp, Maps)");
+sql(`delete from albaranes where numero = 'DH9'`);
+await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+await page.getByText("Orden de entrega (2)").waitFor();
+
 assert.deepEqual(errores, [], "sin errores en la consola");
 await navegador.close();
 console.log("✓ Día fijo y cambios al momento");

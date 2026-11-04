@@ -59,8 +59,8 @@ await page.getByRole("button", { name: /Entregados últimos 30 días \(1\)/ }).c
 await page.getByLabel("Buscar albarán entregado").fill("ds4");
 page.once("dialog", (d) => d.accept());
 await page.getByRole("button", { name: "No se entregó: volver a por repartir" }).click();
-await page.getByText("✓ Listo: vuelve a estar «por repartir».").waitFor();
-assert.equal(estadoAlb("DS4"), "pendiente");
+await esperar(() => estadoAlb("DS4"), "pendiente", "vuelve a por repartir");
+await page.getByText("Por repartir (2)").waitFor(); // se ve al momento en la lista
 assert.equal(sql(`select count(*) from rutas where fecha = '${ayer}'`), "0", "la ruta de ayer se queda vacía y se borra");
 
 paso("Edito los productos de un albarán");
