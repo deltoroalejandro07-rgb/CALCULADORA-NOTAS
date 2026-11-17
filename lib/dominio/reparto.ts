@@ -37,6 +37,10 @@ export interface RutaReparto {
   vehiculo: { nombre: string; matricula: string | null } | null;
   almacen: { direccion: string | null; lat: number | null; lng: number | null } | null;
   paradas: ParadaReparto[];
+  /** Quién la conduce (la oficina ve también las rutas de los repartidores). */
+  conductor?: string | null;
+  /** false: es de otro conductor y la ve la oficina para controlarla. */
+  es_mia?: boolean;
 }
 
 export interface ParadaReparto {

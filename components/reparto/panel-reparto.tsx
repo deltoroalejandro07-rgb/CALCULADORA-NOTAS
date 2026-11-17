@@ -126,7 +126,7 @@ export function PanelReparto() {
   const hechasEnMovil = useMemo(() => new Set(entregas.map((e) => e.parada_id)), [entregas]);
   const lista = useMemo(() => (rutas ?? []).map((r) => r.datos), [rutas]);
   const hoy = fechaDentroDe(0);
-  const ruta: RutaReparto | null = lista.find((r) => r.id === rutaSel) ?? lista.find((r) => r.fecha === hoy) ?? lista.find((r) => progreso(r.paradas, hechasEnMovil).hechas < r.paradas.length) ?? lista[0] ?? null;
+  const ruta: RutaReparto | null = lista.find((r) => r.id === rutaSel) ?? lista.find((r) => r.fecha === hoy && r.es_mia !== false) ?? lista.find((r) => r.fecha === hoy) ?? lista.find((r) => progreso(r.paradas, hechasEnMovil).hechas < r.paradas.length) ?? lista[0] ?? null;
 
   // Sin red, llevar al conductor a su ruta (y no a "Nueva visita") mientras le queden paradas hoy
   useEffect(() => {
@@ -443,6 +443,7 @@ export function PanelReparto() {
               className={cn("min-h-11 shrink-0 rounded-full border px-4 text-sm font-medium", r.id === ruta.id ? "border-marca bg-marca-suave" : "border-borde bg-superficie")}
             >
               {nombreDia(r.fecha)} · {r.vehiculo?.nombre ?? "Ruta"}
+              {r.es_mia === false && r.conductor && ` · ${r.conductor}`}
             </button>
           ))}
         </div>
@@ -469,6 +470,11 @@ export function PanelReparto() {
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-fondo" role="progressbar" aria-valuenow={hechas} aria-valuemax={total} aria-label="Progreso de la ruta">
           <div className="h-full rounded-full bg-marca transition-all" style={{ width: `${total ? (hechas / total) * 100 : 0}%` }} />
         </div>
+        {ruta.es_mia === false && (
+          <p className="mt-2 rounded-lg bg-sky-100 px-3 py-2 text-sm text-sky-900 dark:bg-sky-900/50 dark:text-sky-100">
+            👀 Ruta de <span className="font-semibold">{ruta.conductor ?? "otro conductor"}</span>. La ves por ser de la oficina: puedes marcar entregas si se le olvidan.
+          </p>
+        )}
         {ruta.notas && <p className="mt-2 text-sm text-amber-700 dark:text-amber-300">Oficina: {ruta.notas}</p>}
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button type="button" onClick={() => setVista({ tipo: "carga" })} className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-borde text-sm font-medium active:bg-fondo">
