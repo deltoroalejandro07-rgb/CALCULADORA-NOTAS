@@ -71,6 +71,7 @@ export function PanelReparto() {
   const [aviso, setAviso] = useState<string | null>(null);
   const [esAdmin, setEsAdmin] = useState(false);
   const [borrando, setBorrando] = useState(false);
+  const [rutasOtros, setRutasOtros] = useState<{ id: string; conductor: string | null; vehiculo: string | null; paradas: number }[] | null>(null);
 
   const rutas = useLiveQuery(async () => (usuarioId ? (await baseReparto().rutas.where("usuario_id").equals(usuarioId).toArray()).sort((a, b) => a.fecha.localeCompare(b.fecha)) : []), [usuarioId], undefined);
   const entregas = useLiveQuery(async () => (usuarioId ? baseReparto().entregas.where("usuario_id").equals(usuarioId).toArray() : []), [usuarioId], [] as EntregaLocal[]);
@@ -315,6 +316,24 @@ export function PanelReparto() {
   );
 
   if (!ruta) {
+    // Oficina: aunque no conduzca, ver quién lleva hoy cada ruta y poder abrirla
+    if (esAdmin && enLinea && rutasOtros === null) {
+      setRutasOtros([]);
+      void supabaseNavegador()
+        .from("rutas")
+        .select("id, conductor:perfiles!rutas_conductor_id_fkey(nombre), vehiculos(nombre), paradas(count)")
+        .eq("fecha", hoy)
+        .then(({ data }) =>
+          setRutasOtros(
+            (data ?? []).map((r) => ({
+              id: r.id,
+              conductor: r.conductor?.nombre ?? null,
+              vehiculo: r.vehiculos?.nombre ?? null,
+              paradas: (r.paradas as unknown as { count: number }[])[0]?.count ?? 0,
+            })),
+          ),
+        );
+    }
     return (
       <div className="space-y-3">
         {barraEstado}
@@ -328,6 +347,27 @@ export function PanelReparto() {
             </Boton>
           )}
         </div>
+        {esAdmin && !!rutasOtros?.length && (
+          <section className="mx-4 rounded-xl border border-borde bg-superficie p-4">
+            <p className="font-semibold">Rutas de hoy de otros conductores</p>
+            <p className="text-sm text-suave">Les aparecen a ellos en su «Mi reparto». Si la vas a llevar tú, ábrela y ponte como conductor.</p>
+            <ul className="mt-2 divide-y divide-borde">
+              {rutasOtros.map((r) => (
+                <li key={r.id}>
+                  <Link href={`/logistica/rutas/${r.id}`} className="flex min-h-11 items-center justify-between gap-2 py-2 text-sm">
+                    <span>
+                      <span className="font-medium">{r.conductor ?? "Sin conductor"}</span>
+                      <span className="text-suave">
+                        {r.vehiculo && ` · ${r.vehiculo}`} · {r.paradas} paradas
+                      </span>
+                    </span>
+                    <ChevronRight className="h-5 w-5 shrink-0 text-suave" aria-hidden />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         {enLinea && (
           <Link href="/reparto/dias" className="mx-4 flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-borde bg-superficie text-sm font-medium active:bg-fondo">
             <CalendarDays className="h-4 w-4" aria-hidden /> Ver rutas por días (días pasados)
